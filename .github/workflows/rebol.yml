@@ -100,7 +100,7 @@ jobs:
       - name: Build 64bit Rebol/Bulk using clang
         run: ./rebol3 siskin.r3 rebol %rebol3-bulk-x64-libc-clang
 
-    - uses: actions/upload-artifact@v2
-      with:
-        name: Rebol-64bit-linux
-        path: ./tree/rebol/Rebol/build/rebol3-*
+      - uses: actions/upload-artifact@v2
+        with:
+          name: Rebol-64bit-linux
+          path: ./tree/rebol/Rebol/build/rebol3-*
