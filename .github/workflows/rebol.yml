@@ -79,6 +79,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
+      - name: Checkout Rebol repository
+        uses: actions/checkout@v2
+        with:
+          repository: Siskin-framework/Rebol
+          path: tree/rebol/Rebol
+          #ref:  new-make
+
       - name: Download Rebol
         run: |
           wget -q https://github.com/Oldes/Rebol3/releases/download/3.5.0/Rebol_3.5.0_x64-libc.gz
