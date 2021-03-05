@@ -1,0 +1,3 @@
+;~ Siskin project nest file ~;
+github: @Rebol
+nest:   %Rebol/make/rebol3.nest

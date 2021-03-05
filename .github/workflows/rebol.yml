@@ -1,0 +1,69 @@
+name: 'Build Rebol'
+on:
+  # Triggers the workflow on push or pull request events but only for the master branch
+#  push:
+#    branches: [ master ]
+#  pull_request:
+#    branches: [ master ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  windows:
+    strategy:
+      fail-fast: true
+    runs-on: windows-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Checkout Rebol repository
+      uses: actions/checkout@v2
+      with:
+        repository: Siskin-framework/Rebol
+        path: projects/rebol/Rebol
+        #ref:  new-make
+
+    - name: Download Rebol
+      shell: cmd
+      run: |
+        C:\msys64\usr\bin\wget.exe -q https://github.com/Siskin-framework/Rebol/releases/download/3.5.2/rebol3-core-x86-vs.exe
+        MOVE ./rebol3-core-x86-vs.exe ./rebol3.exe
+        SET PATH=%PATH%;%CD%
+
+    - name: Build 64bit Rebol using MSVC
+      run: |
+        ./rebol3 siskin.r3 rebol [msvc %rebol3-base-x64-gcc]
+        MOVE ./projects/rebol/Rebol/msvc/Release-x64/rebol3-base-x64-vs.exe ./
+
+    - name: Build 64bit Rebol using MSVC
+      run: |
+        ./rebol3 siskin.r3 rebol [msvc %rebol3-core-x64-gcc]
+        MOVE ./projects/rebol/Rebol/msvc/Release-x64/rebol3-core-x64-vs.exe ./
+
+    - name: Build 64bit Rebol using MSVC
+      run: |
+        ./rebol3 siskin.r3 rebol [msvc %rebol3-bulk-x64-clang]
+        MOVE ./projects/rebol/Rebol/msvc/Release-x64/rebol3-bulk-x64-vs.exe ./
+
+    - name: Build 32bit Rebol using MSVC
+      run: |
+        ./rebol3 siskin.r3 rebol [msvc %rebol3-base-x86-gcc]
+        MOVE ./projects/rebol/Rebol/msvc/Release-Win32/rebol3-base-x86-vs.exe ./
+
+    - name: Build 32bit Rebol using MSVC
+      run: |
+        ./rebol3 siskin.r3 rebol [msvc %rebol3-core-x86-gcc]
+        MOVE ./projects/rebol/Rebol/msvc/Release-Win32/rebol3-core-x86-vs.exe ./
+
+    - name: Build 32bit Rebol using MSVC
+      run: |
+        ./rebol3 siskin.r3 rebol [msvc %rebol3-bulk-x86-clang]
+        MOVE ./projects/rebol/Rebol/msvc/Release-Win32/rebol3-bulk-x86-vs.exe ./
+
+    - uses: actions/upload-artifact@v2
+      with:
+        name: Rebol-win-vs
+        path: ./rebol3-*.exe
+
