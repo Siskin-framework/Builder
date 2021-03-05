@@ -34,32 +34,32 @@ jobs:
 
     - name: Build 64bit Rebol using MSVC
       run: |
-        ./rebol3 ./tree/rebol/Siskin/siskin.r3 rebol [msvc %rebol3-base-x64-gcc]
+        ./rebol3 siskin.r3 rebol [msvc %rebol3-base-x64-gcc]
         MOVE ./tree/rebol/Rebol/msvc/Release-x64/rebol3-base-x64-vs.exe ./
 
     - name: Build 64bit Rebol using MSVC
       run: |
-        ./rebol3 ./tree/rebol/Siskin/siskin.r3 rebol [msvc %rebol3-core-x64-gcc]
+        ./rebol3 siskin.r3 rebol [msvc %rebol3-core-x64-gcc]
         MOVE ./tree/rebol/Rebol/msvc/Release-x64/rebol3-core-x64-vs.exe ./
 
     - name: Build 64bit Rebol using MSVC
       run: |
-        ./rebol3 ./tree/rebol/Siskin/siskin.r3 rebol [msvc %rebol3-bulk-x64-clang]
+        ./rebol3 siskin.r3 rebol [msvc %rebol3-bulk-x64-clang]
         MOVE ./tree/rebol/Rebol/msvc/Release-x64/rebol3-bulk-x64-vs.exe ./
 
     - name: Build 32bit Rebol using MSVC
       run: |
-        ./rebol3 ./tree/rebol/Siskin/siskin.r3 rebol [msvc %rebol3-base-x86-gcc]
+        ./rebol3 siskin.r3 rebol [msvc %rebol3-base-x86-gcc]
         MOVE ./tree/rebol/Rebol/msvc/Release-Win32/rebol3-base-x86-vs.exe ./
 
     - name: Build 32bit Rebol using MSVC
       run: |
-        ./rebol3 ./tree/rebol/Siskin/siskin.r3 rebol [msvc %rebol3-core-x86-gcc]
+        ./rebol3 siskin.r3 rebol [msvc %rebol3-core-x86-gcc]
         MOVE ./tree/rebol/Rebol/msvc/Release-Win32/rebol3-core-x86-vs.exe ./
 
     - name: Build 32bit Rebol using MSVC
       run: |
-        ./rebol3 ./tree/rebol/Siskin/siskin.r3 rebol [msvc %rebol3-bulk-x86-clang]
+        ./rebol3 siskin.r3 rebol [msvc %rebol3-bulk-x86-clang]
         MOVE ./tree/rebol/Rebol/msvc/Release-Win32/rebol3-bulk-x86-vs.exe ./
 
     - uses: actions/upload-artifact@v2
