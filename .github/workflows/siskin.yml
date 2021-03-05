@@ -56,11 +56,11 @@ jobs:
     - uses: actions/upload-artifact@v2
       with:
         name: Siskin-x86-win
-        path: ./projects/rebol/Rebol/msvc/Release-Win32/Siskin-x86-vs.exe
+        path: ./tree/rebol/Rebol/msvc/Release-Win32/Siskin-x86-vs.exe
 
     - uses: actions/upload-artifact@v2
       with:
         name: Siskin-x64-win
         path: |
-          ./projects/rebol/Rebol/build/Siskin-x64-gcc.exe
-          ./projects/rebol/Rebol/msvc/Release-x64/Siskin-x64-vs.exe
+          ./tree/rebol/Siskin/build/Siskin-x64-gcc.exe
+          ./tree/rebol/Rebol/msvc/Release-x64/Siskin-x64-vs.exe
