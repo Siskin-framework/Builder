@@ -1,4 +1,4 @@
-;~ Siskin project seed file ~;
+;~ Siskin project nest file ~;
 github: @Rebol
 nest:   %Rebol/make/rebol3.nest
 
@@ -16,7 +16,7 @@ make-siskin: [
 	:common-host
 	
 	mezz-lib-files: [
-		;%../../Siskin/prebol.reb
+;		%../../Siskin/prebol.reb
 		%../../Siskin/siskin-msvc.reb	
 		%../../Siskin/siskin.reb
 	]
@@ -34,13 +34,13 @@ make-siskin-x64: [:make-siskin :arch-x64 #if windows? [target: x64-win32]]
 
 eggs: only [
 	"Siskin x86 gcc" [
-		product: 'Siskin-Builder
+		product:  Siskin-Builder
 		name:     %Siskin-x86-gcc
 		compiler: gcc
 		:make-siskin-x86
 	]
 	"Siskin x64 gcc" [
-		product: 'Siskin-Builder
+		product:  Siskin-Builder
 		name:     %Siskin-x64-gcc
 		compiler: gcc
 		:make-siskin-x64
