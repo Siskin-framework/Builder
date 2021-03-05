@@ -586,7 +586,7 @@ do-nest: closure/with [
 	if parent [
 		foreach [k v] parent [
 			if any [none? v all [series? v empty? v]] [continue]
-			print ["extending:" mold k mold v]
+			;print ["extending:" mold k mold v]
 			extend nest-spec k v
 		]
 		;not empty? parent/eggs] [
@@ -837,9 +837,15 @@ build: function/with [
 
 	; stack size
 	if spec/stack-size [
-		append lflags ajoin either find form spec/compiler "gcc" [
-			["-Wl,--stack="                 spec/stack-size   #" "]
-		][	["-Wl,-stack:0x" skip to-binary spec/stack-size 4 #" "]]
+		either windows? [
+			;This does not work on Linux!
+			append lflags ajoin either find form spec/compiler "gcc" [
+				[["-Wl,--stack="       spec/stack-size]]
+			][	["-Wl,-stack:0x" skip to-binary spec/stack-size 4]]
+		][
+			append lflags join "-Wl,-z,stack-size=" spec/stack-size
+		]
+		append lflags #" "
 	]
 
 	; static libraries
