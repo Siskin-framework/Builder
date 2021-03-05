@@ -1,0 +1,3 @@
+*.exe
+/tree/rebol/Rebol
+/tree/rebol/Siskin/build/

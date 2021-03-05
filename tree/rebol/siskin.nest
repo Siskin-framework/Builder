@@ -1,0 +1,48 @@
+;~ Siskin project seed file ~;
+github: @Rebol
+nest:   %Rebol/make/rebol3.nest
+
+make-siskin: [
+	strip:    on
+	upx:      on
+	product:  Siskin
+	output:   %../Siskin/build/
+
+	:include-mezz-ansi
+	:include-codec-zip
+	:include-https
+	:include-prebol
+	:common
+	:common-host
+	
+	mezz-lib-files: [
+		;%../../Siskin/prebol.reb
+		%../../Siskin/siskin-msvc.reb	
+		%../../Siskin/siskin.reb
+	]
+	boot-host-files: [
+		%../../Siskin/siskin-do.reb
+	]
+
+	define: REB_EXE
+	define: RAW_MAIN_ARGS
+	define: CUSTOM_STARTUP
+	do %make/pre-make.r3 "$NEST_SPEC"
+]
+make-siskin-x86: [:make-siskin :arch-x86 #if windows? [target: x86-win32]]
+make-siskin-x64: [:make-siskin :arch-x64 #if windows? [target: x64-win32]]
+
+eggs: only [
+	"Siskin x86 gcc" [
+		product: 'Siskin-Builder
+		name:     %Siskin-x86-gcc
+		compiler: gcc
+		:make-siskin-x86
+	]
+	"Siskin x64 gcc" [
+		product: 'Siskin-Builder
+		name:     %Siskin-x64-gcc
+		compiler: gcc
+		:make-siskin-x64
+	]
+]
