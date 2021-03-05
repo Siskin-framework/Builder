@@ -67,3 +67,40 @@ jobs:
         name: Rebol-win-vs
         path: ./rebol3-*.exe
 
+  linux:
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [ubuntu-18.04]
+        #os: [ubuntu-20.04, ubuntu-18.04]
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Download Rebol
+        run: |
+          wget -q https://github.com/Oldes/Rebol3/releases/download/3.5.0/Rebol_3.5.0_x64-libc.gz
+          gunzip ./Rebol_3.5.0_x64-libc.gz
+          mv ./Rebol_3.5.0_x64-libc ./rebol3
+          chmod +x ./rebol3
+          ls -la
+
+      - name: Build 64bit Rebol/Base using gcc
+        run: ./rebol3 siskin.r3 rebol %rebol3-base-x64-libc-gcc
+      - name: Build 64bit Rebol/Core using gcc
+        run: ./rebol3 siskin.r3 rebol %rebol3-core-x64-libc-gcc
+      - name: Build 64bit Rebol/Bulk using gcc
+        run: ./rebol3 siskin.r3 rebol %rebol3-bulk-x64-libc-gcc
+      - name: Build 64bit Rebol/Base using clang
+        run: ./rebol3 siskin.r3 rebol %rebol3-base-x64-libc-clang
+      - name: Build 64bit Rebol/Core using clang
+        run: ./rebol3 siskin.r3 rebol %rebol3-core-x64-libc-clang
+      - name: Build 64bit Rebol/Bulk using clang
+        run: ./rebol3 siskin.r3 rebol %rebol3-bulk-x64-libc-clang
+
+    - uses: actions/upload-artifact@v2
+      with:
+        name: Rebol-64bit-linux
+        path: ./tree/rebol/Rebol/build/rebol3-*
