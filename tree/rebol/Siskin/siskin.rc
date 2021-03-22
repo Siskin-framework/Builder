@@ -1,0 +1,32 @@
+101 ICON "siskin.ico"
+
+1 VERSIONINFO
+FILEVERSION     0,3,1,0
+PRODUCTVERSION  0,3,1,0
+BEGIN
+  BLOCK "StringFileInfo"
+  BEGIN
+    BLOCK "040904E4"
+    BEGIN
+      VALUE "FileDescription", "Siskin Builder"
+      VALUE "FileVersion", "0.3"
+      VALUE "InternalName", "Siskin Builder"
+      VALUE "LegalCopyright", "2021 Oldes"
+      VALUE "OriginalFilename", "Siskin.exe"
+      VALUE "ProductName", "Siskin"
+      VALUE "ProductVersion", "0.3"
+    END
+  END
+  BLOCK "VarFileInfo"
+  BEGIN
+    VALUE "Translation", 0x409, 1252
+  END
+END
+
+STRINGTABLE
+BEGIN
+    101  "Siskin Builder"
+END
+
+1 MANIFEST "siskin.manifest"
+

@@ -9,6 +9,7 @@ make-siskin: [
 	output:   %../Siskin/build/
 
 	:include-mezz-ansi
+	:include-codec-ico
 	:include-codec-zip
 	:include-https
 	:include-prebol
@@ -23,6 +24,8 @@ make-siskin: [
 	boot-host-files: [
 		%../../Siskin/siskin-do.reb
 	]
+
+	resource: %../Siskin/siskin.rc
 
 	define: REB_EXE
 	define: RAW_MAIN_ARGS
