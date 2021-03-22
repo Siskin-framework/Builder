@@ -2,7 +2,7 @@ Rebol [
 	Title:  "Siskin Builder - core"
 	Type:    module
 	Name:    siskin
-	Version: 0.3.0
+	Version: 0.3.1
 	Author: "Oldes"
 	;Needs:  prebol
 	exports: [
@@ -16,7 +16,7 @@ Rebol [
 banner: next {
 ^[[0;33m═╗^[[1;31m
 ^[[0;33m ║^[[1;31m    .-.
-^[[0;33m ║^[[1;31m   /'v'\   ^[[0;33mSISKIN-Framework Builder 0.3.0
+^[[0;33m ║^[[1;31m   /'v'\   ^[[0;33mSISKIN-Framework Builder 0.3.1
 ^[[0;33m ║^[[1;31m  (/^[[0;31muOu^[[1;31m\)  ^[[0;33mhttps://github.com/Siskin-framework/Builder/
 ^[[0;33m ╚════^[[1;31m"^[[0;33m═^[[1;31m"^[[0;33m═══════════════════════════════════════════════════════════════════════^[[m}
 
@@ -120,10 +120,10 @@ do-args: closure/with [
 		none? system/script/args
 		block? system/options/args
 	] [
+		;@@ woraround for running nest file associated with Siskin utility on Windows
+		try [system/options/args/1: mold to-rebol-file system/options/args/1]
 		system/script/args: reform system/options/args
 	]
-	;? system/options
-	;? system/script
 
 	change-dir root-dir: system/options/path
 
@@ -676,13 +676,17 @@ do-nest: closure/with [
 							bat: msvc/make-project spec
 							eval-cmd/v ["CALL " bat]
 							;? spec
-							out-file: rejoin [
+							file: rejoin [
 								any [spec/root what-dir]
 								either spec/arch = 'x64 [%msvc/Release-x64/][%msvc/Release-Win32/]
-								spec/name %.exe
+								spec/name
 							]
-							;?? out-file
-							either exists? out-file [
+							;?? file
+							either any [
+								'file = exists? out-file: file
+								'file = exists? out-file: join file %.exe
+								'file = exists? out-file: join file %.dll
+							][
 								if spec/upx [
 									try/except [do-upx out-file][print-error system/state/last-error]
 								]
@@ -839,8 +843,8 @@ build: function/with [
 	if spec/stack-size [
 		either windows? [
 			;This does not work on Linux!
-			append lflags ajoin either find form spec/compiler "gcc" [
-				[["-Wl,--stack="       spec/stack-size]]
+			append lflags rejoin either find form spec/compiler "gcc" [
+				["-Wl,--stack="                 spec/stack-size  ]
 			][	["-Wl,-stack:0x" skip to-binary spec/stack-size 4]]
 		][
 			append lflags join "-Wl,-z,stack-size=" spec/stack-size

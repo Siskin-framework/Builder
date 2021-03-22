@@ -268,7 +268,17 @@ make-project: func[
 	]
 
 	try [
-		replace name join "-" spec/compiler "-vs"
+		; this part is a little bit hackish!
+		; it's for being able to use specification done for not MSVC compiler
+		replace name tmp: join "-" spec/compiler "-vs"
+		if block? spec/shared [
+			foreach file spec/shared [
+				if file? file [
+					replace file tmp "-vs"
+					replace file %.dll %.lib ; not much safe, but good for now
+				]
+			]
+		]
 		spec/compiler: 'cl
 		spec/name: name
 	]
@@ -288,7 +298,7 @@ make-project: func[
 
 	;-- collect ADDITIONAL-DEPENDENCIES                                         
 	clear output
-	foreach lib spec/libraries [
+	foreach lib join spec/libraries spec/shared [
 		unless dir? lib [
 			unless parse lib [thru ".lib" end][
 				append lib ".lib"
@@ -495,12 +505,12 @@ vcxproj: {<?xml version="1.0" encoding="utf-8"?>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|#PLATFORM#'">
 	<IncludePath>#INCLUDE-PATH#$(IncludePath)</IncludePath>
-	<LibraryPath>#LIBRARY-PATH#$(LibraryPath)</LibraryPath>
+	<LibraryPath>#LIBRARY-PATH#$(LibraryPath);$(SolutionDir)$(Configuration)-$(Platform)\</LibraryPath>
 	<SourcePath>$(SourcePath)</SourcePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|#PLATFORM#'">
 	<IncludePath>#INCLUDE-PATH#;$(IncludePath)</IncludePath>
-	<LibraryPath>#LIBRARY-PATH#$(LibraryPath)</LibraryPath>
+	<LibraryPath>#LIBRARY-PATH#$(LibraryPath);$(SolutionDir)$(Configuration)-$(Platform)\</LibraryPath>
 	<SourcePath>$(SourcePath)</SourcePath>
   </PropertyGroup>
 
