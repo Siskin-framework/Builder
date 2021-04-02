@@ -2,7 +2,7 @@ Rebol [
 	Title:  "Siskin Builder - core"
 	Type:    module
 	Name:    siskin
-	Version: 0.3.1
+	Version: 0.3.2
 	Author: "Oldes"
 	;Needs:  prebol
 	exports: [
@@ -16,7 +16,7 @@ Rebol [
 banner: next {
 ^[[0;33m═╗^[[1;31m
 ^[[0;33m ║^[[1;31m    .-.
-^[[0;33m ║^[[1;31m   /'v'\   ^[[0;33mSISKIN-Framework Builder 0.3.1
+^[[0;33m ║^[[1;31m   /'v'\   ^[[0;33mSISKIN-Framework Builder 0.3.2
 ^[[0;33m ║^[[1;31m  (/^[[0;31muOu^[[1;31m\)  ^[[0;33mhttps://github.com/Siskin-framework/Builder/
 ^[[0;33m ╚════^[[1;31m"^[[0;33m═^[[1;31m"^[[0;33m═══════════════════════════════════════════════════════════════════════^[[m}
 
@@ -840,14 +840,18 @@ build: function/with [
 	lflags: spec/lflags
 
 	; stack size
-	if spec/stack-size [
+	if all [
+		spec/stack-size
+		none? find lflags "-shared" ; don't use stack-size setting when making a shared library
+	][
 		either windows? [
 			;This does not work on Linux!
 			append lflags rejoin either find form spec/compiler "gcc" [
 				["-Wl,--stack="                 spec/stack-size  ]
 			][	["-Wl,-stack:0x" skip to-binary spec/stack-size 4]]
 		][
-			append lflags join "-Wl,-z,stack-size=" spec/stack-size
+			;append lflags join "-Wl,-z,stack-size=" spec/stack-size ;<-- this does not work with Apple's clang!
+			append lflags join "-Wl,-stack_size -Wl,0x" skip to-binary spec/stack-size 4
 		]
 		append lflags #" "
 	]
@@ -1200,8 +1204,12 @@ build: function/with [
 				exit
 			]
 
-			eval-cmd/v rejoin [to-local-file ar " rcu " to-local-file archive #" " join "@" spec/objects/objects.txt ]
-
+			either macOS? [
+				print-error "FIXME: AR utility on macOS does not support input from @ file"
+				print-error "Archive file not created."
+			][
+				eval-cmd/v rejoin [to-local-file ar " rcu " to-local-file archive #" " join "@" to-local-file spec/objects/objects.txt ]
+			]
 			if spec/compiler = 'gcc [
 				ranlib: locate-tool 'ranlib spec/arch
 				eval-cmd [to-local-file ranlib to-local-file archive]
