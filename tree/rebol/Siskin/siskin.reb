@@ -848,14 +848,20 @@ build: function/with [
 		spec/stack-size
 		none? find lflags "-shared" ; don't use stack-size setting when making a shared library
 	][
-		either windows? [
-			;This does not work on Linux!
-			append lflags rejoin either find form spec/compiler "gcc" [
-				["-Wl,--stack="                 spec/stack-size  ]
-			][	["-Wl,-stack:0x" skip to-binary spec/stack-size 4]]
-		][
-			;append lflags join "-Wl,-z,stack-size=" spec/stack-size ;<-- this does not work with Apple's clang!
-			append lflags join "-Wl,-stack_size -Wl,0x" skip to-binary spec/stack-size 4
+		case [
+			windows? [
+				;This does not work on Linux!
+				append lflags rejoin either find form spec/compiler "gcc" [
+					["-Wl,--stack="                 spec/stack-size  ]
+				][	["-Wl,-stack:0x" skip to-binary spec/stack-size 4]]
+			]
+			Linux? [
+				;This does not work with Apple's clang!
+				append lflags join "-Wl,-z,stack-size=" spec/stack-size
+			]
+			macOS? [
+				append lflags join "-Wl,-stack_size -Wl,0x" skip to-binary spec/stack-size 4
+			]
 		]
 		append lflags #" "
 	]
@@ -875,6 +881,8 @@ build: function/with [
 	dylib-fix: copy []
 	shared: copy ""
 	if block? spec/shared [
+		; include output directory for shared libraries lookup
+		append shared ajoin ["-L" to-local-file clean-path spec/output #" "]
 		foreach file spec/shared [
 			;file: preprocess-dirs file
 			switch system/platform [
@@ -892,7 +900,10 @@ build: function/with [
 					]
 				]
 				Linux     [
-					add-extension file %.so
+					parse file [remove "lib" to end]
+					replace file %.so "" ;@@ TODO: use safer method!
+					append shared ajoin ["-l" file #" "]
+					continue
 				]
 			]
 			append append shared to-local-file join spec/output file #" "
