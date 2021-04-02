@@ -252,7 +252,7 @@ parse-nest: closure/with [
 		ar arch assembly cc cflags clean compiler define defines file files
 		flags git github include includes lflags libraries library libs
 		name needs optimize out-dir output shared source stack-size strip
-		eggs temp temp-dir tools upx
+		eggs temp temp-dir tools upx framework frameworks
 	]
 
 	get-spec-block-value: func[spec [map!] what /local block][
@@ -434,6 +434,10 @@ parse-nest: closure/with [
 		|[quote library: | quote libraries: | quote libs:] 
 			opt ['only (clear dest/libraries)]
 			set val: [file! | block!] (append dest/libraries val)
+
+		|[quote framework: | quote frameworks:] 
+			opt ['only (clear dest/frameworks)]
+			set val: [word! | file! | block!] (append dest/frameworks val)
 
 		| pos: set name: set-word! [
 			'action set spec: block! set code: block!(
