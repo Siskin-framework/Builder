@@ -2,7 +2,7 @@ Rebol [
 	Title:  "Siskin Builder - core"
 	Type:    module
 	Name:    siskin
-	Version: 0.3.2
+	Version: 0.3.3
 	Author: "Oldes"
 	;Needs:  prebol
 	exports: [
@@ -14,16 +14,16 @@ Rebol [
 ]
 ;? system
 banner: next {
-^[[0;33m═╗^[[1;31m
+^[[0;33m═╗
 ^[[0;33m ║^[[1;31m    .-.
-^[[0;33m ║^[[1;31m   /'v'\   ^[[0;33mSISKIN-Framework Builder 0.3.2
+^[[0;33m ║^[[1;31m   /'v'\   ^[[0;33mSISKIN-Framework Builder 0.3.3
 ^[[0;33m ║^[[1;31m  (/^[[0;31muOu^[[1;31m\)  ^[[0;33mhttps://github.com/Siskin-framework/Builder/
 ^[[0;33m ╚════^[[1;31m"^[[0;33m═^[[1;31m"^[[0;33m═══════════════════════════════════════════════════════════════════════^[[m}
 
 msvc:  import 'msvc
 debug?: off
 
-append system/options/log [siskin: 3]
+append system/options/log [siskin: 2]
 
 ;- environment -
 
@@ -871,6 +871,7 @@ build: function/with [
 		libs: copy ""
 		foreach lib spec/libraries [
 			;lib: preprocess-dirs lib
+			clear-extension lib %.lib
 			append libs rejoin either find "/\" last lib [
 				["-L" to-local-file lib #" "]
 			][	["-l" to-local-file lib #" "]]
@@ -1428,10 +1429,16 @@ print-debug: func[msg][ sys/log/debug 'SISKIN msg ]
 print-more:  func[msg][ sys/log/more  'SISKIN msg ]
 
 
+print-bird: does [
+	prin {
+^[[1;31m           .-.
+^[[1;31m          /'v'\ 
+^[[1;31m         (/^[[0;31muOu^[[1;31m\)}
+]
 print-ready: closure/with [][
 	result: query out-file
-	print ""
-	prin {^/^[[0;32m═[^[[1mSISKIN^[[0;32m]══════>  ^[[1mBuild READY}
+	print-bird
+	prin {^/^[[0;32m═[^[[1mSISKIN^[[0;32m]══^[[1;31m"^[[0;32m═^[[1;31m"^[[0;32m═>  ^[[1mBuild READY}
 	prin {^/^[[0;32m │}
 	prin {^/^[[0;32m └──────[ FILE ]: ^[[1;37m} prin to-local-file result/name
 	prin {^/^[[0;32m        [ SIZE ]: ^[[1;37m} prin               result/size
@@ -1442,7 +1449,8 @@ print-ready: closure/with [][
 ] :nest-context
 
 print-failed: func[][
-	print {^/^/^[[0;31m═[^[[1mSISKIN^[[0;31m]══════>  ^[[1mBuild failed (output not found!)}
+	print-bird
+	print {^/^[[0;31m═[^[[1mSISKIN^[[0;31m]══^[[1;31m"^[[0;31m═^[[1;31m"^[[0;31m═>  ^[[1mBuild failed (output not found!)}
 	none
 ]
 
@@ -1512,11 +1520,11 @@ pushd: function [
 ][
 	dir: what-dir
 	if dir <> target [
-		attempt [dir: change-dir target]	
-		unless quiet [print-info ["Changed directory to:" as-green to-local-file what-dir]]
+		attempt [target: change-dir target]	
+		unless quiet [print-info ["Changed directory to:" as-green to-local-file target]]
 	]
 	append dirs-stack dir
-	dir
+	target
 ]
 popd: function [
 	/quiet
@@ -1689,11 +1697,12 @@ add-extension: func[
 		append file ext
 	]
 ]
-replace-extension: func[
-	file ext
-	/local s
-][
+clear-extension: func[file ext /local s][
 	if s: suffix? file [ clear find/last file s	]
+	file
+]
+replace-extension: func[file ext][
+	clear-extension file ext
 	add-extension file ext
 	file
 ]

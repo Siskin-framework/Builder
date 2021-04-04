@@ -1,11 +1,14 @@
 ;~ Siskin project nest file ~;
 github: @Rebol
 nest:   %Rebol/make/rebol3.nest
+compiler: gcc
 
 make-siskin: [
-	strip:    on
-	upx:      on
 	product:  Siskin
+	strip:    on
+	#if Windows? [upx: on ]
+	#if Posix?   [upx: off]
+	
 	output:   %../Siskin/build/
 
 	:include-mezz-ansi
@@ -36,16 +39,36 @@ make-siskin-x86: [:make-siskin :arch-x86 #if windows? [target: x86-win32]]
 make-siskin-x64: [:make-siskin :arch-x64 #if windows? [target: x64-win32]]
 
 eggs: only [
-	"Siskin x86 gcc" [
-		product:  Siskin-Builder
-		name:     %Siskin-x86-gcc
-		compiler: gcc
-		:make-siskin-x86
+	#if Windows? [
+		"Siskin x86" [
+			name:     %Siskin-x86
+			:make-siskin-x86
+		]
+		"Siskin x64" [
+			name:     %Siskin-x64
+			:make-siskin-x64
+		]
 	]
-	"Siskin x64 gcc" [
-		product:  Siskin-Builder
-		name:     %Siskin-x64-gcc
-		compiler: gcc
-		:make-siskin-x64
+	#if Linux? [
+		"Siskin x86" [
+			name:     %Siskin-x86-libc
+			:make-siskin-x86
+		]
+		"Siskin x64" [
+			name:     %Siskin-x64-libc
+			:make-siskin-x64
+		]
+	]
+	#if macOS? [
+		"Siskin x86" [
+			name:     %Siskin-x86-osx
+			compiler: clang
+			:make-siskin-x86
+		]
+		"Siskin x64" [
+			name:     %Siskin-x64-osx
+			compiler: clang
+			:make-siskin-x64
+		]
 	]
 ]

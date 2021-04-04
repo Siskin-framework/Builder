@@ -32,8 +32,8 @@ jobs:
         MOVE ./rebol3-core-x86-vs.exe ./rebol3.exe
         SET PATH=%PATH%;%CD%
 
-    #- name: Build 32bit Siskin using gcc
-    #  run: ./rebol3 siskin.r3 rebol/siskin %Siskin-x86-gcc
+    - name: Build 32bit Siskin using gcc
+      run: ./rebol3 siskin.r3 rebol/siskin %Siskin-x86-gcc
     - name: Build 64bit Siskin using gcc
       run: ./rebol3 siskin.r3 rebol/siskin %Siskin-x64-gcc
 
@@ -42,25 +42,117 @@ jobs:
     - name: Build 64bit Siskin using msvc
       run: ./rebol3 siskin.r3 rebol/siskin [msvc %Siskin-x64-gcc]
 
-    #- name: Test 32bit Siskin project (gcc)
-    #  run: ./tree/rebol/Siskin/build/Siskin-x86-gcc.exe
+    - name: Move results into the root for uploading
+      run: |
+        MOVE ./tree/rebol/Siskin/build/Siskin-x86-gcc.exe ./
+        MOVE ./tree/rebol/Siskin/build/Siskin-x64-gcc.exe ./
+        MOVE ./tree/rebol/Rebol/msvc/Release-Win32/Siskin-x86-vs.exe ./
+        MOVE ./tree/rebol/Rebol/msvc/Release-x64/Siskin-x64-vs.exe ./
+
+    - name: Test 32bit Siskin project (gcc)
+      run: ./Siskin-x86-gcc.exe
     - name: Test 64bit Siskin project (gcc)
-      run: ./tree/rebol/Siskin/build/Siskin-x64-gcc.exe
-
-    # at this moment, MSVC results are in MSVC folder
+      run: ./Siskin-x64-gcc.exe
     - name: Test 32bit Siskin project (msvc)
-      run: ./tree/rebol/Rebol/msvc/Release-Win32/Siskin-x86-vs.exe
+      run: ./Siskin-x86-vs.exe
     - name: Test 64bit Siskin project (msvc)
-      run: ./tree/rebol/Rebol/msvc/Release-x64/Siskin-x64-vs.exe
+      run: ./Siskin-x64-vs.exe
 
     - uses: actions/upload-artifact@v2
       with:
-        name: Siskin-x86-win
-        path: ./tree/rebol/Rebol/msvc/Release-Win32/Siskin-x86-vs.exe
-
-    - uses: actions/upload-artifact@v2
-      with:
-        name: Siskin-x64-win
+        name: Siskin-Windows
         path: |
-          ./tree/rebol/Siskin/build/Siskin-x64-gcc.exe
-          ./tree/rebol/Rebol/msvc/Release-x64/Siskin-x64-vs.exe
+          ./Siskin-x86-gcc.exe
+          ./Siskin-x86-vs.exe
+          ./Siskin-x64-gcc.exe
+          ./Siskin-x64-vs.exe
+
+  linux:
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [ubuntu-18.04]
+        #os: [ubuntu-20.04, ubuntu-18.04]
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Checkout Rebol repository
+        uses: actions/checkout@v2
+        with:
+          repository: Siskin-framework/Rebol
+          path: tree/rebol/Rebol
+          #ref:  new-make
+
+      - name: Download Rebol
+        run: |
+          wget -q https://github.com/Oldes/Rebol3/releases/download/3.5.0/Rebol_3.5.0_x64-libc.gz
+          gunzip ./Rebol_3.5.0_x64-libc.gz
+          mv ./Rebol_3.5.0_x64-libc ./rebol3
+          chmod +x ./rebol3
+          ls -la
+
+      - name: Build 32bit Siskin using gcc
+        run: ./rebol3 siskin.r3 rebol/siskin %Siskin-x86-libc
+
+      - name: Build 64bit Siskin using gcc
+        run: ./rebol3 siskin.r3 rebol/siskin %Siskin-x64-libc
+
+      - name: Move results into the root for uploading
+        run: |
+          mv ./tree/rebol/Siskin/build/Siskin-x86-libc ./
+          mv ./tree/rebol/Siskin/build/Siskin-x64-libc ./
+
+      - name: Compress results before uploading
+        run: |
+          gzip -9 ./Siskin-x86-libc
+          gzip -9 ./Siskin-x64-libc
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: Siskin-Linux
+          path: ./Siskin-x*
+
+  macos:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Checkout Rebol repository
+        uses: actions/checkout@v2
+        with:
+          repository: Siskin-framework/Rebol
+          path: tree/rebol/Rebol
+          #ref:  new-make
+
+      - name: Download Rebol
+        run: |
+          wget -q https://github.com/Oldes/Rebol3/releases/download/3.5.0/Rebol_3.5.0_x64-osx.gz
+          gunzip ./Rebol_3.5.0_x64-osx.gz
+          mv ./Rebol_3.5.0_x64-osx ./rebol3
+          chmod +x ./rebol3
+          ls -la
+
+      - name: Build 32bit Siskin
+        run: ./rebol3 siskin.r3 rebol/siskin %Siskin-x86-osx
+
+      - name: Build 64bit Siskin
+        run: ./rebol3 siskin.r3 rebol/siskin %Siskin-x64-osx
+
+      - name: Move results into the root for uploading
+        run: |
+          mv ./tree/rebol/Siskin/build/Siskin-x86-osx ./
+          mv ./tree/rebol/Siskin/build/Siskin-x64-osx ./
+
+      - name: Compress results before uploading
+        run: |
+          gzip -9 ./Siskin-x86-osx
+          gzip -9 ./Siskin-x64-osx
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: Siskin-Linux
+          path: ./Siskin-x*
