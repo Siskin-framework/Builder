@@ -745,13 +745,19 @@ get-spec: closure/with [
 		]
 		++ n
 	]
+	none
 ] :nest-context
 
 build-target: closure/with [
 	command [block! integer! file! string!]
 ][
 	timestamp: now/time/precise
-	try/except [ build get-spec command ] :on-error-quit
+	try/except [
+		unless spec: get-spec command [
+			on-error-quit ["Command not handled:" as-red mold command]
+		]
+		build spec
+	] :on-error-quit
 ] :nest-context
 
 
