@@ -44,10 +44,10 @@ jobs:
 
     - name: Move results into the root for uploading
       run: |
-        MOVE ./tree/rebol/Siskin/build/Siskin-x86-gcc.exe ./
-        MOVE ./tree/rebol/Siskin/build/Siskin-x64-gcc.exe ./
-        MOVE ./tree/rebol/Rebol/msvc/Release-Win32/Siskin-x86-vs.exe ./
-        MOVE ./tree/rebol/Rebol/msvc/Release-x64/Siskin-x64-vs.exe ./
+        MOVE ./tree/rebol/Siskin/build/Siskin-x86.exe ./Siskin-x86-gcc.exe
+        MOVE ./tree/rebol/Siskin/build/Siskin-x64.exe ./Siskin-x64-gcc.exe
+        MOVE ./tree/rebol/Rebol/msvc/Release-Win32/Siskin-x86.exe ./Siskin-x86-vs.exe
+        MOVE ./tree/rebol/Rebol/msvc/Release-x64/Siskin-x64.exe ./Siskin-x64-vs.exe
 
     - name: Test 32bit Siskin project (gcc)
       run: ./Siskin-x86-gcc.exe
@@ -136,21 +136,21 @@ jobs:
           chmod +x ./rebol3
           ls -la
 
-      - name: Build 32bit Siskin
-        run: ./rebol3 siskin.r3 rebol/siskin %Siskin-x86-osx
+      #It looks it's not possible to build 32bit macOS version anymore using GitHub actions!
+      #
+      #- name: Build 32bit Siskin
+      #  run: |
+      #    ./rebol3 siskin.r3 rebol/siskin %Siskin-x86-osx
+      #    mv ./tree/rebol/Siskin/build/Siskin-x86-osx ./
 
       - name: Build 64bit Siskin
         run: ./rebol3 siskin.r3 rebol/siskin %Siskin-x64-osx
 
       - name: Move results into the root for uploading
-        run: |
-          mv ./tree/rebol/Siskin/build/Siskin-x86-osx ./
-          mv ./tree/rebol/Siskin/build/Siskin-x64-osx ./
+        run: mv ./tree/rebol/Siskin/build/Siskin-x64-osx ./
 
       - name: Compress results before uploading
-        run: |
-          gzip -9 ./Siskin-x86-osx
-          gzip -9 ./Siskin-x64-osx
+        run: gzip -9 ./Siskin-x64-osx
 
       - uses: actions/upload-artifact@v2
         with:
