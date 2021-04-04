@@ -6,7 +6,7 @@ on:
 #  pull_request:
 #    branches: [ master ]
 
-  # Allows you to run this workflow manually from the Actions tab
+# Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
 jobs:
@@ -15,59 +15,59 @@ jobs:
       fail-fast: true
     runs-on: windows-latest
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v2
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
-    - name: Checkout Rebol repository
-      uses: actions/checkout@v2
-      with:
-        repository: Siskin-framework/Rebol
-        path: tree/rebol/Rebol
+      - name: Checkout Rebol repository
+        uses: actions/checkout@v2
+        with:
+          repository: Siskin-framework/Rebol
+          path: tree/rebol/Rebol
 
-    - name: Download Rebol
-      shell: cmd
-      run: |
-        C:\msys64\usr\bin\wget.exe -q https://github.com/Siskin-framework/Rebol/releases/download/3.5.2/rebol3-core-x86-vs.exe
-        MOVE ./rebol3-core-x86-vs.exe ./rebol3.exe
-        SET PATH=%PATH%;%CD%
+      - name: Download Rebol
+        shell: cmd
+        run: |
+          C:\msys64\usr\bin\wget.exe -q https://github.com/Siskin-framework/Rebol/releases/download/3.5.2/rebol3-core-x86-vs.exe
+          MOVE ./rebol3-core-x86-vs.exe ./rebol3.exe
+          SET PATH=%PATH%;%CD%
 
-# 32bit gcc version would fail for now (requires 32bit mingw)
-#    - name: Build 32bit Siskin using gcc
-#      run: |
-#        ./rebol3 siskin.r3 rebol/siskin %Siskin-x86
-#        MOVE ./tree/rebol/Siskin/build/Siskin-x86.exe ./Siskin-x86-gcc.exe
-# 
-#    - name: Build 64bit Siskin using gcc
-#      run: |
-#        ./rebol3 siskin.r3 rebol/siskin %Siskin-x64
-#        MOVE ./tree/rebol/Siskin/build/Siskin-x64.exe ./Siskin-x64-gcc.exe
+      # 32bit gcc version would fail for now (requires 32bit mingw)
+      #    - name: Build 32bit Siskin using gcc
+      #      run: |
+      #        ./rebol3 siskin.r3 rebol/siskin %Siskin-x86
+      #        MOVE ./tree/rebol/Siskin/build/Siskin-x86.exe ./Siskin-x86-gcc.exe
+      # 
+      #    - name: Build 64bit Siskin using gcc
+      #      run: |
+      #        ./rebol3 siskin.r3 rebol/siskin %Siskin-x64
+      #        MOVE ./tree/rebol/Siskin/build/Siskin-x64.exe ./Siskin-x64-gcc.exe
 
-    - name: Build 32bit Siskin using msvc
-      run: |
-        ./rebol3 siskin.r3 rebol/siskin [msvc %Siskin-x86]
-        MOVE ./tree/rebol/Rebol/msvc/Release-Win32/Siskin-x86.exe ./
-    - name: Build 64bit Siskin using msvc
-      run: |
-        ./rebol3 siskin.r3 rebol/siskin [msvc %Siskin-x64]
-        MOVE ./tree/rebol/Rebol/msvc/Release-x64/Siskin-x64.exe ./
+      - name: Build 32bit Siskin using msvc
+        run: |
+          ./rebol3 siskin.r3 rebol/siskin [msvc %Siskin-x86]
+          MOVE ./tree/rebol/Rebol/msvc/Release-Win32/Siskin-x86.exe ./
+      - name: Build 64bit Siskin using msvc
+        run: |
+          ./rebol3 siskin.r3 rebol/siskin [msvc %Siskin-x64]
+          MOVE ./tree/rebol/Rebol/msvc/Release-x64/Siskin-x64.exe ./
 
-#    - name: Test 32bit Siskin project (gcc)
-#      run: ./Siskin-x86-gcc.exe
-#    - name: Test 64bit Siskin project (gcc)
-#      run: ./Siskin-x64-gcc.exe
-    - name: Test 32bit Siskin project (msvc)
-      run: ./Siskin-x86.exe
-    - name: Test 64bit Siskin project (msvc)
-      run: ./Siskin-x64.exe
+      #- name: Test 32bit Siskin project (gcc)
+      #  run: ./Siskin-x86-gcc.exe
+      #- name: Test 64bit Siskin project (gcc)
+      #  run: ./Siskin-x64-gcc.exe
+      - name: Test 32bit Siskin project (msvc)
+        run: ./Siskin-x86.exe
+      - name: Test 64bit Siskin project (msvc)
+        run: ./Siskin-x64.exe
 
-    - uses: actions/upload-artifact@v2
-      with:
-        name: Siskin-windows
-        path: |
-#          ./Siskin-x86-gcc.exe
-#          ./Siskin-x64-gcc.exe
-          ./Siskin-x86.exe
-          ./Siskin-x64.exe
+      - uses: actions/upload-artifact@v2
+        with:
+          name: Siskin-windows
+          path: |
+            ./Siskin-x86.exe
+            ./Siskin-x64.exe
+          #  ./Siskin-x86-gcc.exe
+          #  ./Siskin-x64-gcc.exe
 
   linux:
     strategy:
