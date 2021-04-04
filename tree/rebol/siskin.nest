@@ -28,7 +28,7 @@ make-siskin: [
 		%../../Siskin/siskin-do.reb
 	]
 
-	resource: %../Siskin/siskin.rc
+	#if Windows? [resource: %../Siskin/siskin.rc]
 
 	define: REB_EXE
 	define: RAW_MAIN_ARGS

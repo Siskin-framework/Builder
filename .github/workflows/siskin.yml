@@ -33,14 +33,14 @@ jobs:
         SET PATH=%PATH%;%CD%
 
     - name: Build 32bit Siskin using gcc
-      run: ./rebol3 siskin.r3 rebol/siskin %Siskin-x86-gcc
+      run: ./rebol3 siskin.r3 rebol/siskin %Siskin-x86
     - name: Build 64bit Siskin using gcc
-      run: ./rebol3 siskin.r3 rebol/siskin %Siskin-x64-gcc
+      run: ./rebol3 siskin.r3 rebol/siskin %Siskin-x64
 
     - name: Build 32bit Siskin using msvc
-      run: ./rebol3 siskin.r3 rebol/siskin [msvc %Siskin-x86-gcc]
+      run: ./rebol3 siskin.r3 rebol/siskin [msvc %Siskin-x86]
     - name: Build 64bit Siskin using msvc
-      run: ./rebol3 siskin.r3 rebol/siskin [msvc %Siskin-x64-gcc]
+      run: ./rebol3 siskin.r3 rebol/siskin [msvc %Siskin-x64]
 
     - name: Move results into the root for uploading
       run: |
@@ -94,21 +94,21 @@ jobs:
           chmod +x ./rebol3
           ls -la
 
-      - name: Build 32bit Siskin using gcc
-        run: ./rebol3 siskin.r3 rebol/siskin %Siskin-x86-libc
+      #- name: Build 32bit Siskin using gcc
+      #  run: ./rebol3 siskin.r3 rebol/siskin %Siskin-x86-libc
 
       - name: Build 64bit Siskin using gcc
         run: ./rebol3 siskin.r3 rebol/siskin %Siskin-x64-libc
 
       - name: Move results into the root for uploading
         run: |
-          mv ./tree/rebol/Siskin/build/Siskin-x86-libc ./
           mv ./tree/rebol/Siskin/build/Siskin-x64-libc ./
+        #  mv ./tree/rebol/Siskin/build/Siskin-x86-libc ./
 
       - name: Compress results before uploading
         run: |
-          gzip -9 ./Siskin-x86-libc
           gzip -9 ./Siskin-x64-libc
+        #  gzip -9 ./Siskin-x86-libc
 
       - uses: actions/upload-artifact@v2
         with:
