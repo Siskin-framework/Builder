@@ -62,7 +62,7 @@ jobs:
 
     - uses: actions/upload-artifact@v2
       with:
-        name: Siskin-Windows
+        name: Siskin-windows
         path: |
 #          ./Siskin-x86-gcc.exe
 #          ./Siskin-x64-gcc.exe
@@ -114,7 +114,7 @@ jobs:
 
       - uses: actions/upload-artifact@v2
         with:
-          name: Siskin-Linux
+          name: Siskin-linux
           path: ./Siskin-x*
 
   macos:
@@ -156,5 +156,5 @@ jobs:
 
       - uses: actions/upload-artifact@v2
         with:
-          name: Siskin-Linux
+          name: Siskin-osx
           path: ./Siskin-x*
