@@ -1,0 +1,31 @@
+;-    .-.                                                                       
+;-   /'v'\   SISKIN-Builder project file                                        
+;-  (/uOu\)  https://github.com/Siskin-framework/Builder/                       
+;-===="="=======================================================================
+
+github:   %lz4/lz4
+source:   %lz4/
+compiler: gcc
+arch:     x64
+strip:    on
+#if Windows? [upx: on]
+#if macOS?   [compiler: clang]
+
+files: [
+	%lib/lz4.c
+	%lib/lz4hc.c
+	%lib/lz4frame.c
+	%lib/xxhash.c
+]
+include: %lz4/lib/
+include: %lz4/programs/
+
+eggs: [
+	"lz4cli" [
+		name: %lz4cli
+		file: %programs/lz4io.c
+		file: %programs/lz4cli.c
+		file: %programs/bench.c
+		file: %programs/datagen.c
+	]
+]
