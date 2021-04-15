@@ -1,0 +1,29 @@
+;-    .-.                                                                       
+;-   /'v'\   SISKIN-Builder project file                                        
+;-  (/uOu\)  https://github.com/Siskin-framework/Builder/                       
+;-===="="=======================================================================
+
+github:   @lzfse
+source:   %lzfse/
+compiler: gcc
+arch:     x64
+strip:    on
+#if Windows? [upx: on]
+#if macOS?   [compiler: clang]
+
+files: [
+	%src/lzfse_decode.c         ; LZFSE decoder API entry point
+	%src/lzfse_encode.c         ; LZFSE encoder API entry point
+	%src/lzfse_decode_base.c    ; LZFSE decoder internal functions
+	%src/lzfse_encode_base.c    ; LZFSE encoder internal functions
+	%src/lzfse_fse.c            ; FSE entropy encoder/decoder functions
+	%src/lzvn_decode_base.c     ; LZVN decoder
+	%src/lzvn_encode_base.c     ; LZVN encoder
+]
+
+eggs: [
+	"lzfse" [
+		name: %lzfse
+		file: %src/lzfse_main.c
+	]
+]
