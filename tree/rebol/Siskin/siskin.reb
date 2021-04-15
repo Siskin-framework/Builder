@@ -65,6 +65,7 @@ nest-context: object [
 	rebuild?:     false ; if force compilation of all files (even if not modified)
 	no-eval?:     false
 	clang?:       false
+	CI?:          false
 	target-names: copy []
 	interactive?: false
 
@@ -319,8 +320,9 @@ parse-nest: closure/with [
 		| quote git:        set val: [url! | block!]   ( append dest/gits val )
 		| quote github:     set val: [path! | file! | ref!] (
 			if ref? val [val: join %Siskin-framework/ val]
-			;append dest/gits join https://github.com/ [val %.git]
-			append dest/gits to url! rejoin [git@github.com #":" val %.git]
+			append dest/gits either CI? [
+				join https://github.com/ [val %.git]
+			][	to url! rejoin [git@github.com #":" val %.git] ]
 		) opt [set val: [refinement!] (append dest/gits val)] ;optional branch
 		| quote eggs: [opt 'only (clear dest/eggs) ] set val: block! (
 			append dest/eggs preprocess val
@@ -580,6 +582,7 @@ do-nest: closure/with [
 	/with args
 	/and parent [map!]
 ][
+	CI?: ("true" = get-env "CI")
 	print-info ["Processing nest:" as-green to-local-file clean-path nest]
 	try [args: load/all args] ;@@ review this!
 	interactive?: none? args
@@ -1298,9 +1301,13 @@ clone-gits: function [
 				locate-tool 'git none
 				found-git?: true
 			]
-			cmd: ["git clone" git "--depth 1"]
+			cmd: ["git clone" git "--depth 1 --quiet"]
 			if branch [append cmd ["--branch" branch]]
-			if 0 = eval-cmd/no-pipe/v cmd [ ; using no-pipe as it may require user input
+			res: either find/match git https:// [
+				eval-cmd/v cmd
+			][	eval-cmd/no-pipe/v cmd ] ; using no-pipe as it may require user input
+
+			if res = 0 [
 				print-info "Project cloned successfuly."
 			]
 		]
@@ -1673,11 +1680,12 @@ eval-cmd: function/with [
 			delete log-file
 		]
 		if res <> 0 [
+			if CI? [quit/return 1]
 			ask "^/^[[1;35;49mPress enter to continue.^[[0m"
 		]
 	][
 		res: call/wait/shell cmd
-		if all [res <> 0 not no-quit][ quit ]
+		if all [res <> 0 not no-quit][ quit/return 1 ]
 	]
 	res
 ] :nest-context
