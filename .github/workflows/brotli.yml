@@ -30,6 +30,9 @@ jobs:
           ./rebol3.exe siskin.r3 utility/brotli [msvc 1]
           MOVE ./tree/utility/msvc/Release-x64/brotli.exe ./
 
+      - name: Simple test
+        run: ./brotli.exe -h
+
       - uses: actions/upload-artifact@v2
         with:
           name: brotli
@@ -60,6 +63,9 @@ jobs:
       - name: Move results into the root for uploading
         run:  mv ./tree/utility/build/brotli ./brotli
 
+      - name: Simple test
+        run: chmod +x ./brotli & ./brotli -h
+
       - name: Compress results before uploading
         run: gzip -9 ./brotli
 
@@ -86,6 +92,9 @@ jobs:
 
       - name: Move results into the root for uploading
         run: mv ./tree/utility/build/brotli ./brotli-osx
+
+      - name: Simple test
+        run: chmod +x ./brotli-osx & ./brotli-osx -h
 
       - name: Compress results before uploading
         run: gzip -9 ./brotli-osx
