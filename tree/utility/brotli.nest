@@ -7,6 +7,7 @@ github:   google/brotli
 source:   %brotli/c/
 compiler: gcc
 optimize: 2
+arch:     x64
 
 #if Windows? [upx: on strip: on]
 #if macOS?   [compiler: clang]
