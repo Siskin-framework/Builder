@@ -1,0 +1,96 @@
+name: 'Build Brotli'
+on:
+  # Triggers the workflow on push or pull request events but only for the master branch
+#  push:
+#    branches: [ master ]
+#  pull_request:
+#    branches: [ master ]
+
+# Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  windows:
+    strategy:
+      fail-fast: true
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Download Rebol
+        shell: cmd
+        run: |
+          C:\msys64\usr\bin\wget.exe -q https://github.com/Siskin-framework/Rebol/releases/download/3.5.2/rebol3-core-x86-vs.exe
+          MOVE ./rebol3-core-x86-vs.exe ./rebol3.exe
+          SET PATH=%PATH%;%CD%
+
+      - name: Build 64bit Brotli using msvc
+        run: |
+          ./rebol3.exe siskin.r3 utility/brotli [msvc 1]
+          MOVE ./tree/utility/msvc/Release-x64/brotli.exe ./
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: brotli
+          path: ./brotli.exe
+
+  linux:
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [ubuntu-18.04]
+        #os: [ubuntu-20.04, ubuntu-18.04]
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Download Rebol
+        run: |
+          wget -q https://github.com/Oldes/Rebol3/releases/download/3.5.0/Rebol_3.5.0_x64-libc.gz
+          gunzip ./Rebol_3.5.0_x64-libc.gz
+          mv ./Rebol_3.5.0_x64-libc ./rebol3
+          chmod +x ./rebol3
+
+      - name: Build 64bit Brotli using gcc
+        run: ./rebol3 siskin.r3 utility/brotli 1
+
+      - name: Move results into the root for uploading
+        run:  mv ./tree/utility/build/brotli ./brotli
+
+      - name: Compress results before uploading
+        run: gzip -9 ./brotli
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: brotli
+          path: ./brotli.gz
+
+  macos:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Download Rebol
+        run: |
+          wget -q https://github.com/Oldes/Rebol3/releases/download/3.5.0/Rebol_3.5.0_x64-osx.gz
+          gunzip ./Rebol_3.5.0_x64-osx.gz
+          mv ./Rebol_3.5.0_x64-osx ./rebol3
+          chmod +x ./rebol3
+
+      - name: Build 64bit Brotli
+        run: ./rebol3 siskin.r3 utility/brotli 1
+
+      - name: Move results into the root for uploading
+        run: mv ./tree/utility/build/brotli ./brotli-osx
+
+      - name: Compress results before uploading
+        run: gzip -9 ./brotli-osx
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: brotli
+          path: ./brotli-osx.gz
