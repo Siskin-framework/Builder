@@ -11,6 +11,7 @@ arch:     x64
 
 #if Windows? [upx: on strip: on]
 #if macOS?   [compiler: clang]
+#if Linux?   [library: %m]
 
 includes: %brotli/c/include/
 
