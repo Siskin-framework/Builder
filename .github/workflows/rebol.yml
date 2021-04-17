@@ -18,19 +18,8 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
 
-    - name: Checkout Rebol repository
-      uses: actions/checkout@v2
-      with:
-        repository: Siskin-framework/Rebol
-        path: tree/rebol/Rebol
-        #ref:  new-make
-
-    - name: Download Rebol
-      shell: cmd
-      run: |
-        C:\msys64\usr\bin\wget.exe -q https://github.com/Siskin-framework/Rebol/releases/download/3.5.2/rebol3-core-x86-vs.exe
-        MOVE ./rebol3-core-x86-vs.exe ./rebol3.exe
-        SET PATH=%PATH%;%CD%
+    - name: Install Rebol
+      uses: oldes/install-rebol@v3.5.3
 
     - name: Build 64bit Rebol/Base using MSVC
       run: |
@@ -117,20 +106,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Checkout Rebol repository
-        uses: actions/checkout@v2
-        with:
-          repository: Siskin-framework/Rebol
-          path: tree/rebol/Rebol
-          #ref:  new-make
-
-      - name: Download Rebol
-        run: |
-          wget -q https://github.com/Oldes/Rebol3/releases/download/3.5.0/Rebol_3.5.0_x64-libc.gz
-          gunzip ./Rebol_3.5.0_x64-libc.gz
-          mv ./Rebol_3.5.0_x64-libc ./rebol3
-          chmod +x ./rebol3
-          ls -la
+      - name: Install Rebol
+        uses: oldes/install-rebol@v3.5.3
 
       - name: Build 64bit Rebol/Base using gcc
         run: ./rebol3 siskin.r3 rebol %rebol3-base-x64-libc-gcc
@@ -165,20 +142,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Checkout Rebol repository
-        uses: actions/checkout@v2
-        with:
-          repository: Siskin-framework/Rebol
-          path: tree/rebol/Rebol
-          #ref:  new-make
-
-      - name: Download Rebol
-        run: |
-          wget -q https://github.com/Oldes/Rebol3/releases/download/3.5.0/Rebol_3.5.0_x64-osx.gz
-          gunzip ./Rebol_3.5.0_x64-osx.gz
-          mv ./Rebol_3.5.0_x64-osx ./rebol3
-          chmod +x ./rebol3
-          ls -la
+      - name: Install Rebol
+        uses: oldes/install-rebol@v3.5.3
 
       - name: Build 64bit Rebol/Base using clang
         run: ./rebol3 siskin.r3 rebol %rebol3-base-x64-osx
