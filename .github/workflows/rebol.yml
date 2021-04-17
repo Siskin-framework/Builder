@@ -145,6 +145,15 @@ jobs:
       - name: Build 64bit Rebol/Bulk using clang
         run: ./rebol3 siskin.r3 rebol %rebol3-bulk-x64-libc-clang
 
+      - name: Create archives from each version
+        run: |
+          gzip -9 ./tree/rebol/Rebol/build/rebol3-base-x64-libc-gcc
+          gzip -9 ./tree/rebol/Rebol/build/rebol3-core-x64-libc-gcc
+          gzip -9 ./tree/rebol/Rebol/build/rebol3-bulk-x64-libc-gcc
+          gzip -9 ./tree/rebol/Rebol/build/rebol3-base-x64-libc-clang
+          gzip -9 ./tree/rebol/Rebol/build/rebol3-core-x64-libc-clang
+          gzip -9 ./tree/rebol/Rebol/build/rebol3-bulk-x64-libc-clang
+
       - uses: actions/upload-artifact@v2
         with:
           name: Rebol-64bit-linux
@@ -182,6 +191,12 @@ jobs:
         run: ./rebol3 siskin.r3 rebol %lib-rebol3-core-x64-osx
       - name: Build 64bit Rebol/Core as a host application
         run: ./rebol3 siskin.r3 rebol %host-core-x64-osx
+
+      - name: Create archives from each version
+        run: |
+          gzip -9 ./tree/rebol/Rebol/build/rebol3-base-x64-osx
+          gzip -9 ./tree/rebol/Rebol/build/rebol3-core-x64-osx
+          gzip -9 ./tree/rebol/Rebol/build/rebol3-bulk-x64-osx
 
       - uses: actions/upload-artifact@v2
         with:
