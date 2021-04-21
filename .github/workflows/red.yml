@@ -51,7 +51,7 @@ jobs:
         run: |
           sudo dpkg --add-architecture i386
           sudo apt-get update
-          sudo apt-get install libc6:i386 libcurl4:i386 libgtk-3-0:i386 libgdk-pixbuf2.0-0:i386
+          sudo apt-get install libxt6:i386 libc6:i386 libcurl4:i386 libgtk-3-0:i386 libgdk-pixbuf2.0-0:i386
 
       - name: Build Red CLI console
         run: |
@@ -75,31 +75,34 @@ jobs:
           name: Red-Linux
           path: ./red-*
 
-  macos:
-    runs-on: macos-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-
-      - name: Install Rebol
-        uses: oldes/install-rebol@v3.5.3
-
-      - name: Build Red CLI console
-        run: |
-          ./rebol3 siskin.r3 red console
-          mv ./tree/red/console ./red-cli-osx
-
-      - name: Build Red GUI console
-        run: |
-          ./rebol3 siskin.r3 red gui-console
-          mv ./tree/red/gui-console ./red-gui-osx
-
-      - name: Create archives from each version
-        run: |
-          gzip -9 ./red-cli-osx
-          gzip -9 ./red-gui-osx
-
-      - uses: actions/upload-artifact@v2
-        with:
-          name: Red-macOS
-          path: ./red-*
+#
+# There is only 64bit macOS in GithHub Actions... Red is 32bit, so no way
+#
+#  macos:
+#    runs-on: macos-latest
+#    steps:
+#      - name: Checkout repository
+#        uses: actions/checkout@v2
+#
+#      - name: Install Rebol
+#        uses: oldes/install-rebol@v3.5.3
+#
+#      - name: Build Red CLI console
+#        run: |
+#          ./rebol3 siskin.r3 red console
+#          mv ./tree/red/console ./red-cli-osx
+#
+#      - name: Build Red GUI console
+#        run: |
+#          ./rebol3 siskin.r3 red gui-console
+#          mv ./tree/red/gui-console ./red-gui-osx
+#
+#      - name: Create archives from each version
+#        run: |
+#          gzip -9 ./red-cli-osx
+#          gzip -9 ./red-gui-osx
+#
+#      - uses: actions/upload-artifact@v2
+#        with:
+#          name: Red-macOS
+#          path: ./red-*
