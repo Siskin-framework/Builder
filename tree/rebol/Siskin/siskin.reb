@@ -2,7 +2,7 @@ Rebol [
 	Title:  "Siskin Builder - core"
 	Type:    module
 	Name:    siskin
-	Version: 0.3.3
+	Version: 0.3.4
 	Author: "Oldes"
 	;Needs:  prebol
 	exports: [
@@ -16,7 +16,7 @@ Rebol [
 banner: next {
 ^[[0;33m═╗
 ^[[0;33m ║^[[1;31m    .-.
-^[[0;33m ║^[[1;31m   /'v'\   ^[[0;33mSISKIN-Framework Builder 0.3.3
+^[[0;33m ║^[[1;31m   /'v'\   ^[[0;33mSISKIN-Framework Builder 0.3.4
 ^[[0;33m ║^[[1;31m  (/^[[0;31muOu^[[1;31m\)  ^[[0;33mhttps://github.com/Siskin-framework/Builder/
 ^[[0;33m ╚════^[[1;31m"^[[0;33m═^[[1;31m"^[[0;33m═══════════════════════════════════════════════════════════════════════^[[m}
 
@@ -179,6 +179,21 @@ do-args: closure/with [
 	]
 ] :nest-context
 
+do-strip: closure/with [spec [map!] file [file!]][
+	;-- strip resulted binary
+	any [
+		all [file? spec/strip       exists? strip: spec/strip]
+		all [spec/compiler = 'clang exists? strip: locate-tool 'llvm-strip none]
+		strip: locate-tool 'strip none
+	]
+	either exists? strip [
+		print-info ["Stripping binary from:" as-yellow size? file as-cyan "bytes"]
+		eval-cmd/no-quit/v [to-local-file strip file either macOS? [""]["-s "]]
+	][
+		print-error "STRIP command not found!"
+	]
+] :nest-context
+
 do-upx: closure/with [file [file!]][
 	upx: locate-tool 'upx none
 	unless any [
@@ -209,6 +224,55 @@ do-upx: closure/with [file [file!]][
 	][
 		print-error ["UPX command not found! (" mold upx ")"]
 	]
+] :nest-context
+
+do-rebol2: closure/with [file [string! file!]][
+	add-env-path root-dir
+	rebol2: any [
+		get-env "REBOL2"
+		locate-tool 'rebol2 none
+	]
+	if 'file <> exists? rebol2 [
+		print-error "REBOL2 not found!"
+		switch system/platform [
+			windows [
+				url: http://www.rebol.com/downloads/v278/rebol-view-278-3-1.exe
+				crc: #{1DEF65DDE53AB24C122DA6C76646A36D7D910790}
+			]
+			linux [
+				url: http://www.rebol.com/downloads/v278/rebol-view-278-4-3.tar.gz
+				crc: #{F078EF80744DF217AAB5CD60E75B5A5D2690F396}
+			]
+			macos [
+				url: http://www.rebol.com/downloads/v278/rebol-view-278-2-5.tar.gz
+				crc: #{E45DEFC8155D157090588F85B521A40FA7A30E48}
+			]
+		]
+		unless url [
+			print-error "REBOL2 not available for this platform!"
+			exit
+		]
+		try/except [
+			print-info "Downloading REBOL2"
+			bin: read/binary url
+			if crc <> checksum bin 'sha1 [
+				print-error "REBOL2 binary checksum failed!"
+				exit
+			]
+			either Windows? [
+				rebol2: write root-dir/rebol2.exe bin
+			][
+				; file is *.tar.gz
+				tar: decode 'tar decompress/gzip bin
+				rebol2: write root-dir/rebol2 tar/6/1
+				eval-cmd/v ["chmod +x" root-dir/rebol2]
+			]
+			add-env "REBOL2" to-local-file rebol2
+		] [	print-error system/state/last-error exit ]
+	]
+	;It looks that Rebol2 does not support output redirection, so use temp file...
+	eval-cmd/log/v [rebol2 "-csw" trim/lines val] %log.txt
+
 ] :nest-context
 
 add-pre-build: func[dest cmd [block!]][
@@ -440,6 +504,8 @@ parse-nest: closure/with [
 		|[quote framework: | quote frameworks:] 
 			opt ['only (clear dest/frameworks)]
 			set val: [word! | file! | block!] (append dest/frameworks val)
+
+		|['set | 'set-env] set var: [any-string! | any-word!]set val: [string!] (add-env var val)
 
 		| pos: set name: set-word! [
 			'action set spec: block! set code: block!(
@@ -688,17 +754,7 @@ do-nest: closure/with [
 								either spec/arch = 'x64 [%msvc/Release-x64/][%msvc/Release-Win32/]
 								spec/name
 							]
-							;?? file
-							either any [
-								'file = exists? out-file: file
-								'file = exists? out-file: join file %.exe
-								'file = exists? out-file: join file %.dll
-							][
-								if spec/upx [
-									try/except [do-upx out-file][print-error system/state/last-error]
-								]
-								print-ready
-							][	print-failed]
+							finalize-build spec file
 						] :on-error-quit
 					)
 					|
@@ -774,7 +830,7 @@ build: function/with [
 		]
 	]
 
-	out-file: any [spec/exe-file spec/name]
+	out-file: any [spec/exe-file spec/name spec/target]
 	if out-file [out-file: to file! out-file]
 
 	spec/defines: copy new-line/all sort unique spec/defines true
@@ -956,14 +1012,15 @@ build: function/with [
 
 	;- prepare a directory to hold object files                                 
 	;? spec/objects
-	if all [
-		out-file
-		none? spec/objects
-	][
-		spec/objects: dirize rejoin [
-			dirize any [spec/temp %tmp/]
-			spec/compiler #"-" spec/arch #"/"
-			normalize-file-name out-file
+	if none? spec/objects [
+		spec/objects: dirize either out-file [
+			 rejoin [
+				dirize any [spec/temp %tmp/]
+				spec/compiler #"-" spec/arch #"/"
+				normalize-file-name out-file
+			]
+		][
+			any [spec/objects spec/temp  %tmp/]
 		]
 	]
 
@@ -990,7 +1047,9 @@ build: function/with [
 	]
 
 	unless spec/compiler [
-		print-info "No compiler to use."
+		unless finalize-build/no-fail spec out-file [
+			print-info "No compiler to use."
+		]
 		exit
 	]
 	if all [empty? spec/files empty? spec/assembly] [
@@ -1242,26 +1301,7 @@ build: function/with [
 		]
 	]
 
-	either exists? out-file [
-		;-- strip resulted binary
-		if spec/strip [
-			any [
-				all [file? spec/strip       exists? strip: spec/strip]
-				all [spec/compiler = 'clang exists? strip: locate-tool 'llvm-strip none]
-				strip: locate-tool 'strip none
-			]
-			either exists? strip [
-				print-info ["Stripping binary from:" as-yellow size? out-file as-cyan "bytes"]
-				eval-cmd/no-quit/v [to-local-file strip out-file either macOS? [""]["-s "]]
-			][
-				print-error "STRIP command not found!"
-			]
-		]
-
-		if spec/upx [ do-upx out-file ]
-		print-ready
-	][	print-failed]
-
+	finalize-build spec out-file
 ] :nest-context
 
 probe-spec: func[spec [map!] values [block!] /local val][
@@ -1284,6 +1324,24 @@ preprocess: func [
 	process-source/only spec 0
 	spec
 ]
+
+finalize-build: closure/with [spec [map!] file [file! none!] /no-fail][
+	either any [
+		'file = exists? out-file: file
+		'file = exists? out-file: join file %.exe
+		'file = exists? out-file: join file %.dll
+	][
+		if spec/strip [
+			try/except [do-strip spec out-file][print-error system/state/last-error]
+		]
+		if spec/upx [
+			try/except [do-upx out-file][print-error system/state/last-error]
+		]
+		print-ready
+		return true
+	][	unless no-fail [print-failed]]
+	false
+] :nest-context
 
 clone-gits: function [
 	gits [block! url!]
@@ -1382,15 +1440,8 @@ eval-code: function/with [
 				] :on-error-warn
 			)
 		]
-;		|
-;		'Rebol2 set val string! (
-;			if none? config/Rebol2 [ config/Rebol2: %rebol2]
-;			;if #"/" <> first config/Rebol2 [insert config/Rebol2 root-dir]
-;			replace/all val "#[LIB]" lib-extension
-;			replace/all val "#[EXE]" exe-extension
-;			;It looks that Rebol2 does not support output redirection, so use temp file...
-;			eval-cmd/log/v [to-local-file config/Rebol2 "-csw" trim/lines val]  %log.txt
-;		)
+		|
+		'Rebol2 set val string! (do-rebol2 val)
 ;		| 'Red set val file! (
 ;			eval-cmd/v [
 ;				to-local-file any [ expand-env %$RED_CLI  %red ] #" " 
@@ -1556,7 +1607,7 @@ delete: function/with [
 	file [file!]
 ][
 	if exists? file [
-		print-info ["Deleting: " as-green to-local-file file]
+		print-info ["Deleting:" as-green to-local-file file]
 		unless no-eval? [
 			try/except [lib/delete file] :on-error-quit
 		]
@@ -1894,7 +1945,7 @@ add-env-path: func[
 ]
 
 add-env: func [
-	key [string!]
+	key [any-string! any-word!]
 	value [string! file! none!]
 ][
 	if file? value [value: to-local-file value]

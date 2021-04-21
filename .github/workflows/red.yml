@@ -1,0 +1,105 @@
+name: 'Build Red'
+on:
+  # Triggers the workflow on push or pull request events but only for the master branch
+#  push:
+#    branches: [ master ]
+#  pull_request:
+#    branches: [ master ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  windows:
+    strategy:
+      fail-fast: true
+    runs-on: windows-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Install Rebol
+      uses: oldes/install-rebol@v3.5.3
+
+    - name: Build Red CLI console
+      run: |
+        ./rebol3 siskin.r3 red console
+        MOVE ./tree/red/console.exe ./red-cli.exe
+
+    - name: Build Red GUI console
+      run: |
+        ./rebol3 siskin.r3 red gui-console
+        MOVE ./tree/red/gui-console.exe ./red-gui.exe
+
+    ###############################################################################
+    # Collecting build artifacts...
+    - uses: actions/upload-artifact@v2
+      with:
+        name: Red-Windows
+        path: ./red-*.exe
+
+  linux:
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Install Rebol
+        uses: oldes/install-rebol@v3.5.3
+
+      - name: Install 32bit dependencies
+        run: |
+          dpkg --add-architecture i386
+          apt-get update
+          apt-get install libc6:i386 libcurl4:i386 libgtk-3-0:i386 libgdk-pixbuf2.0-0:i386
+
+      - name: Build Red CLI console
+        run: |
+          ./rebol3 siskin.r3 red console
+          mv ./tree/red/console ./red-cli-linux
+          file ./red-cli-linux
+
+      - name: Build Red GUI console
+        run: |
+          ./rebol3 siskin.r3 red gui-console
+          mv ./tree/red/gui-console ./red-gui-linux
+          file ./red-gui-linux
+
+      - name: Create archives from each version
+        run: |
+          gzip -9 ./red-cli-linux
+          gzip -9 ./red-gui-linux
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: Red-Linux
+          path: ./red-*
+
+  macos:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Install Rebol
+        uses: oldes/install-rebol@v3.5.3
+
+      - name: Build Red CLI console
+        run: |
+          ./rebol3 siskin.r3 red console
+          mv ./tree/red/console ./red-cli-osx
+
+      - name: Build Red GUI console
+        run: |
+          ./rebol3 siskin.r3 red gui-console
+          mv ./tree/red/gui-console ./red-gui-osx
+
+      - name: Create archives from each version
+        run: |
+          gzip -9 ./red-cli-osx
+          gzip -9 ./red-gui-osx
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: Red-macOS
+          path: ./red-*

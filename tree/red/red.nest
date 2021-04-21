@@ -1,0 +1,52 @@
+;~ Siskin project nest file ~;
+github: red/red
+
+#if Windows? [
+	set RED_CLI_TARGET: "MSDOS"
+	set RED_GUI_TARGET: "Windows"
+	set EXE: ".exe"
+	upx: on
+	strip: on
+]
+#if macOS? [
+	set RED_CLI_TARGET: "Darwin"
+	set RED_GUI_TARGET: "macOS"
+	set EXE: ""
+]
+#if Linux? [
+	set RED_CLI_TARGET: "Linux"
+	set RED_GUI_TARGET: "Linux-GTK"
+	set EXE: ""
+]
+			
+eggs: [
+	"Red CLI console" [
+		name: %console
+		Rebol2 {
+			red/red.r -r -t $RED_CLI_TARGET
+			red/environment/console/CLI/console.red
+		}
+	]
+	"Red CLI console (debug)" [
+		name: %console
+		Rebol2 {
+			red/red.r -r -d -t $RED_CLI_TARGET
+			red/environment/console/CLI/console.red
+			-o red-cli-dbg$EXE
+		}
+	]
+	"Red GUI console" [
+		name: %gui-console
+		Rebol2 {
+			red/red.r -r -t $RED_GUI_TARGET
+			red/environment/console/GUI/gui-console.red
+		}
+	]
+	"Red GUI console (debug)" [
+		name: %gui-console
+		Rebol2 {
+			red/red.r -r -d -t $RED_GUI_TARGET
+			red/environment/console/GUI/gui-console.red
+		}
+	]
+]
