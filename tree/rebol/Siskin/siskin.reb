@@ -243,7 +243,8 @@ do-rebol2: closure/with [file [string! file!]][
 				url: http://www.rebol.com/downloads/v278/rebol-view-278-4-3.tar.gz
 				crc: #{F078EF80744DF217AAB5CD60E75B5A5D2690F396}
 			]
-			macos [
+			macos
+			Macintosh [
 				url: http://www.rebol.com/downloads/v278/rebol-view-278-2-5.tar.gz
 				crc: #{E45DEFC8155D157090588F85B521A40FA7A30E48}
 			]
