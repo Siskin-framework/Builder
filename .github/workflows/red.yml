@@ -49,9 +49,9 @@ jobs:
 
       - name: Install 32bit dependencies
         run: |
-          dpkg --add-architecture i386
-          apt-get update
-          apt-get install libc6:i386 libcurl4:i386 libgtk-3-0:i386 libgdk-pixbuf2.0-0:i386
+          sudo dpkg --add-architecture i386
+          sudo apt-get update
+          sudo apt-get install libc6:i386 libcurl4:i386 libgtk-3-0:i386 libgdk-pixbuf2.0-0:i386
 
       - name: Build Red CLI console
         run: |
