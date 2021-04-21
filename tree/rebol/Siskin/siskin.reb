@@ -226,7 +226,7 @@ do-upx: closure/with [file [file!]][
 	]
 ] :nest-context
 
-do-rebol2: closure/with [file [string! file!]][
+do-rebol2: closure/with [code [string! file!]][
 	add-env-path root-dir
 	rebol2: any [
 		get-env "REBOL2"
@@ -272,7 +272,7 @@ do-rebol2: closure/with [file [string! file!]][
 		] [	print-error system/state/last-error exit ]
 	]
 	;It looks that Rebol2 does not support output redirection, so use temp file...
-	eval-cmd/log/v [rebol2 "-csw" trim/lines val] %log.txt
+	eval-cmd/log/v [rebol2 "-csw" trim/lines code] %log.txt
 
 ] :nest-context
 
