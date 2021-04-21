@@ -1,0 +1,93 @@
+name: 'Build bzip2'
+on:
+  # Triggers the workflow on push or pull request events but only for the master branch
+#  push:
+#    branches: [ master ]
+#  pull_request:
+#    branches: [ master ]
+
+# Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  windows:
+    strategy:
+      fail-fast: true
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Install Rebol
+        uses: oldes/install-rebol@v3.5.3
+
+      - name: Build 64bit bzip2 using mingw64
+        run: |
+          ./rebol3.exe siskin.r3 utility/bzip2 bzip2
+          MOVE ./tree/utility/build/bzip2.exe ./
+
+      - name: Simple test
+        run: ./bzip2.exe --help
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: bzip2
+          path: ./bzip2.exe
+
+  linux:
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [ubuntu-18.04]
+        #os: [ubuntu-20.04, ubuntu-18.04]
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Install Rebol
+        uses: oldes/install-rebol@v3.5.3
+
+      - name: Build 64bit bzip2 using gcc
+        run: ./rebol3 siskin.r3 utility/bzip2 bzip2
+
+      - name: Move results into the root for uploading
+        run:  mv ./tree/utility/build/bzip2 ./bzip2
+
+      - name: Simple test
+        run: chmod +x ./bzip2 & ./bzip2 -h
+
+      - name: Compress results before uploading
+        run: gzip -9 ./bzip2
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: bzip2
+          path: ./bzip2.gz
+
+  macos:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Install Rebol
+        uses: oldes/install-rebol@v3.5.3
+
+      - name: Build 64bit bzip2
+        run: ./rebol3 siskin.r3 utility/bzip2 bzip2
+
+      - name: Move results into the root for uploading
+        run: mv ./tree/utility/build/bzip2 ./bzip2-osx
+
+      - name: Simple test
+        run: chmod +x ./bzip2-osx & ./bzip2-osx -h
+
+      - name: Compress results before uploading
+        run: gzip -9 ./bzip2-osx
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: bzip2
+          path: ./bzip2-osx.gz

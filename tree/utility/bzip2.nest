@@ -1,0 +1,45 @@
+;-    .-.                                                                       
+;-   /'v'\   SISKIN-Builder project file                                        
+;-  (/uOu\)  https://github.com/Siskin-framework/Builder/                       
+;-===="="=======================================================================
+
+git:      https://sourceware.org/git/bzip2.git
+source:   %bzip2/
+compiler: gcc
+arch:     x64
+strip:    on
+optimize: 2
+#if Windows? [upx: on defines: [_CRT_SECURE_NO_WARNINGS WIN32]]
+#if macOS?   [compiler: clang]
+#if Linux?   [flag: -Wno-unused-result]
+
+define: _FILE_OFFSET_BITS=64
+
+
+lib-files: [
+	%blocksort.c
+	%huffman.c
+	%crctable.c
+	%randtable.c
+	%compress.c
+	%decompress.c
+	%bzlib.c
+]
+include: %lz4/lib/
+include: %lz4/programs/
+
+eggs: [
+	"libbzip2" [
+		name:  %libbzip2
+		files: :lib-files
+		flags:  shared
+		upx: off
+		#if Posix? [ flag: fPIC]
+		#if macOS? [ flag: fno-common strip: off]
+	]
+	"bzip2" [
+		name:  %bzip2
+		file:  %bzip2.c
+		files: :lib-files
+	]
+]
