@@ -249,7 +249,7 @@ do-rebol2: closure/with [file [string! file!]][
 			]
 		]
 		unless url [
-			print-error "REBOL2 not available for this platform!"
+			print-error ["REBOL2 not available for" system/platform "platform!"]
 			exit
 		]
 		try/except [
