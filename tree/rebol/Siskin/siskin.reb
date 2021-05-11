@@ -2,7 +2,7 @@ Rebol [
 	Title:  "Siskin Builder - core"
 	Type:    module
 	Name:    siskin
-	Version: 0.3.4
+	Version: 0.3.5
 	Author: "Oldes"
 	;Needs:  prebol
 	exports: [
@@ -16,14 +16,15 @@ Rebol [
 banner: next {
 ^[[0;33m═╗
 ^[[0;33m ║^[[1;31m    .-.
-^[[0;33m ║^[[1;31m   /'v'\   ^[[0;33mSISKIN-Framework Builder 0.3.4
+^[[0;33m ║^[[1;31m   /'v'\   ^[[0;33mSISKIN-Framework Builder 0.3.5
 ^[[0;33m ║^[[1;31m  (/^[[0;31muOu^[[1;31m\)  ^[[0;33mhttps://github.com/Siskin-framework/Builder/
 ^[[0;33m ╚════^[[1;31m"^[[0;33m═^[[1;31m"^[[0;33m═══════════════════════════════════════════════════════════════════════^[[m}
 
 msvc:  import 'msvc
+msvc/siskin: self
 debug?: off
 
-append system/options/log [siskin: 2]
+append system/options/log [siskin: 3]
 
 ;- environment -
 
@@ -558,7 +559,7 @@ parse-nest: closure/with [
 			add-pre-build dest ['cmd dir val]
 		)
 		|
-		'call set val: [file!]  (
+		'call set val: [file! | string!]  (
 			add-pre-build dest ['call val]
 		)
 		|
@@ -1463,16 +1464,20 @@ eval-code: function/with [
 			if rel-path? val [insert val what-dir]
 			eval-cmd/v join " CALL " to-local-file val
 		)
-;		| 'cmd set dir [file! | none!] set val string! (
-;			if dir [pushd dir]
-;			foreach line split val lf [
-;				line: trim/head/tail line
-;				unless empty? line [
-;					eval-cmd/v line
-;				]
-;			]
-;			if dir [popd]
-;		)
+		| 'cmd set dir [file! | none!] set val string! (
+			print ["cmd." mold dir]
+			if dir [
+				if not exists? dir [make-dir/deep dir]
+				pushd dir
+			]
+			foreach line split val lf [
+				line: trim/head/tail line
+				unless empty? line [
+					eval-cmd/v line
+				]
+			]
+			if dir [popd]
+		)
 		| 'pushd set val file! (pushd val)
 		| 'popd (popd)
 		|
@@ -1907,6 +1912,17 @@ locate-tool: function/with [
 				add-env "NDK_TOOLCHAIN" join android-ndk %toolchains/llvm/prebuilt/$OS_NAME/
 				return  android-ndk
 			]
+		]
+		msbuild [
+			if all [
+				tmp: first msvc/vswhere
+				tmp: select tmp 'installationPath
+			][
+				;eval-cmd/vvv rejoin [{"} tmp {\VC\Auxiliary\Build\vcvarsall.bat" } any [arch 'x64]]
+				add-env-path tmp: join to-rebol-file tmp %\MSBuild\Current\Bin\
+				return tmp
+			]
+
 		]
 	][	;else..
 		; make sure that we know env-paths
