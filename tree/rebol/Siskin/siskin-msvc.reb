@@ -233,7 +233,7 @@ make-project: func[
 		id [string!] "Visual studio project type GUID"
 	/local
 		name tmp output dir dir-vs dir-bin defines includes rel-file dir-name
-		filters items ver
+		filters items ver lib-paths
 ][
 	unless siskin [siskin: system/modules/siskin]
 	output: make string! 30000
@@ -297,18 +297,25 @@ make-project: func[
 	write-file [dir-vs name %.sln] output
 
 	;-- collect ADDITIONAL-DEPENDENCIES                                         
+	lib-paths: copy [] 
 	clear output
 	foreach lib join spec/libraries spec/shared [
-		unless dir? lib [
-			unless parse lib [thru ".lib" end][
-				append lib ".lib"
+		lib: split-path lib
+		append lib-paths lib/1
+		if lib/2 [
+			unless parse lib/2 [thru ".lib" end][
+				append lib/2 ".lib"
 			]
-			append append output lib
-			either parse lib [thru ".lib" end][";"][".lib;"]
+			append append output lib/2
+			either parse lib/2 [thru ".lib" end][";"][".lib;"]
 		]
 	]
 	ADDITIONAL-DEPENDENCIES: copy output
 	LIBRARY-PATH: copy ""
+	foreach path unique lib-paths [
+		if #"/" <> first path [insert path %../] 
+		append append LIBRARY-PATH path #";"
+	]
 
 	;-- collect RESOURCE-ITEM                                                   
 	RESOURCE-ITEM: either file? spec/resource [
