@@ -31,7 +31,7 @@ jobs:
       run: ./rebol3 siskin.r3 utility/triangle triangle-x64
 
     - name: Test 64bit Triangle
-      run: ./tree/utility/build/triangle-x64
+      run: ./tree/utility/triangle/build/triangle-x64
 
     ###############################################################################
     # Collecting build artifacts...
