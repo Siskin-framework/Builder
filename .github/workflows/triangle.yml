@@ -24,11 +24,12 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
 
-    - name: Install Siskin Builder
-      uses: oldes/install-siskin@v0.3.5
+    - name: Install Rebol
+      uses: oldes/install-rebol@v3.5.3
 
     - name: Build 64bit Traingle utility
-      run: ./siskin utility/triangle.nest %triangle-x64
+      run: ./rebol3 siskin.r3 utility/triangle triangle-x64
+
     - name: Test 64bit Triangle
       run: ./tree/utility/build/triangle-x64
 
