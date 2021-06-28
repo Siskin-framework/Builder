@@ -10,29 +10,31 @@ on:
   workflow_dispatch:
 
 jobs:
-  runs-on: ${{ matrix.os }}
-  strategy:
-    fail-fast: false
-    matrix:
-      os:
-        - ubuntu-latest
-        - windows-latest
-        - macOS-latest
-  steps:
-  - name: Checkout repository
-    uses: actions/checkout@v2
+  build_triangle:
+    name: Triangle
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - windows-latest
+          - macOS-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
 
-  - name: Install Siskin Builder
-    uses: oldes/install-siskin@v0.3.5
+    - name: Install Siskin Builder
+      uses: oldes/install-siskin@v0.3.5
 
-  - name: Build 64bit Traingle utility
-    run: ./siskin triangle.nest %triangle-x64
-  - name: Test 64bit Triangle
-    run:  ./build/triangle-x64
+    - name: Build 64bit Traingle utility
+      run: ./siskin triangle.nest %triangle-x64
+    - name: Test 64bit Triangle
+      run:  ./build/triangle-x64
 
-  ###############################################################################
-  # Collecting build artifacts...
-  - uses: actions/upload-artifact@v2
-    with:
-      name: Triangle-${RUNNER_OS}-CI-${{github.run_id}}
-      path: ./build/*
+    ###############################################################################
+    # Collecting build artifacts...
+    - uses: actions/upload-artifact@v2
+      with:
+        name: Triangle-${RUNNER_OS}-CI-${{github.run_id}}
+        path: ./build/*
