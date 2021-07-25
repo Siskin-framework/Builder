@@ -19,7 +19,7 @@ jobs:
       uses: actions/checkout@v2
 
     - name: Install Rebol
-      uses: oldes/install-rebol@v3.5.3
+      uses: oldes/install-rebol@v3.5.5
 
     - name: Build Red CLI console
       run: |
@@ -45,13 +45,13 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Install Rebol
-        uses: oldes/install-rebol@v3.5.3
+        uses: oldes/install-rebol@v3.5.5
 
       - name: Install 32bit dependencies
         run: |
           sudo dpkg --add-architecture i386
           sudo apt-get update
-          sudo apt-get install libxt6:i386 libc6:i386 libcurl4:i386 libgtk-3-0:i386 libgdk-pixbuf2.0-0:i386
+          sudo apt-get install libxt6:i386 libXaw:i386 libc6:i386 libcurl4:i386 libgtk-3-0:i386 libgdk-pixbuf2.0-0:i386
 
       - name: Build Red CLI console
         run: |
@@ -85,7 +85,7 @@ jobs:
 #        uses: actions/checkout@v2
 #
 #      - name: Install Rebol
-#        uses: oldes/install-rebol@v3.5.3
+#        uses: oldes/install-rebol@v3.5.5
 #
 #      - name: Build Red CLI console
 #        run: |

@@ -19,7 +19,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Install Rebol
-        uses: oldes/install-rebol@v3.5.3
+        uses: oldes/install-rebol@v3.5.5
 
       - name: Build 64bit lz4 using msvc
         run: |
@@ -47,7 +47,7 @@ jobs:
         uses: actions/checkout@v2
         
       - name: Install Rebol
-        uses: oldes/install-rebol@v3.5.3
+        uses: oldes/install-rebol@v3.5.5
 
       - name: Build 64bit lz4 using gcc
         run: ./rebol3 siskin.r3 utility/lz4 lz4cli
@@ -73,7 +73,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Install Rebol
-        uses: oldes/install-rebol@v3.5.3
+        uses: oldes/install-rebol@v3.5.5
 
       - name: Build 64bit lz4
         run: ./rebol3 siskin.r3 utility/lz4 lz4cli
