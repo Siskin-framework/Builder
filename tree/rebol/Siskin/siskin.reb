@@ -2,7 +2,7 @@ Rebol [
 	Title:  "Siskin Builder - core"
 	Type:    module
 	Name:    siskin
-	Version: 0.3.6
+	Version: 0.3.7
 	Author: "Oldes"
 	;Needs:  prebol
 	exports: [
@@ -16,7 +16,7 @@ Rebol [
 banner: next {
 ^[[0;33m═╗
 ^[[0;33m ║^[[1;31m    .-.
-^[[0;33m ║^[[1;31m   /'v'\   ^[[0;33mSISKIN-Framework Builder 0.3.6
+^[[0;33m ║^[[1;31m   /'v'\   ^[[0;33mSISKIN-Framework Builder 0.3.7
 ^[[0;33m ║^[[1;31m  (/^[[0;31muOu^[[1;31m\)  ^[[0;33mhttps://github.com/Siskin-framework/Builder/
 ^[[0;33m ╚════^[[1;31m"^[[0;33m═^[[1;31m"^[[0;33m═══════════════════════════════════════════════════════════════════════^[[m}
 
@@ -211,7 +211,7 @@ do-upx: closure/with [file [file!]][
 				exit
 			]
 			exe: codecs/zip/decode/only bin [%upx-3.96-win32/upx.exe]
-			upx: write root-dir/upx.exe exe/2/3
+			upx: write root-dir/upx.exe exe/2/2
 			add-env-path root-dir
 		] [	print-error system/state/last-error exit ]
 	]
