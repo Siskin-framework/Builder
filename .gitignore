@@ -1,3 +1,6 @@
-*.exe
-/tree/rebol/Rebol
-/tree/rebol/Siskin/build/
+/*
+!/.github
+!/.gitignore
+!/tree/
+!/siskin.r3
+!/README.md
