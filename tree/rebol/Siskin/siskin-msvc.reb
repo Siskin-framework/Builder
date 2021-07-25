@@ -23,6 +23,7 @@ POST-BUILD-EVENT:
 RESOURCE-ITEM:
 MSVC-PATH:
 TOOLSET-VERSION:
+STACK-SIZE:
 none
 
 
@@ -267,6 +268,8 @@ make-project: func[
 		if all [dir-bin dir <> %./][append dir-bin dir]
 	]
 
+	STACK-SIZE: any [spec/stack-size ""]
+	
 	try [
 		; this part is a little bit hackish!
 		; it's for being able to use specification done for not MSVC compiler
@@ -532,6 +535,7 @@ vcxproj: {<?xml version="1.0" encoding="utf-8"?>
 	<Link>
 	  <AdditionalDependencies>#ADDITIONAL-DEPENDENCIES#%(AdditionalDependencies)</AdditionalDependencies>
 	  <SubSystem>#SUBSYSTEM#</SubSystem>
+	  <StackReserveSize>#STACK-SIZE#</StackReserveSize>
 	</Link>
 	<PreBuildEvent>#PRE-BUILD-EVENT#</PreBuildEvent>
 	<PostBuildEvent>#POST-BUILD-EVENT#</PostBuildEvent>
@@ -554,6 +558,7 @@ vcxproj: {<?xml version="1.0" encoding="utf-8"?>
 	  <OptimizeReferences>true</OptimizeReferences>
 	  <AdditionalDependencies>#ADDITIONAL-DEPENDENCIES#%(AdditionalDependencies)</AdditionalDependencies>
 	  <SubSystem>#SUBSYSTEM#</SubSystem>
+	  <StackReserveSize>#STACK-SIZE#</StackReserveSize>
 	</Link>
 	<PreBuildEvent>#PRE-BUILD-EVENT#</PreBuildEvent>
 	<PostBuildEvent>#POST-BUILD-EVENT#</PostBuildEvent>
