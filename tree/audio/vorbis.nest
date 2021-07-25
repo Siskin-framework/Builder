@@ -1,0 +1,125 @@
+;-    .-.                                                                       
+;-   /'v'\   SISKIN-Builder project file                                        
+;-  (/uOu\)  https://github.com/Siskin-framework/Builder/                       
+;-===="="=======================================================================
+
+github:   %xiph/vorbis
+github:   %xiph/ogg
+
+compiler: clang
+arch:     x64
+strip:    on
+optimize: 2
+
+include: %vorbis/include/
+include: %ogg/include/
+
+#if Windows? [
+	define: _CRT_SECURE_NO_WARNINGS
+]
+
+arch-x64: [
+	arch: x64
+	define: _FILE_OFFSET_BITS=64
+	#if Linux? [
+		library: %dl
+		defines: TO_LINUX_X64
+		defines: __LP64__ ; has long (integer) 64 bits
+	]
+	#if Windows? [
+		defines: TO_WIN32_X64
+		defines: _WIN32
+		defines: __LLP64__ ; 64-bit, long (integer) has 32 bits and 'void *' is sizeof(long long)
+	]
+	#if macOS? [
+		defines: TO_OSX_X64
+		defines: __LP64__ ; same like LLP64, but long (integer) has 64 bits instead of 32
+	]
+]
+
+lib-ogg: [
+	include: %ogg/src/
+	files: [
+		%ogg/src/bitwise.c
+		%ogg/src/framing.c
+	]
+]
+
+lib-vorbis: [
+	include: %vorbis/lib/
+	files: [
+		%vorbis/lib/mdct.c
+		%vorbis/lib/smallft.c
+		%vorbis/lib/block.c
+		%vorbis/lib/envelope.c
+		%vorbis/lib/window.c
+		%vorbis/lib/lsp.c
+		%vorbis/lib/lpc.c
+		%vorbis/lib/analysis.c
+		%vorbis/lib/synthesis.c
+		%vorbis/lib/psy.c
+		%vorbis/lib/info.c
+		%vorbis/lib/floor1.c
+		%vorbis/lib/floor0.c
+		%vorbis/lib/res0.c
+		%vorbis/lib/mapping0.c
+		%vorbis/lib/registry.c
+		%vorbis/lib/codebook.c
+		%vorbis/lib/sharedbook.c
+		%vorbis/lib/lookup.c
+		%vorbis/lib/bitrate.c
+	]
+]
+
+;source: 
+eggs: [
+	"Library: ogg (x64)" [
+		name:  %libogg
+		flags: shared
+		strip: off
+		:arch-x64
+		:lib-ogg
+	]
+	"Library: vorbis (x64)" [
+		name:  %libvorbis
+		flags: [shared]
+		strip: off
+		:arch-x64
+		:lib-vorbis
+		library: [%build/ %libogg]
+		lflags: {-Wl"/DEF:vorbis\win32\svorbis.def"}
+	]
+	"Library: vorbisenc (x64)" [
+		name:  %libvorbisenc
+		flags: [shared]
+		strip: off
+		:arch-x64
+		file:    %vorbis/lib/vorbisenc.c
+		library: [%build/ %libvorbis %libogg]
+		#if Windows? [cflags: -Wno-microsoft-include]
+	]
+
+	"Vorbis decoder_example" [
+		name: %vorbis_decoder_example
+		library: [%build/ %libvorbis %libogg]
+		file:    %vorbis/lib/vorbisenc.c
+		file:    %vorbis/examples/decoder_example.c
+		:arch-x64
+		#if Windows? [
+			cflags: -Wno-microsoft-include
+			upx: on
+		]
+	]
+	"Vorbis encoder_example" [
+		name: %vorbis_encoder_example
+		shared: %libvorbisenc
+		;library: [%build/ %libvorbis %libogg]
+		;file:    %vorbis/lib/vorbisenc.c
+		file:    %vorbis/examples/encoder_example.c
+		:arch-x64
+		#if Windows? [
+			cflags: -Wno-microsoft-include
+			upx: on
+		]
+	]
+]
