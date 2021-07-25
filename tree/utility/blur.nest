@@ -1,0 +1,24 @@
+;-    .-.                                                                       
+;-   /'v'\   SISKIN-Builder project file                                        
+;-  (/uOu\)  https://github.com/Siskin-framework/Builder/                       
+;-===="="=======================================================================
+
+github:   %Oldes/blur
+source:   %blur/
+include:  %blur/
+compiler: gcc
+arch:     x64
+strip:    on
+optimize: 2
+#if Windows? [upx: on]
+#if macOS?   [compiler: clang]
+
+file: %blur.c
+
+eggs: [
+	"Utility: blur" [
+		name: %blur
+		file: %test/test.c
+		include: %test/
+	]
+]
