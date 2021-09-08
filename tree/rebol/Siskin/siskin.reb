@@ -1384,19 +1384,39 @@ finalize-build: closure/with [spec [map!] file [file! none!] /no-fail][
 		'file = exists? out-file: join file %.exe
 		'file = exists? out-file: join file %.dll
 	][
+		if macOS? [
+			if any [
+				; 1. sign is environment variable...
+				all [
+					string? spec/sign
+					#"$" = first spec/sign
+					sign: get-env next spec/sign
+				]
+				; 2. sign is user defined string
+				string? sign: spec/sign
+				; 3. try hardcoded environment variable
+				sign: get-env "SISKIN_SIGN_IDENTITY"
+			][
+				unless valid-sign-identity? sign [
+					print-error "Sign identity defined but not found as a valid one!"
+					sign: none
+				]
+			]
+		]
+
 		if spec/strip [
-			try/except [do-strip spec out-file][print-error system/state/last-error]
+			either all [macOS?  not sign][
+				print-error "Not using requested STRIP as it would invalidate a signature!"
+				print-error "There is no available sign identity to re-sign!"
+			][
+				try/except [do-strip spec out-file][print-error system/state/last-error]
+			]
 		]
 		if spec/upx [
 			try/except [do-upx out-file][print-error system/state/last-error]
 		]
-		if macOS? [
-			if any [
-				string? sign: spec/sign
-				sign: get-env "SISKIN_SIGN_IDENTITY"
-			][
-				eval-cmd/v rejoin [{codesign --sign } sign { --timestamp -f -o runtime } out-file]
-			]
+		if all [sign macOS?][
+			eval-cmd/v rejoin [{codesign --sign "} sign {" -f -o runtime } out-file]
 		]
 		
 
@@ -2036,5 +2056,15 @@ add-env: func [
 			as-cyan "is"
 			as-green mold value
 		]
+	]
+]
+
+valid-sign-identity?: function[sign][
+	out: make string! 1000
+	all [
+		0 = try [call/shell/wait/output {security find-identity -v -p codesigning} out]
+		find out sign
+		print-info "Sign identity is valid."
+		true
 	]
 ]
