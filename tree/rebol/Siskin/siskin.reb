@@ -798,7 +798,7 @@ do-nest: closure/with [
 
 							; to build xcodeproj:
 							unless no-eval? [
-								eval-cmd/v ["xcodebuild -configuration Release -quiet -project " xcodeproj " build"]
+								eval-cmd/v ["xcodebuild -configuration Release -project " xcodeproj " build" either debug? [""][" -quiet"]]
 								finalize-build spec spec/output
 							]
 							
