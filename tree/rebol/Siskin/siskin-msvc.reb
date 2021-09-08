@@ -1,4 +1,5 @@
 Rebol [
+	Title:  "Siskin Builder - Visual Studio project generator"
 	name: msvc
 	type: module
 ]

@@ -2,7 +2,7 @@ Rebol [
 	Title:  "Siskin Builder - core"
 	Type:    module
 	Name:    siskin
-	Version: 0.3.7
+	Version: 0.4.0
 	Author: "Oldes"
 	;Needs:  prebol
 	exports: [
@@ -16,15 +16,18 @@ Rebol [
 banner: next {
 ^[[0;33m═╗
 ^[[0;33m ║^[[1;31m    .-.
-^[[0;33m ║^[[1;31m   /'v'\   ^[[0;33mSISKIN-Framework Builder 0.3.7
+^[[0;33m ║^[[1;31m   /'v'\   ^[[0;33mSISKIN-Framework Builder 0.4.0
 ^[[0;33m ║^[[1;31m  (/^[[0;31muOu^[[1;31m\)  ^[[0;33mhttps://github.com/Siskin-framework/Builder/
 ^[[0;33m ╚════^[[1;31m"^[[0;33m═^[[1;31m"^[[0;33m═══════════════════════════════════════════════════════════════════════^[[m}
 
 msvc:  import 'msvc
-msvc/siskin: self
+xcode: import 'xcode
+ msvc/siskin:
+xcode/siskin:  self
+
 debug?: off
 
-append system/options/log [siskin: 3]
+append system/options/log [siskin: 1]
 
 ;- environment -
 
@@ -36,6 +39,7 @@ nest-context: object [
 		arch:       none
 		root:       none
 		temp:       none
+		sign:       none
 		output:     none ;%bin/
 		source:     %""
 		objects:    none
@@ -396,6 +400,7 @@ parse-nest: closure/with [
 		| quote stack-size: set val:  integer!         ( dest/stack-size: val )
 		| quote arch:       set val:  word!            ( dest/arch:       val )
 		| quote root:       set val:  file!            ( dest/root: clean-path val )
+		| quote sign:       set val:  string!          ( dest/sign:       val )
 		|[quote temp-dir: | quote temp:  ] set val: file! ( dest/temp:    val )
 		|[quote out-dir:  | quote output:] set val: file! ( dest/output:  val )
 		|[quote compiler: | quote cc:    ] [
@@ -485,7 +490,7 @@ parse-nest: closure/with [
 			]
 		]
 		| quote flags: 'none ( clear dest/cflags clear dest/lflags )
-		| quote optimize: set val [integer! | 'size] (
+		| quote optimize: set val [integer! | 'size | 'z | 's | 'fast] (
 			add-flag dest join #"O" case [
 				val = 'size [#"s"]
 				true        [val ] 
@@ -716,6 +721,9 @@ do-nest: closure/with [
 			no-eval?: false
 			set-env "NEST_SPEC" none
 
+			debug?: off
+			system/options/log/siskin: 1
+
 			parse args [
 				any [
 					(
@@ -730,6 +738,19 @@ do-nest: closure/with [
 					)
 					| opt [['c | 'clean] (rebuild?: true)] set id: [integer! | file! | string!] (
 						build-target id
+					)
+					|
+					'v (system/options/log/siskin: 1)
+					|
+					'vv (system/options/log/siskin: 2)
+					|
+					'vvv (system/options/log/siskin: 3)
+					|
+					['quiet] (debug?: off system/options/log/siskin: 0)
+					|
+					['d | 'debug] (
+						debug?: true
+						system/options/log/siskin: 4
 					)
 					|
 					['r | 'run | 'e] (
@@ -757,6 +778,30 @@ do-nest: closure/with [
 								spec/name
 							]
 							finalize-build spec file
+						] :on-error-quit
+					)
+					| 'xcode set id: [integer! | file! | string!] (
+						try/except [
+							timestamp: now/time/precise
+							spec: get-spec id
+							spec/eggs: none
+							spec/compiler: 'xcode
+							xcodeproj: xcode/make-project spec
+
+							
+							if debug? [
+								; to get info about xcodeproj:
+								eval-cmd/v ["xcodebuild -list -project " xcodeproj]
+								; to see settings:
+								eval-cmd/v ["xcodebuild -configuration Release -showBuildSettings -project " xcodeproj]
+							]
+
+							; to build xcodeproj:
+							unless no-eval? [
+								eval-cmd/v ["xcodebuild -configuration Release -quiet -project " xcodeproj " build"]
+								finalize-build spec spec/output
+							]
+							
 						] :on-error-quit
 					)
 					|
@@ -1291,8 +1336,14 @@ build: function/with [
 			]
 
 			either macOS? [
-				print-error "FIXME: AR utility on macOS does not support input from @ file"
-				print-error "Archive file not created."
+				;print-error "FIXME: AR utility on macOS does not support input from @ file"
+				;print-error "Archive file not created."
+				tmp: rejoin [
+					to-local-file ar
+					" qc " to-local-file archive
+					#" " replace/all read/string spec/objects/objects.txt LF #" "
+				]
+				eval-cmd/v tmp
 			][
 				eval-cmd/v rejoin [to-local-file ar " rcu " to-local-file archive #" " join "@" to-local-file spec/objects/objects.txt ]
 			]
@@ -1339,6 +1390,16 @@ finalize-build: closure/with [spec [map!] file [file! none!] /no-fail][
 		if spec/upx [
 			try/except [do-upx out-file][print-error system/state/last-error]
 		]
+		if macOS? [
+			if any [
+				string? sign: spec/sign
+				sign: get-env "SISKIN_SIGN_IDENTITY"
+			][
+				eval-cmd/v rejoin [{codesign --sign } sign { --timestamp -f -o runtime } out-file]
+			]
+		]
+		
+
 		print-ready
 		return true
 	][	unless no-fail [print-failed]]
@@ -1708,7 +1769,6 @@ eval-cmd: function/with [
 		cmd: local
 		;?? cmd
 	]
-
 	case [
 		vvv [print-more  ["EVAL:^[[0;33m" cmd]]
 		vv  [print-debug ["EVAL:^[[0;33m" cmd]] 
