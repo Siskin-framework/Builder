@@ -383,6 +383,12 @@ parse-nest: closure/with [
 		change/only p select dest first p
 	) :p]]
 
+	logic: [
+		       set val: logic!
+		| truthy ( val: true  )
+		| falsy  ( val: false )
+	]
+
 	parse copy spec [any [
 		;x: (probe first x)
 		  quote name:       set val:  any-string!      ( dest/name: to string! val )
@@ -397,12 +403,12 @@ parse-nest: closure/with [
 		| quote eggs: [opt 'only (clear dest/eggs) ] set val: block! (
 			append dest/eggs preprocess val
 		)
-		| quote stack-size: set val:  integer!         ( dest/stack-size: val )
-		| quote arch:       set val:  word!            ( dest/arch:       val )
-		| quote root:       set val:  file!            ( dest/root: clean-path val )
-		| quote sign:       set val:  string!          ( dest/sign:       val )
-		|[quote temp-dir: | quote temp:  ] set val: file! ( dest/temp:    val )
-		|[quote out-dir:  | quote output:] set val: file! ( dest/output:  val )
+		| quote stack-size: set val:  integer!            ( dest/stack-size: val )
+		| quote arch:       set val:  word!               ( dest/arch:       val )
+		| quote root:       set val:  file!               ( dest/root: clean-path val )
+		| quote sign:      [set val: string! | logic]     ( dest/sign:       val )
+		|[quote temp-dir: | quote temp:  ] set val: file! ( dest/temp:       val )
+		|[quote out-dir:  | quote output:] set val: file! ( dest/output:     val )
 		|[quote compiler: | quote cc:    ] [
 			  set val: any-string! ( dest/cc: expand-env to-rebol-file val )
 			| falsy                ( dest/compiler: none)
@@ -411,15 +417,11 @@ parse-nest: closure/with [
 		| quote ar: set val: any-string! ( dest/ar: expand-env to-rebol-file val )
 		| quote strip: [
 			  set val: any-string! ( dest/strip: to file! val )
-			| set val: logic!      ( dest/strip: val   )
-			| truthy               ( dest/strip: true  )
-			| falsy                ( dest/strip: false )
+			| logic                ( dest/strip: val )
 		]
 		| quote upx: [
 			  set val: any-string! ( dest/upx: to file! val )
-			| set val: logic!      ( dest/upx: val   )
-			| truthy               ( dest/upx: true  )
-			| falsy                ( dest/upx: false )
+			| logic                ( dest/upx: val )
 		]
 		| quote source: set val: any-string! ( 
 			src-dir: to file! val
@@ -1384,7 +1386,7 @@ finalize-build: closure/with [spec [map!] file [file! none!] /no-fail][
 		'file = exists? out-file: join file %.exe
 		'file = exists? out-file: join file %.dll
 	][
-		if macOS? [
+		if all [macOS? spec/sign <> false][
 			if any [
 				; 1. sign is environment variable...
 				all [
