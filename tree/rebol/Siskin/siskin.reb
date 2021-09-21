@@ -355,7 +355,7 @@ parse-nest: closure/with [
 					]
 				]
 			][
-				print-error ["Unexpected file input:" as-red mold file]
+				print-warn ["Unexpected file input:" as-red mold file]
 			]
 		]
 	]
@@ -374,7 +374,7 @@ parse-nest: closure/with [
 					]
 				]
 			][
-				print-error ["Unexpected `add-to` input:" as-red mold values/1]
+				print-warn ["Unexpected `add-to` input:" as-red mold values/1]
 			]
 		]
 	]
@@ -443,7 +443,7 @@ parse-nest: closure/with [
 			opt-get-word
 			set val: [block! | file!] ( add-files dest 'files val )
 		]
-		|[quote needs: | 'needs] set val: [word! | block!] ( prep-needs val dest/arch )
+		|[quote needs: | 'needs] set val: [word! | block!] ( unless prep-needs/required val dest/arch [return false] )
 		|[quote clean: | 'clean] [
 			'none ( clear dest/clean )
 			|
@@ -526,10 +526,11 @@ parse-nest: closure/with [
 			set val: 1 skip (
 				;quit
 				if find reserved-words to word! name [
-					on-error-quit rejoin [
-						"Invalid dialect use at: ^[[0;35m"
-						next mold/flat/part pos 50 "..."
+					print-error rejoin [
+						"Invalid dialect use at: ^[[31m"
+						next mold/flat/part pos 50
 					]
+					return false
 				]
 				if block? val [val: preprocess val]
 				either all [val block? dest/:name] [
@@ -542,7 +543,8 @@ parse-nest: closure/with [
 				if block? val [val: preprocess val]
 				insert pos val
 			][
-				on-error-quit rejoin ["Failed to process:" as-red mold name]
+				print-error rejoin ["Failed to process:" as-red mold name]
+				return false
 			]
 		)
 		|
@@ -596,15 +598,17 @@ parse-nest: closure/with [
 			either find dest/actions val [
 				add-pre-build dest ['action val]
 			][
-				on-error-quit join "!!! Unknown action: " val
+				print-error ["Unknown action: " mold val]
+				return false
 			]
 		)
 		|
 		pos: 1 skip (
-			on-error-quit rejoin [
-				"Invalid dialect use at: ^[[0;35m"
-				next mold/flat/part pos 50 "..."
+			print-error rejoin [
+				"Invalid dialect use at: ^[[0;31m"
+				next mold/flat/part pos 50
 			]
+			return false
 		)
 	]]
 
@@ -664,6 +668,7 @@ do-nest: closure/with [
 	set [nest-root: nest:] split-path nest
 	nest-root: pushd nest-root
 	nest-spec: parse-nest nest none
+	if none? nest-spec [exit]
 
 	if parent [
 		foreach [k v] parent [
@@ -862,9 +867,14 @@ build-target: closure/with [
 	timestamp: now/time/precise
 	try/except [
 		unless spec: get-spec command [
-			on-error-quit ["Command not handled:" as-red mold command]
+			print-error ["Command not handled:" as-red mold command]
+			print-failed
+			exit
 		]
-		build spec
+		try/except [build spec][
+			print-failed
+			exit
+		]
 	] :on-error-quit
 ] :nest-context
 
@@ -1225,7 +1235,8 @@ build: function/with [
 		source-info: query source: file
 		unless source-info [
 			print-error ["Source file not found: " to-local-file file]
-			quit
+			print-failed
+			exit
 		]
 
 		suffix: suffix? source
@@ -1580,6 +1591,7 @@ print-error: func[err][ sys/log/error 'SISKIN any [err system/state/last-error] 
 print-info:  func[msg][ sys/log/info  'SISKIN msg ]
 print-debug: func[msg][ sys/log/debug 'SISKIN msg ]
 print-more:  func[msg][ sys/log/more  'SISKIN msg ]
+print-warn:  func[msg][ sys/log/info  'SISKIN as-purple form either block? msg [reduce msg][msg]]
 
 
 print-bird: does [
@@ -1657,6 +1669,10 @@ on-error-quit: func[err][
 	;popd
 	quit/return either error? err [err/code][1]
 ]
+on-error-throw: func[err][
+	print-error err
+	do err
+]
 on-error-warn: func[err [error!]][
 	print err
 	wait 0:0:2
@@ -1664,7 +1680,7 @@ on-error-warn: func[err [error!]][
 ]
 
 attempt: func[code [block!] /local err][
-	try/except code :on-error-quit
+	try/except code :on-error-throw
 ]
 
 pushd: function [
@@ -1698,7 +1714,7 @@ delete: function/with [
 	if exists? file [
 		print-info ["Deleting:" as-green to-local-file file]
 		unless no-eval? [
-			try/except [lib/delete file] :on-error-quit
+			try/except [lib/delete file] :on-error-throw
 		]
 	]
 ] :nest-context
@@ -1770,7 +1786,7 @@ eval-cmd: function/with [
 	/vvv  "print debug"
 ][
 	if block? cmd [
-		try/except [cmd: reduce cmd] :on-error-quit
+		attempt [cmd: reduce cmd]
 		local: copy ""
 		;?? cmd
 		parse cmd [any [
@@ -1882,24 +1898,23 @@ get-file-with-extensions: func[
 prep-needs: func[
 	needs [word! block! file!]
 	arch  [word! none!]
-	/check
+	/required
 	/local tool
 ][
 	unless block? needs [needs: reduce [needs]]
 	forall needs [
 		;prin ["Needs:" as-green pad needs/1 12]
-		either tool: locate-tool needs/1 arch [
+		either tool: apply :locate-tool [needs/1 arch required] [
 			;print ["using:" as-green to-local-file tool]
 		][
-			;print as-red "not found!"
-			unless check [
-				on-error-quit make error! "tool not found!"
+			;print as-red " not found!"
+			if required [
+				print-error ["Tool not found" as-red needs/1]
+				return false
 			]
 		]
 	]
-]
-check-tool: func[tool [word!]][
-	prep-needs/check tool none
+	true
 ]
 
 to-abs-dir: func[
@@ -1926,6 +1941,7 @@ env-paths-init: does [
 locate-tool: function/with [
 	tool [word! any-string!]
 	arch
+	/required "Return NONE if not located"
 ][
 	print-debug ["Locating tool:" as-green tool any [arch ""]]
 	tool-file: to file! tool
@@ -2024,7 +2040,7 @@ locate-tool: function/with [
 			return tool-exe
 		]
 	]
-	tool-file
+	either required [none][tool-file]
 ] :nest-context
 
 add-env-path: func[
