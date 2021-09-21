@@ -1418,7 +1418,7 @@ finalize-build: closure/with [spec [map!] file [file! none!] /no-fail][
 		]
 
 		if spec/strip [
-			either all [macOS?  not sign][
+			either all [macOS? spec/sign <> false not sign][
 				print-error "Not using requested STRIP as it would invalidate a signature!"
 				print-error "There is no available sign identity to re-sign!"
 			][
