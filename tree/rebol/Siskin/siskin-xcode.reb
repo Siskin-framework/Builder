@@ -10,6 +10,7 @@ siskin: none
 PROJECT-UUID:
 PROJECT-NAME:
 PROJECT-VERSION:
+PRODUCT:
 TARGET-UUID:
 LIBRARY-PATH:
 INCLUDE-PATH:
@@ -30,11 +31,13 @@ SECTION-PBXGroup-Headers-Children:
 SECTION-PBXGroup-Frameworks-Children:
 SECTION-PBXSourcesBuildPhase-Files:
 SECTION-PBXFrameworksBuildPhase-Files:
+SECTION-PBXCopyFilesBuildPhase-EmbedLib-Files:
 HEADER_SEARCH_PATHS:
 GCC_PREPROCESSOR_DEFINITIONS:
 GCC_OPTIMIZATION_LEVEL:
 OTHER_LDFLAGS:
 WARNING_CFLAGS:
+MACH_O_TYPE:
 ARCH:
 GCC_WARN_64_TO_32_BIT_CONVERSION:
 none
@@ -179,6 +182,7 @@ make-project: func[
 	/local
 		name tmp output dir dir-out dir-bin defines includes rel-file dir-name
 		filters items ver lib-paths d n id_fileRef id_file dirs blk headers
+		product-type
 ][
 	unless siskin [siskin: system/modules/siskin]
 	output: make string! 30000
@@ -193,7 +197,6 @@ make-project: func[
 
 	dir-out: clean-path prepare-dir rejoin [%make/ name %.xcodeproj/]
 
-	spec/output: join %make/build/Release/ name
 
 	unless spec/root [
 		spec/root: to file! get-env "NEST_ROOT"
@@ -202,6 +205,8 @@ make-project: func[
 	STACK-SIZE: any [spec/stack-size ""]
 
 	siskin/add-env "NEST_SPEC" save dir-out/(join name %.reb) spec 
+
+	product: copy name
 
 	;-- compose .pbxproj file
 	if siskin/debug? [?? spec]
@@ -217,11 +222,32 @@ make-project: func[
 	SECTION-PBXGroup-Frameworks-Children: clear ""
 	SECTION-PBXSourcesBuildPhase-Files: clear ""
 	SECTION-PBXFrameworksBuildPhase-Files: clear ""
+	SECTION-PBXCopyFilesBuildPhase-EmbedLib-Files: clear ""
 
 	ARCH: spec/arch
 	case [
 		ARCH = 'x86 [ARCH: 'i386]
 		ARCH = 'x64 [ARCH: 'x86_64]
+	]
+
+	MACH_O_TYPE: any [
+		all [
+			find spec/lflags "-shared "
+			product-type: "compiled.mach-o.dylib"
+			siskin/replace-extension product %.dylib
+			'mh_dylib
+		]
+		all [
+			find spec/lflags "-archive-only "
+			product-type: "compiled.mach-o.objfile"
+			siskin/replace-extension product %.a
+			unless find/match product "lib" [insert product "lib"]
+			'staticlib
+		]
+		all [
+			product-type: "compiled.mach-o.executable"
+			'mh_execute
+		]
 	]
 
 	HEADER_SEARCH_PATHS: clear ""
@@ -295,6 +321,47 @@ make-project: func[
 		]
 	]
 	;? headers
+
+	append SECTION-PBXFileReference rejoin [
+		TAB2 TARGET-UUID  " /* " product " */ = {isa = PBXFileReference; explicitFileType = ^""
+		product-type "^"; includeInIndex = 0; path = " product "; sourceTree = BUILT_PRODUCTS_DIR; };^/"
+	]
+
+	foreach file sort spec/shared [
+		siskin/replace-extension file %.dylib
+		id_file:    make-uuid "file in Frameworks" file 
+		id_fileRef: make-uuid "fileRef" file
+
+		append SECTION-PBXFileReference rejoin [
+			TAB2 id_fileRef  " /* " file " */ = {isa = PBXFileReference; lastKnownFileType = ^"compiled.mach-o.dylib^"; name = "
+			file "; path = build/Release/" file "; sourceTree = ^"<group>^"; };^/"
+		]
+
+		append SECTION-PBXBuildFile rejoin [
+			TAB2 id_file " /* " file " in Frameworks */ = {isa = PBXBuildFile; fileRef = "
+			id_fileRef " /* " file " */; };^/"
+		]
+
+		append SECTION-PBXFrameworksBuildPhase-Files rejoin [
+			TAB4 id_file " /* " file " in Frameworks */,^/"
+		]
+
+		append SECTION-PBXGroup-Frameworks-Children rejoin [
+			TAB4 id_fileRef " /* " file " */,^/"
+		]
+
+		id_file:    make-uuid "file in Embed Libraries" file 
+		append SECTION-PBXBuildFile rejoin [
+			TAB2 id_file " /* " file " in Embed Libraries */ = {isa = PBXBuildFile; fileRef = "
+			id_fileRef " /* " file " */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };^/"
+		]
+
+		append SECTION-PBXCopyFilesBuildPhase-EmbedLib-Files rejoin [
+			TAB4 id_file " /* " file " in Embed Libraries */,^/"
+		]
+
+		
+	]
 
 	foreach file sort spec/frameworks [
 		file: append to file! file %.framework
@@ -391,6 +458,9 @@ make-project: func[
 
 	;-- collect libraries
 	OTHER_LDFLAGS: clear ""
+
+	probe spec/lflags
+
 	foreach lib any [spec/libraries []] [
 		append OTHER_LDFLAGS rejoin [
 			{^-^-^-^-^-"-l} lib {",^/}
@@ -420,19 +490,24 @@ make-project: func[
 
 	;-- and...
 
+	spec/output: join %make/build/Release/ product
+
+
 	PRE-BUILD: form-pre-post-build spec any [spec/pre-build []]
 	PRE-BUILD-SCRIPT: to-local-file join dir-out %pre-build.sh
 	write-file [dir-out %pre-build.sh] PRE-BUILD
-	siskin/eval-cmd/v ["chmod +x " PRE-BUILD-SCRIPT]
+	siskin/eval-cmd/v/force ["chmod +x " PRE-BUILD-SCRIPT]
 	;@@ TODO: post actions..
 	;POST-BUILD-EVENT: copy "" ;form-pre-post-build spec/post-build
 
 	GCC_WARN_64_TO_32_BIT_CONVERSION: either find spec/cflags @-Wno-shorten-64-to-32 [@NO][@YES]
 	
+	trim/tail SECTION-PBXBuildFile
 	trim/tail SECTION-PBXGroup-Frameworks-Children
 	trim/tail SECTION-PBXGroup-Sources-Children
 	trim/tail SECTION-PBXFrameworksBuildPhase-Files
 	trim/tail SECTION-PBXSourcesBuildPhase-Files
+	trim/tail SECTION-PBXCopyFilesBuildPhase-EmbedLib-Files
 	trim/head/tail HEADER_SEARCH_PATHS
 	trim/head/tail GCC_PREPROCESSOR_DEFINITIONS
 	trim/head/tail OTHER_LDFLAGS
@@ -440,7 +515,7 @@ make-project: func[
 	reword/escape/into project.pbxproj self [#"#" #"#"] output
 	write-file [dir-out %project.pbxproj] output
 
-	siskin/print-info {^[[1;35mXcode Done^[[m}
+	siskin/print-info {^[[1;32mXcode project generated.^[[m}
 
 	dir-out ; returns the *.xcodeproj directory 
 ]
@@ -467,10 +542,20 @@ project.pbxproj: {// !$*UTF8*$!
 			);
 			runOnlyForDeploymentPostprocessing = 1;
 		};
+		40E23ADE26FB4A0C00E7BF3F /* Embed Libraries */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+#SECTION-PBXCopyFilesBuildPhase-EmbedLib-Files#
+			);
+			name = "Embed Libraries";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		#TARGET-UUID# /* #PROJECT-NAME# */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = #PROJECT-NAME#; sourceTree = BUILT_PRODUCTS_DIR; };
 #SECTION-PBXFileReference#
 /* End PBXFileReference section */
 
@@ -507,7 +592,7 @@ project.pbxproj: {// !$*UTF8*$!
 		40AFCA8726BD67990023CA1A /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				#TARGET-UUID# /* #PROJECT-NAME# */,
+				#TARGET-UUID# /* #PRODUCT# */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -541,14 +626,15 @@ project.pbxproj: {// !$*UTF8*$!
 				40AFCA8226BD67990023CA1A /* Sources */,
 				40AFCA8326BD67990023CA1A /* Frameworks */,
 				40AFCA8426BD67990023CA1A /* CopyFiles */,
+				40E23AE226FB4D1F00E7BF3F /* Embed Libraries */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
-			name = #PROJECT-NAME#;
-			productName = #PROJECT-NAME#;
-			productReference = #TARGET-UUID# /* #PROJECT-NAME# */;
+			name = #PRODUCT#;
+			productName = #PRODUCT#;
+			productReference = #TARGET-UUID# /* #PRODUCT# */;
 			productType = "com.apple.product-type.tool";
 		};
 /* End PBXNativeTarget section */
@@ -745,6 +831,7 @@ project.pbxproj: {// !$*UTF8*$!
 					#OTHER_LDFLAGS#
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				MACH_O_TYPE = "#MACH_O_TYPE#";
 			};
 			name = Debug;
 		};
@@ -774,6 +861,7 @@ project.pbxproj: {// !$*UTF8*$!
 				WARNING_CFLAGS = (
 					#WARNING_CFLAGS#
 				);
+				MACH_O_TYPE = "#MACH_O_TYPE#";
 			};
 			name = Release;
 		};

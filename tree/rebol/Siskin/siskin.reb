@@ -461,18 +461,17 @@ parse-nest: closure/with [
 			opt ['only (
 				clear dest/cflags
 				clear dest/lflags
-			)] set val: [block! | word!] (
+			)] set val: [block! | word! | string!] (
 				val: either block? val [preprocess val][to block! val]
 				forall val [ add-flag dest val/1 ]
 			)
-		| quote lflags: any [
+		|[quote lflags: | quote lflag:] any [
 			['only | 'none]       (clear dest/lflags)
 			| set val: any-string! (append-flag dest/lflags val)
 			| p: block! :p into [
 				some [
 					set val: 1 skip (
 						val: form val
-						unless find "-`" val/1 [insert val #"-"]
 						append-flag dest/lflags val
 					)
 				]
@@ -485,7 +484,6 @@ parse-nest: closure/with [
 				some [
 					set val: 1 skip (
 						val: form val
-						unless find "-`" val/1 [insert val #"-"]
 						append-flag dest/rflags val
 					)
 				]
@@ -1367,7 +1365,7 @@ build: function/with [
 		]
 	]
 
-	finalize-build spec out-file
+	finalize-build spec either archive-only? [archive][out-file]
 ] :nest-context
 
 probe-spec: func[spec [map!] values [block!] /local val][
@@ -1433,6 +1431,11 @@ finalize-build: closure/with [spec [map!] file [file! none!] /no-fail][
 		]
 		
 
+		
+		if all [macOS? system/options/log/siskin > 0] [
+			eval-cmd/v ["file" out-file]
+			eval-cmd/v ["otool -L" out-file]
+		]
 		print-ready
 		return true
 	][	unless no-fail [print-failed]]
@@ -1732,6 +1735,7 @@ normalize-file-name: func[
 
 append-flag: func[flags [string!] flag [string!]][
 	flag: append trim/tail flag #" "
+	unless find "-`" flag/1 [insert flag #"-"]
 	unless find flags flag [append flags flag]
 	flags
 ]
@@ -1784,6 +1788,7 @@ eval-cmd: function/with [
 	/v    "print info"
 	/vv   "print more"
 	/vvv  "print debug"
+	/force "evaluate even when no-eval is used"
 ][
 	if block? cmd [
 		attempt [cmd: reduce cmd]
@@ -1815,9 +1820,10 @@ eval-cmd: function/with [
 
 	cmd: expand-env copy cmd
 
-	;?? cmd
+	; there may be case, where evaluation is needed even when no-eval? is true
+	; for example when just making xcode project without actually trying to build it
+	if all [no-eval? not force] [exit]
 
-	if no-eval? [exit]
 	if log [
 		if exists? log-file [try [lib/delete log-file]]
 		append cmd rejoin [" > " to-local-file log-file]
