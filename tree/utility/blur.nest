@@ -19,6 +19,5 @@ eggs: [
 	"Utility: blur" [
 		name: %blur
 		file: %test/test.c
-		include: %test/
 	]
 ]
