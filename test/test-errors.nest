@@ -1,0 +1,34 @@
+; use main seed as a template...
+#include %test.nest
+; but provide own targets...
+eggs: only [
+	"Test error: not existing include" [
+		name: %error-1
+		info "Intended error follows!"
+		:test-6-iclude-not-exists ; it should stop processing here
+	]
+	"Test error: missing source file" [
+		name: %error-2
+		info "Intended error follows!"
+		files: [
+			%main.c
+			%not-exists.c
+		]
+	]
+	"Test error: unknown/missing tool" [
+		name: %error-3
+		info "Intended error follows!"
+		needs: [unknown-tool]
+	]
+	"Test error: invalid dialect 1" [
+		name: %error-4
+		info "Intended error follows!"
+		needs: 123
+	]
+	"Test error: invalid dialect 2" [
+		name: %error-5
+		info "Intended error follows!"
+		123
+		file: %main.c
+	]
+]

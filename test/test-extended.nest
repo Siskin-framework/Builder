@@ -1,0 +1,17 @@
+; use main seed as a template...
+#include %test.nest
+; but provide own targets...
+eggs: only [
+	"Test extended" [
+		name: %test-extended
+		global-file: %global.c
+		files: [
+			%main.c
+			:global-file
+			:os-files
+		]
+		define: {STR_VALUE="\"This is extended test!\""}
+		;probe-spec
+		strip: on
+	]
+]

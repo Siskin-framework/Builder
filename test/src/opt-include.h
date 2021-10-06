@@ -1,0 +1,1 @@
+#define OPT_STR_VALUE "Another string."

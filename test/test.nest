@@ -1,0 +1,135 @@
+name:    "Testing..."
+source:  %src/
+compiler: gcc
+
+; immediate action
+probe-spec: action ["Probe current spec structure"][do [? spec]]
+; pre-compilation action
+
+sign: false
+
+os-files: []
+
+#if Windows? [
+	defines: [HAS_MESSAGE]
+	os-files: [%windows.c]
+]
+
+test-4-include: [
+	files: [%main.c %global.c]
+]
+test-5-iclude: [
+	:test-4-include
+	defines: none
+]
+test-6-files-A: [%main.c]
+test-6-files-B: [%global.c #if Windows? [%windows.c]]
+test-6-include: [
+	test-6-files-A: :test-6-files-B
+]
+
+include-hello: [
+	define: HAS_HELLO
+	file:   %hello.c
+]
+
+eggs: [
+	"Test 1 (hello)" [
+		name: %test-1
+		files: [
+			%main.c
+			%global.c
+			#if Windows? [
+				%windows.c
+			]
+		]
+		:include-hello
+		probe-spec
+	]
+	"Test 2 (get files)" [
+		name: %test-2
+		global-file: %global.c
+		files: [
+			%main.c
+			:global-file
+			:os-files
+		]
+	]
+	"Test 3 (define: DEFINE)" [
+		name: %test-3
+		file: %main.c
+		file: %global.c
+		file: :os-files
+		some-defines: [DEFINE_1 DEFINE_2]
+		#if Windows? [
+			define: HAS_MESSAGE
+		]
+		define: "TEST_DEFINE"
+		define: :some-defines
+		define: {STR_VALUE="\"Some string\""}
+		define: {OPT_INCLUDE=\"opt-include.h\"}
+		do [? spec/defines]
+	]
+	"Test 4 (include)" [
+		name: %test-4
+		:test-4-include
+		defines: none
+	]
+	"Test 5 (nested include)" [
+		name: %test-5
+		:test-5-iclude
+		probe-spec
+	]
+	"Test 6 (nested files include)" [
+		name: %test-6
+		:test-6-include
+		files: :test-6-files-A
+		probe-spec
+	]
+	"Test 7 (flags)" [
+		name: %test-7
+		; all variants should be accepted, result with only one value
+		flags: [mconsole]
+		flags: -mconsole
+		flags:  mconsole
+		;
+		cflags: [-ffunction-sections -fdata-sections]
+		cflags: -ffunction-sections
+		cflags:  ffunction-sections
+		;
+		lflags: ["-Wl,--gc-sections"]
+		lflags:  "-Wl,--gc-sections"
+		do [
+			? spec/cflags
+			? spec/lflags
+		]
+		info "This egg has no files to compile, so there will be no output!"
+	]
+	
+	"Shared `hello` library" [
+		name: %libhello
+		file: %hello.c
+		flag: shared
+		lflag: "compatibility_version 1.0"
+		lflag: "current_version 1.2.3"
+	]
+	"Static `hello` library" [
+		name: %libhello
+		file: %hello.c
+		flag: archive-only
+	]
+	"Using `hello` static library" [
+		name: %hello-static
+		file: %main.c
+		file: %global.c
+		define: HAS_HELLO
+		library: %hello
+	]
+	"Using `hello` shared library" [
+		name: %hello-shared
+		file: %main.c
+		file: %global.c
+		define: HAS_HELLO
+		shared: %libhello
+	]
+]
