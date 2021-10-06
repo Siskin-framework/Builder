@@ -323,7 +323,7 @@ parse-nest: closure/with [
 		ar arch assembly cc cflags clean compiler define defines file files
 		flags git github include includes lflags libraries library libs
 		name needs optimize out-dir output shared source stack-size strip
-		eggs temp temp-dir tools upx framework frameworks
+		eggs temp temp-dir tools upx framework frameworks info
 	]
 
 	get-spec-block-value: func[spec [map!] what /local block][
@@ -546,6 +546,10 @@ parse-nest: closure/with [
 			]
 		)
 		|
+		'info set val: string! (
+			print-info val
+		)
+		|
 		'pushd set val: file! (
 			add-pre-build dest ['pushd val]
 		)
@@ -603,7 +607,7 @@ parse-nest: closure/with [
 		|
 		pos: 1 skip (
 			print-error rejoin [
-				"Invalid dialect use at: ^[[0;31m"
+				"Invalid dialect use at: ^[[31m"
 				next mold/flat/part pos 50
 			]
 			return false
