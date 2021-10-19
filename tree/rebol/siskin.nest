@@ -21,7 +21,8 @@ make-siskin: [
 	
 	mezz-lib-files: [
 ;		%../../Siskin/prebol.reb
-		%../../Siskin/siskin-msvc.reb	
+		%../../Siskin/siskin-msvc.reb
+		%../../Siskin/siskin-xcode.reb
 		%../../Siskin/siskin.reb
 	]
 	boot-host-files: [
