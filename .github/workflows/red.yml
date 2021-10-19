@@ -19,7 +19,7 @@ jobs:
       uses: actions/checkout@v2
 
     - name: Install Rebol
-      uses: oldes/install-rebol@v3.5.5
+      uses: oldes/install-rebol@v3.6.0
 
     - name: Build Red CLI console
       run: |
@@ -45,7 +45,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Install Rebol
-        uses: oldes/install-rebol@v3.5.5
+        uses: oldes/install-rebol@v3.6.0
 
       - name: Install 32bit dependencies
         run: |
@@ -85,7 +85,7 @@ jobs:
 #        uses: actions/checkout@v2
 #
 #      - name: Install Rebol
-#        uses: oldes/install-rebol@v3.5.5
+#        uses: oldes/install-rebol@v3.6.0
 #
 #      - name: Build Red CLI console
 #        run: |

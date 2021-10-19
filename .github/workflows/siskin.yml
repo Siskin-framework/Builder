@@ -19,7 +19,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Install Rebol
-        uses: oldes/install-rebol@v3.5.5
+        uses: oldes/install-rebol@v3.6.0
 
       # 32bit gcc version would fail for now (requires 32bit mingw)
       #    - name: Build 32bit Siskin using gcc
@@ -72,7 +72,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Install Rebol
-        uses: oldes/install-rebol@v3.5.5
+        uses: oldes/install-rebol@v3.6.0
 
       #- name: Build 32bit Siskin using gcc
       #  run: ./rebol3 siskin.r3 rebol/siskin %Siskin-x86-libc
@@ -102,7 +102,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Install Rebol
-        uses: oldes/install-rebol@v3.5.5
+        uses: oldes/install-rebol@v3.6.0
 
       #It looks it's not possible to build 32bit macOS version anymore using GitHub actions!
       #
