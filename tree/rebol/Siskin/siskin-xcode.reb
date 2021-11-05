@@ -47,7 +47,7 @@ TAB4: "^-^-^-^-"
 
 make-uuid: function[type [any-string!] name [any-string!]][
 	uuid: make binary! 12
-	ni: encode 'unixtime now
+	ni: to integer! now
 	tp: checksum join "SISKIN" type 'adler32
 	nm: checksum join "SISKIN" name 'adler32
 	binary/write uuid [UI32 :ni UI32 :tp UI32 :nm]
