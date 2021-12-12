@@ -114,7 +114,7 @@ do-args: closure/with [
 		print-debug ["..with arguments:" as-red form system/options/args]
 		system/options/quiet: true
 		try/except [ do/args script system/options/args ][
-			sys/log/error 'rebol system/state/last-error
+			print-error system/state/last-error
 			quit/return 1 ;@@ TODO: choose which error number to use
 		]
 		quit
@@ -1270,7 +1270,7 @@ build: function/with [
 		][
 			make-dir/deep first split-path target
 
-			print [as-green "Building object:" to-local-file target-short]
+			print [as-green "Building object:" as-yellow to-local-file target-short]
 
 			eval-cmd/vvv [
 				compile
