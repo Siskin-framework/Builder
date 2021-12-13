@@ -1331,7 +1331,7 @@ build: function/with [
 		][
 			make-dir/deep first split-path target
 
-			print [as-green "Building object:" as-yellow mold target-short]
+			print [as-green "Building object:" as-yellow target-short]
 
 			eval-cmd/vvv [
 				compile
@@ -1797,15 +1797,16 @@ normalize-file-name: func[
 	to file! name
 ]
 
-escaped-space: either Windows? ["^ "]["\ "]
-
-to-local-file: func[
-	file
-	/no-escape "Don't escape spaces"
+to-local-file: function [
+	file [file! string!]
+	/no-quote "Don't quote even when found spaces"
 ][
 	file: lib/to-local-file file
-	unless no-escape [
-		replace/all file #" " escaped-space
+	if all [
+		not no-quote
+		find file #" "
+	][
+		append insert file #"^"" #"^""
 	]
 	file
 ]
@@ -1931,7 +1932,7 @@ eval-cmd: function/with [
 store-object: func[list [file!] file [file! string!]][
 	write/append list rejoin [
 		;using *nix type of path even on Windows + escaped spaces
-		replace/all replace/all to-local-file/no-escape file #"\" #"/" #" " "\ "
+		replace/all to-local-file file #"\" #"/"
 		newline
 	]
 ]

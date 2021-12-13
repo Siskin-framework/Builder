@@ -107,6 +107,7 @@ eggs: [
 	]
 	"Test 8 (file with space in name)" [
 		;compiler: %"/Users/oldes/test space/gcc"
+		;compiler: %"/c/Dev/MingW/mingw64/bin/ gcc"
 		name: %"test-8 spaced"
 		file: %"hello space.c"
 	]
