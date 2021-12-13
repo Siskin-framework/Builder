@@ -296,7 +296,7 @@ do-rebol2: closure/with [code [string! file!]][
 				rebol2: write root-dir/rebol2.exe bin
 			][
 				; file is *.tar.gz
-				tar: decode 'tar decompress/gzip bin
+				tar: decode 'tar decompress bin 'gzip
 				rebol2: write root-dir/rebol2 tar/6/1
 				eval-cmd/v ["chmod +x" root-dir/rebol2]
 			]
