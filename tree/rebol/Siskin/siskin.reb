@@ -20,6 +20,7 @@ banner: next rejoin [{
 ^[[0;33m ║^[[1;31m  (/^[[0;31muOu^[[1;31m\)  ^[[0;33mhttps://github.com/Siskin-framework/Builder/
 ^[[0;33m ╚════^[[1;31m"^[[0;33m═^[[1;31m"^[[0;33m═══════════════════════════════════════════════════════════════════════^[[m}]
 
+       import 'prebol
 msvc:  import 'msvc
 xcode: import 'xcode
  msvc/siskin:
@@ -28,6 +29,32 @@ xcode/siskin:  self
 debug?: off
 
 append system/options/log [siskin: 1]
+
+commands-to-args: #(
+	t      "-test"
+	test   "-test"
+	v      "-v"
+	vv     "-vv"
+	vvv    "-vvv"
+	d      "-debug"
+	debug  "-debug"
+	r      "-run"
+	run    "-run"
+	msvc   "-msvc"
+	xcode  "-xcode"
+	u      "-update"
+	update "-update"
+	c      "-clean"
+	clean  "-clean"
+)
+short-commands: #(
+	"-t"   "-test"
+	"-d"   "-debug"
+	"-r"   "-run"
+	"-u"   "-update"
+	"-c"   "-clean"
+	"-q"   "-quiet"
+)
 
 ;- environment -
 
@@ -70,9 +97,13 @@ nest-context: object [
 	rebuild?:     false ; if force compilation of all files (even if not modified)
 	no-eval?:     false
 	clang?:       false
+	run-result?:  false
+	update?:      false
 	CI?:          false
 	target-names: copy []
 	interactive?: false
+
+	force-compiler: none
 
 	android-sdk:  none
 	android-ndk:  none
@@ -122,18 +153,24 @@ do-args: closure/with [
 
 	print banner
 
-	if all [
-		none? system/script/args
-		block? system/options/args
-	] [
-		;@@ woraround for running nest file associated with Siskin utility on Windows
-		try [system/options/args/1: mold to-rebol-file system/options/args/1]
-		system/script/args: reform system/options/args
+	either system/product = 'Siskin [
+		; using prebuild Siskin utility
+		args: system/options/args
+	][
+		; using Rebol with Siskin script needs special handling!
+		if all [
+			none? system/script/args
+			block? system/options/args
+		] [
+			;@@ woraround for running nest file associated with Siskin utility on Windows
+			try [system/options/args/1: mold to-rebol-file system/options/args/1]
+			system/script/args: reform system/options/args
+		]
+		args: any [system/script/args system/options/args]
 	]
 
 	change-dir root-dir: system/options/path
 
-	args: any [system/script/args system/options/args]
 	if debug? [?? args]
 	if all [string? args empty? args][args: none]
 	either all [args not empty? args][
@@ -144,34 +181,24 @@ do-args: closure/with [
 			]
 		] 
 		unless block? args [args: reduce [args]]
-		parse args [
-			any [
-
-				set project: [word! | path! | any-string!] set command: [integer! | block! | any-string! | word! | none] (
-					project: to file! project
-					parts: split-path project
-					unless any [
-						'file = exists? nest: project
-						'file = exists? nest: join project %.nest
-						'file = exists? nest: join project %/.nest
-						'file = exists? nest: rejoin [%./ project %/ parts/2 %.nest ]
-						'file = exists? nest: rejoin [%./tree/ project %.nest]
-						'file = exists? nest: rejoin [%./tree/ project %/ parts/2 %.nest]
-						'file = exists? nest: rejoin [%./projects/ project %.nest]
-						'file = exists? nest: rejoin [%./projects/ project %/ parts/2 %.nest]
-					][
-						print-error ["Nest not found:" as-red project]
-						exit
-					]
-					
-
-					;?? nest
-					try/except [ do-nest/with nest command][ print-error none ]
-				)
-				|
-				p: 1 skip (print-error reduce ["Unknown argument:" as-red p/1])
-			]
+		project: to file! take args
+		parts: split-path project
+		unless any [
+			'file = exists? nest: project
+			'file = exists? nest: join project %.nest
+			'file = exists? nest: join project %/.nest
+			'file = exists? nest: rejoin [%./ project %/ parts/2 %.nest ]
+			'file = exists? nest: rejoin [%./tree/ project %.nest]
+			'file = exists? nest: rejoin [%./tree/ project %/ parts/2 %.nest]
+			'file = exists? nest: rejoin [%./projects/ project %.nest]
+			'file = exists? nest: rejoin [%./projects/ project %/ parts/2 %.nest]
+		][
+			print-error ["Nest not found:" as-red project]
+			exit
 		]
+
+		;?? nest
+		try/except [ do-nest nest args ][ print-error none ]
 	][
 		; Script may be evaluated from inside Siskin utility or as a Rebol script! 
 		print ajoin [
@@ -660,13 +687,16 @@ parse-action: closure/with [
 
 do-nest: closure/with [
 	nest [file!]
-	/with args
-	/and parent [map!]
+	args [block!]
+	/with parent [map!]
 ][
 	CI?: ("true" = get-env "CI")
 	print-info ["Processing nest:" as-green to-local-file clean-path nest]
-	try [args: load/all args] ;@@ review this!
-	interactive?: none? args
+
+	unless interactive?: empty? args [
+		print-info ["With commands:" as-green mold args]
+	]
+	
 	set [nest-root: nest:] split-path nest
 	nest-root: pushd nest-root
 	nest-spec: parse-nest nest none
@@ -699,7 +729,7 @@ do-nest: closure/with [
 		try/except [
 			nest-spec/gits: none
 			nest-spec/nest: none
-			do-nest/with/and nest args nest-spec
+			do-nest/with nest args nest-spec
 		][ print-error none ]
 		exit
 	]
@@ -709,25 +739,45 @@ do-nest: closure/with [
 
 	forever [
 		try/except [
-			if word? args [args: to string! args]
-			unless args [print-eggs]
 			if any [none? args all [block? args empty? args]][
+				unless none? args [print-eggs]
 				args: ask as-green "^/Egg command: "
 				unless args [ quit ] ; CTRL+C
 				try/except [args: load args][
 					print-error ["Invalid command:" as-red args]
-					clear args
+					args: none
 					continue
 				]
+				unless block? args [args: to block! args] ; in case that input was a single value
+				forall args [
+					if tmp: select commands-to-args args/1 [ change args tmp ]
+				]
 			]
+
+			; make sure, that args are block even for a not interactive input
+			; (may be string when running Builder as a pure Rebol script with just a single argument)
 			unless block? args [args: reduce [args]]
-			if empty? args [
-				print-eggs
-				continue
+
+			if empty? args [ continue ]
+
+			forall args [
+				; in case that args are from command line, expand short versions
+				; or allow numeric and file input...
+				if any [
+					tmp: select short-commands args/1
+					all [
+						not error? try [tmp: load args/1]
+						find #[typeset! [integer! file!]] type? :tmp
+					]
+				][
+					change args tmp
+				]
 			]
+
 			if debug? [?? args]
 
 			no-eval?: false
+			run-result?: false
 			set-env "NEST_SPEC" none
 
 			debug?: off
@@ -738,106 +788,50 @@ do-nest: closure/with [
 					(
 						;-- reset states if there are more commands in one call
 						;@@ TODO: may need more additions!
-						rebuild?: false
-						clang?: false
+						rebuild?:    false
+						clang?:      false
+						run-result?: false
+						update?:     false
 					)
-					['t | 'test] (
-						;-- like normal build command, but there are no evaluations
-						no-eval?: true
-					)
-					| opt [['c | 'clean] (rebuild?: true)] set id: [integer! | file! | string!] (
-						build-target id
-					)
-					|
-					'v (system/options/log/siskin: 1)
-					|
-					'vv (system/options/log/siskin: 2)
-					|
-					'vvv (system/options/log/siskin: 3)
-					|
-					['quiet] (debug?: off system/options/log/siskin: 0)
-					|
-					['d | 'debug] (
-						debug?: true
-						system/options/log/siskin: 4
-					)
-					|
-					['r | 'run | 'e] (
-						if all [
-							object? result
-							file? result/name
-						][
-							print [as-green "^/Executing:" to-local-file result/name]
-							pushd first split-path result/name
-							eval-cmd/no-quit/v to-local-file result/name
-							popd
-						] 
-					)
-					| 'msvc set id: [integer! | file! | string!] (
-						try/except [
-							timestamp: now/time/precise
-							spec: get-spec id
-							spec/eggs: none
-							bat: msvc/make-project spec
-							eval-cmd/v ["CALL " bat]
-							;? spec
-							file: rejoin [
-								any [spec/root what-dir]
-								either spec/arch = 'x64 [%msvc/Release-x64/][%msvc/Release-Win32/]
-								spec/name
-							]
-							finalize-build spec file
-						] :on-error-quit
-					)
-					| 'xcode set id: [integer! | file! | string!] (
-						try/except [
-							timestamp: now/time/precise
-							spec: get-spec id
-							spec/eggs: none
-							spec/compiler: 'xcode
-							xcodeproj: xcode/make-project spec
-
-							
-							if debug? [
-								; to get info about xcodeproj:
-								eval-cmd/v ["xcodebuild -list -project " xcodeproj]
-								; to see settings:
-								eval-cmd/v ["xcodebuild -configuration Release -showBuildSettings -project " xcodeproj]
-							]
-
-							; to build xcodeproj:
-							unless no-eval? [
-								eval-cmd/v ["xcodebuild -configuration Release -project " xcodeproj " build" either debug? [""][" -quiet"]]
-								finalize-build spec spec/output
-							]
-							
-						] :on-error-quit
-					)
-					|
-					['u | 'update] set id: [integer! | none] (
-
-						project: either none? id [
-							nest-spec
-						][
-							default: copy/deep nest-spec
-							command: at commands (2 * id)
-							parse-spec command/1 default
-						]
-						foreach git project/gits [
-							print [as-green "Updating GIT:" git]
-							attempt [
-								pushd get-git-dir git
-								eval-cmd/vv {git pull}
+					any [
+					  "-test"   (no-eval?: true) ;-- like normal build command, but there are no evaluations
+					| "-clean"  (rebuild?: true) ;@@ TODO: could be better used to delete all cache files
+					| "-v"      (system/options/log/siskin: 1)
+					| "-vv"     (system/options/log/siskin: 2)
+					| "-vvv"    (system/options/log/siskin: 3)
+					| "-vvvv"   (system/options/log/siskin: 4)
+					| "-debug"  (system/options/log/siskin: 4 debug?: on)
+					| "-quiet"  (system/options/log/siskin: 0 debug?: off)
+					| "-run"    (run-result?: on)
+					| "-msvc"   (force-compiler: @msvc)
+					| "-xcode"  (force-compiler: @xcode)
+					| "-update" (update?: on)
+					| ['q | 'quit] (interactive?: false)
+					]
+					copy ids: any [integer! | file! | string!]
+					(
+						forall ids [
+							build-target ids/1
+							if all [
+								run-result?
+								not no-eval?
+								object? result
+								file? result/name
+							][
+								print [as-green "^/Executing:" to-local-file result/name]
+								pushd first split-path result/name
+								eval-cmd/no-quit/v to-local-file result/name
 								popd
-							]
+							] 
 						]
 					)
 					|
-					['q | 'quit] (interactive?: false)
+					p: 1 skip (print-error ["Unklnown arg:" as-red mold first p])
 				]
 			]
+			args: none
 		] :on-error-warn
-		clear args
+		
 		unless interactive? [break]
 	]
 	popd
@@ -863,6 +857,20 @@ get-spec: closure/with [
 	none
 ] :nest-context
 
+update-gits: function/with [
+	spec [map!]
+][
+	;@@TODO: make sure not to update gits multiple time in one command batch
+	foreach git spec/gits [
+		print [as-green "Updating GIT:" git]
+		attempt [
+			pushd get-git-dir git
+			eval-cmd/vv {git pull}
+			popd
+		]
+	]
+] :nest-context
+
 build-target: closure/with [
 	command [block! integer! file! string!]
 ][
@@ -873,6 +881,16 @@ build-target: closure/with [
 			print-failed
 			exit
 		]
+		if update? [update-gits spec]
+
+		;@@ temporary using strings because of https://github.com/Oldes/Rebol-issues/issues/2466
+		;@@ use ref! once build with fixed Rebol version!!!
+		if force-compiler [
+		switch to string! force-compiler [
+			"msvc"  [build-msvc  spec  exit]
+			"xcode" [build-xcode spec  exit]
+		]]
+
 		try/except [build spec][
 			print-failed
 			exit
@@ -880,8 +898,51 @@ build-target: closure/with [
 	] :on-error-quit
 ] :nest-context
 
+build-msvc: function/with [
+	"Build using Microsoft's Visual Studio project"
+	spec [map!]
+][
+	try/except [
+		spec/eggs: none
+		bat: msvc/make-project spec
+		eval-cmd/v ["CALL " bat]
+		;? spec
+		file: rejoin [
+			any [spec/root what-dir]
+			either spec/arch = 'x64 [%msvc/Release-x64/][%msvc/Release-Win32/]
+			spec/name
+		]
+		finalize-build spec file
+	] :on-error-quit
+] :nest-context
+
+build-xcode: function/with [
+	"Build using Apple's XCode project"
+	spec [map!]
+][
+	try/except [
+		spec/eggs: none
+		spec/compiler: 'xcode
+		? spec
+		xcodeproj: xcode/make-project spec
+		
+		if debug? [
+			; to get info about xcodeproj:
+			eval-cmd/v ["xcodebuild -list -project " xcodeproj]
+			; to see settings:
+			eval-cmd/v ["xcodebuild -configuration Release -showBuildSettings -project " xcodeproj]
+		]
+
+		; to build xcodeproj:
+		unless no-eval? [
+			eval-cmd/v ["xcodebuild -configuration Release -project " xcodeproj " build" either debug? [""][" -quiet"]]
+			finalize-build spec spec/output
+		]
+	] :on-error-quit
+] :nest-context
 
 build: function/with [
+	"Build using given specification"
 	spec [map!]
 ][
 	foreach [k v] defaults [
@@ -1258,7 +1319,7 @@ build: function/with [
 		]
 
 		target: rejoin [spec/objects force-relative-file file %.o]
-		target-short: rejoin [tmp-env to-local-file force-relative-file file %.o]
+		target-short: rejoin [tmp-env force-relative-file file %.o]
 
 		p: to integer! round 100 * i / n
 		prin rejoin [" [" pad/left p 4 "% ] "]
@@ -1270,19 +1331,18 @@ build: function/with [
 		][
 			make-dir/deep first split-path target
 
-			print [as-green "Building object:" as-yellow to-local-file target-short]
+			print [as-green "Building object:" as-yellow mold target-short]
 
 			eval-cmd/vvv [
 				compile
 				;source-type
 				to-local-file source
 				"-c" cflags "$DEFINES $INCLUDES"
-				"-o" target-short ;-- using environment variable to hold temp location
+				"-o" to-local-file target-short ;-- using environment variable to hold temp location
 			]
 		][
 			print ["^[[32mFile up to date^[[0m:" to-local-file target-short]
 		]
-
 		store-object spec/objects/objects.txt target
 	]
 
@@ -1737,6 +1797,19 @@ normalize-file-name: func[
 	to file! name
 ]
 
+escaped-space: either Windows? ["^ "]["\ "]
+
+to-local-file: func[
+	file
+	/no-escape "Don't escape spaces"
+][
+	file: lib/to-local-file file
+	unless no-escape [
+		replace/all file #" " escaped-space
+	]
+	file
+]
+
 append-flag: func[flags [string!] flag [string!]][
 	flag: append trim/tail flag #" "
 	unless find "-`" flag/1 [insert flag #"-"]
@@ -1846,7 +1919,7 @@ eval-cmd: function/with [
 		]
 		if res <> 0 [
 			if CI? [quit/return 1]
-			ask "^/^[[1;35;49mPress enter to continue.^[[0m"
+			ask as-purple "^/Press enter to continue."
 		]
 	][
 		res: call/wait/shell cmd
@@ -1857,7 +1930,8 @@ eval-cmd: function/with [
 
 store-object: func[list [file!] file [file! string!]][
 	write/append list rejoin [
-		replace/all to-local-file file #"\" #"/" ;on windows it must use *nix type of path
+		;using *nix type of path even on Windows + escaped spaces
+		replace/all replace/all to-local-file/no-escape file #"\" #"/" #" " "\ "
 		newline
 	]
 ]
