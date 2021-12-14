@@ -50,6 +50,26 @@ jobs:
       - name: Test 64bit Siskin project (msvc)
         run: ./Siskin-x64.exe
 
+      - name: Test build 1
+        run: ./Siskin-x64.exe test test-1
+      - name: Test build 2
+        run: ./Siskin-x64.exe test test-2
+      - name: Test build 3
+        run: ./Siskin-x64.exe test test-3
+      - name: Test build 4
+        run: ./Siskin-x64.exe test test-4
+      - name: Test build 5
+        run: ./Siskin-x64.exe test test-5
+      - name: Test build 6
+        run: ./Siskin-x64.exe test test-6
+      - name: Test build 7
+        run: ./Siskin-x64.exe test test-7
+      - name: Test build 8
+        run: ./Siskin-x64.exe test "test-8 spaced"
+      - name: Test build multiple at once
+        run: ./Siskin-x64.exe test 1 2 "test-8 spaced"
+      
+
       - uses: actions/upload-artifact@v2
         with:
           name: Siskin-windows
@@ -85,6 +105,25 @@ jobs:
           mv ./tree/rebol/Siskin/build/Siskin-x64-libc ./
         #  mv ./tree/rebol/Siskin/build/Siskin-x86-libc ./
 
+      - name: Test build 1
+        run: ./Siskin-x64-libc test test-1
+      - name: Test build 2
+        run: ./Siskin-x64-libc test test-2
+      - name: Test build 3
+        run: ./Siskin-x64-libc test test-3
+      - name: Test build 4
+        run: ./Siskin-x64-libc test test-4
+      - name: Test build 5
+        run: ./Siskin-x64-libc test test-5
+      - name: Test build 6
+        run: ./Siskin-x64-libc test test-6
+      - name: Test build 7
+        run: ./Siskin-x64-libc test test-7
+      - name: Test build 8
+        run: ./Siskin-x64-libc test "test-8 spaced"
+      - name: Test build multiple at once
+        run: ./Siskin-x64-libc test 1 2 "test-8 spaced"
+
       - name: Compress results before uploading
         run: |
           gzip -9 ./Siskin-x64-libc
@@ -116,6 +155,25 @@ jobs:
 
       - name: Move results into the root for uploading
         run: mv ./tree/rebol/Siskin/build/Siskin-x64-osx ./
+
+      - name: Test build 1
+        run: ./Siskin-x64-osx test test-1
+      - name: Test build 2
+        run: ./Siskin-x64-osx test test-2
+      - name: Test build 3
+        run: ./Siskin-x64-osx test test-3
+      - name: Test build 4
+        run: ./Siskin-x64-osx test test-4
+      - name: Test build 5
+        run: ./Siskin-x64-osx test test-5
+      - name: Test build 6
+        run: ./Siskin-x64-osx test test-6
+      - name: Test build 7
+        run: ./Siskin-x64-osx test test-7
+      - name: Test build 8
+        run: ./Siskin-x64-osx test "test-8 spaced"
+      - name: Test build multiple at once
+        run: ./Siskin-x64-osx test 1 2 "test-8 spaced"
 
       - name: Compress results before uploading
         run: gzip -9 ./Siskin-x64-osx
