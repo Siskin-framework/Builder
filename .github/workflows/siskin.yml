@@ -33,13 +33,14 @@ jobs:
       #        MOVE ./tree/rebol/Siskin/build/Siskin-x64.exe ./Siskin-x64-gcc.exe
 
       - name: Build 32bit Siskin using msvc
-        run: ./rebol3 siskin.r3 rebol/siskin [msvc %Siskin-x86]
-      - name: Move 32bit Siskin
-        run: MOVE ./tree/rebol/Rebol/msvc/Release-Win32/Siskin-x86.exe ./
+        run: |
+          ./rebol3 siskin.r3 rebol/siskin -msvc %Siskin-x86
+          MOVE ./tree/rebol/Rebol/msvc/Release-Win32/Siskin-x86.exe ./
+          
       - name: Build 64bit Siskin using msvc
-        run: ./rebol3 siskin.r3 rebol/siskin [msvc %Siskin-x64]
-      - name: Move 64bit Siskin
-        run: MOVE ./tree/rebol/Rebol/msvc/Release-x64/Siskin-x64.exe ./
+        run: |
+          ./rebol3 siskin.r3 rebol/siskin -msvc %Siskin-x64
+          MOVE ./tree/rebol/Rebol/msvc/Release-x64/Siskin-x64.exe ./
 
       #- name: Test 32bit Siskin project (gcc)
       #  run: ./Siskin-x86-gcc.exe
