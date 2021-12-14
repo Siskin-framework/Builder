@@ -122,6 +122,13 @@ relativize-files: func[files [block!] dir /local tmp][
 	files
 ]
 
+quoted: func[str][
+	if find str #" " [
+		str: append insert copy str #"^"" #"^""
+	]
+	str
+]
+
 dirs-stack: copy []
 pushd: function [
 	target [file!]
@@ -177,8 +184,8 @@ form-pre-post-build: func[
 		)
 		|
 		copy val 2 skip (
-			print ["!!! Ignoring setting: " mold val]
-			ask "Press enter to continue."
+			siskin/print-warn ["!!! Ignoring setting: " mold/flat val]
+			;ask "Press enter to continue."
 		)
 	]]
 	result
@@ -341,7 +348,7 @@ make-project: func[
 
 	append SECTION-PBXFileReference rejoin [
 		TAB2 TARGET-UUID  " /* " product " */ = {isa = PBXFileReference; explicitFileType = ^""
-		product-type "^"; includeInIndex = 0; path = " product "; sourceTree = BUILT_PRODUCTS_DIR; };^/"
+		product-type "^"; includeInIndex = 0; path = " quoted product "; sourceTree = BUILT_PRODUCTS_DIR; };^/"
 	]
 
 	foreach file sort spec/shared [
@@ -514,9 +521,10 @@ make-project: func[
 
 
 	PRE-BUILD: form-pre-post-build spec any [spec/pre-build []]
-	PRE-BUILD-SCRIPT: to-local-file join dir-out %pre-build.sh
+	PRE-BUILD-SCRIPT: siskin/to-local-file join dir-out %pre-build.sh
 	write-file [dir-out %pre-build.sh] PRE-BUILD
-	siskin/eval-cmd/v/force ["chmod +x " PRE-BUILD-SCRIPT]
+	siskin/eval-cmd/v/force [{chmod +x } PRE-BUILD-SCRIPT]
+	replace/all PRE-BUILD-SCRIPT #" " "\\ " ;@@ add proper escaping!!!
 	;@@ TODO: post actions..
 	;POST-BUILD-EVENT: copy "" ;form-pre-post-build spec/post-build
 
@@ -652,8 +660,8 @@ project.pbxproj: {// !$*UTF8*$!
 			);
 			dependencies = (
 			);
-			name = #PRODUCT#;
-			productName = #PRODUCT#;
+			name = "#PRODUCT#";
+			productName = "#PRODUCT#";
 			productReference = #TARGET-UUID# /* #PRODUCT# */;
 			productType = "com.apple.product-type.tool";
 		};
@@ -705,7 +713,7 @@ project.pbxproj: {// !$*UTF8*$!
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "#PRE-BUILD-SCRIPT#";
+			shellScript = #PRE-BUILD-SCRIPT#;
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
