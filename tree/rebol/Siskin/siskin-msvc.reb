@@ -188,8 +188,8 @@ form-pre-post-build: func[
 		)
 		|
 		copy val 2 skip (
-			print ["!!! Ignoring setting: " mold val]
-			ask "Press enter to continue."
+			siskin/print-warn ["!!! Ignoring setting: " mold/flat val]
+			;ask "Press enter to continue."
 		)
 	]]
 	append result "^/^-  </Command>^/^-"

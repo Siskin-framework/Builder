@@ -40,10 +40,21 @@ WARNING_CFLAGS:
 MACH_O_TYPE:
 ARCH:
 GCC_WARN_64_TO_32_BIT_CONVERSION:
+MACOSX_DEPLOYMENT_TARGET:
 none
 
 TAB2: "^-^-"
 TAB4: "^-^-^-^-"
+
+valid-archs: #(
+	x86:    i386 
+	i386:   i386
+	x64:    x86_64
+	x86_64: x86_64
+	arm64:  arm64
+	arm64e: arm64e ;used on the A12 chipset - on Mac M1's and iPhones models (XS/XS Max/XR)
+	armv8:  arm64e
+)
 
 make-uuid: function[type [any-string!] name [any-string!]][
 	uuid: make binary! 12
@@ -111,6 +122,13 @@ relativize-files: func[files [block!] dir /local tmp][
 	files
 ]
 
+quoted: func[str][
+	if find str #" " [
+		str: append insert copy str #"^"" #"^""
+	]
+	str
+]
+
 dirs-stack: copy []
 pushd: function [
 	target [file!]
@@ -166,8 +184,8 @@ form-pre-post-build: func[
 		)
 		|
 		copy val 2 skip (
-			print ["!!! Ignoring setting: " mold val]
-			ask "Press enter to continue."
+			siskin/print-warn ["!!! Ignoring setting: " mold/flat val]
+			;ask "Press enter to continue."
 		)
 	]]
 	result
@@ -223,12 +241,18 @@ make-project: func[
 	SECTION-PBXSourcesBuildPhase-Files: clear ""
 	SECTION-PBXFrameworksBuildPhase-Files: clear ""
 	SECTION-PBXCopyFilesBuildPhase-EmbedLib-Files: clear ""
+	MACOSX_DEPLOYMENT_TARGET: clear ""
 
-	ARCH: spec/arch
-	case [
-		ARCH = 'x86 [ARCH: 'i386]
-		ARCH = 'x64 [ARCH: 'x86_64]
+	ARCH: select valid-archs spec/arch
+	unless ARCH [
+		tmp: form spec/arch
+		ARCH: case [
+			find tmp "x86" ['i386  ]
+			find tmp "x64" ['x86_64]
+			'else ["$(ARCHS_STANDARD)"]
+		]
 	]
+	unless string? ARCH [ARCH: ajoin [#"(" ARCH #")"]]
 
 	MACH_O_TYPE: any [
 		all [
@@ -324,7 +348,7 @@ make-project: func[
 
 	append SECTION-PBXFileReference rejoin [
 		TAB2 TARGET-UUID  " /* " product " */ = {isa = PBXFileReference; explicitFileType = ^""
-		product-type "^"; includeInIndex = 0; path = " product "; sourceTree = BUILT_PRODUCTS_DIR; };^/"
+		product-type "^"; includeInIndex = 0; path = " quoted product "; sourceTree = BUILT_PRODUCTS_DIR; };^/"
 	]
 
 	foreach file sort spec/shared [
@@ -459,7 +483,7 @@ make-project: func[
 	;-- collect libraries
 	OTHER_LDFLAGS: clear ""
 
-	probe spec/lflags
+	;probe spec/lflags
 
 	foreach lib any [spec/libraries []] [
 		append OTHER_LDFLAGS rejoin [
@@ -488,15 +512,19 @@ make-project: func[
 		]
 	]
 
+	;MACOSX_DEPLOYMENT_TARGET: "MACOSX_DEPLOYMENT_TARGET = 10.9;"
+
+
 	;-- and...
 
 	spec/output: join %make/build/Release/ product
 
 
 	PRE-BUILD: form-pre-post-build spec any [spec/pre-build []]
-	PRE-BUILD-SCRIPT: to-local-file join dir-out %pre-build.sh
+	PRE-BUILD-SCRIPT: siskin/to-local-file join dir-out %pre-build.sh
 	write-file [dir-out %pre-build.sh] PRE-BUILD
-	siskin/eval-cmd/v/force ["chmod +x " PRE-BUILD-SCRIPT]
+	siskin/eval-cmd/v/force [{chmod +x } PRE-BUILD-SCRIPT]
+	replace/all PRE-BUILD-SCRIPT #" " "\\ " ;@@ add proper escaping!!!
 	;@@ TODO: post actions..
 	;POST-BUILD-EVENT: copy "" ;form-pre-post-build spec/post-build
 
@@ -632,8 +660,8 @@ project.pbxproj: {// !$*UTF8*$!
 			);
 			dependencies = (
 			);
-			name = #PRODUCT#;
-			productName = #PRODUCT#;
+			name = "#PRODUCT#";
+			productName = "#PRODUCT#";
 			productReference = #TARGET-UUID# /* #PRODUCT# */;
 			productType = "com.apple.product-type.tool";
 		};
@@ -685,7 +713,7 @@ project.pbxproj: {// !$*UTF8*$!
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "#PRE-BUILD-SCRIPT#";
+			shellScript = #PRE-BUILD-SCRIPT#;
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
@@ -753,7 +781,7 @@ project.pbxproj: {// !$*UTF8*$!
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				#MACOSX_DEPLOYMENT_TARGET#
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -806,7 +834,7 @@ project.pbxproj: {// !$*UTF8*$!
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				#MACOSX_DEPLOYMENT_TARGET#
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = macosx;
@@ -816,6 +844,7 @@ project.pbxproj: {// !$*UTF8*$!
 		40AFCA8E26BD67990023CA1A /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = #ARCH#;
 				CLANG_ENABLE_MODULES = NO;
 				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = "#PROJECT-VERSION#";
@@ -839,9 +868,7 @@ project.pbxproj: {// !$*UTF8*$!
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				ARCHS = (
-					#ARCH#,
-				);
+				ARCHS = #ARCH#;
 				ONLY_ACTIVE_ARCH = YES;
 				CLANG_ENABLE_MODULES = NO;
 				CODE_SIGN_STYLE = Manual;

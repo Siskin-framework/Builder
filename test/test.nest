@@ -3,7 +3,7 @@ source:  %src/
 compiler: gcc
 
 ; immediate action
-probe-spec: action ["Probe current spec structure"][do [? spec]]
+probe-spec: action ["Probe current spec structure"][do [?? spec]]
 ; pre-compilation action
 
 sign: false
@@ -104,6 +104,12 @@ eggs: [
 			? spec/lflags
 		]
 		info "This egg has no files to compile, so there will be no output!"
+	]
+	"Test 8 (file with space in name)" [
+		;compiler: %"/Users/oldes/test space/gcc"
+		;compiler: %"/c/Dev/MingW/mingw64/bin/ gcc"
+		name: %"test-8 spaced"
+		file: %"hello space.c"
 	]
 	
 	"Shared `hello` library" [

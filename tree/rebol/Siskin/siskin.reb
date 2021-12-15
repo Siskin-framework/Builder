@@ -2,7 +2,7 @@ Rebol [
 	Title:  "Siskin Builder - core"
 	Type:    module
 	Name:    siskin
-	Version: 0.4.1
+	Version: 0.5.0
 	Author: "Oldes"
 	;Needs:  prebol
 	exports: [
@@ -16,10 +16,11 @@ Rebol [
 banner: next rejoin [{
 ^[[0;33m═╗
 ^[[0;33m ║^[[1;31m    .-.
-^[[0;33m ║^[[1;31m   /'v'\   ^[[0;33mSISKIN-Framework Builder 0.4.1 Rebol } rebol/version {
+^[[0;33m ║^[[1;31m   /'v'\   ^[[0;33mSISKIN-Framework Builder 0.5.0 Rebol } rebol/version {
 ^[[0;33m ║^[[1;31m  (/^[[0;31muOu^[[1;31m\)  ^[[0;33mhttps://github.com/Siskin-framework/Builder/
 ^[[0;33m ╚════^[[1;31m"^[[0;33m═^[[1;31m"^[[0;33m═══════════════════════════════════════════════════════════════════════^[[m}]
 
+       import 'prebol
 msvc:  import 'msvc
 xcode: import 'xcode
  msvc/siskin:
@@ -27,7 +28,80 @@ xcode/siskin:  self
 
 debug?: off
 
-append system/options/log [siskin: 1]
+append system/options/log [siskin: 0]
+
+all-options: [
+    #"c" "--clean"   "Remove cached results before build"
+    #"d" "--debug"   "Maximum verbosity and debug messages"
+    #"h" "--help"    "Display available options"
+    #"q" "--quiet"   "Minimum output"
+    #"r" "--run"     "Execute build product immediately"
+    #"t" "--test"    "Soft run without real evaluation"
+    #"u" "--update"  "Update all linked source repositories before build"
+    #"v" "--verbose" "Make the operation more talkative"
+    #"V" "--version" "Show version number and quit"
+	  -  "--msvc"    "Create Visual Studio project and use it for a build"
+	  -  "--xcode"   "Create XCode project and use it for a build"
+]
+
+; mapping of commands used in the interactive input into command line arguments
+; it is generated in the `init-options` call
+supported-commands: make block! 20
+; also these 2 help strings are generated bellow
+help-options-int: 
+help-options-cli: none
+
+init-options: func[/local long short hlp1 hlp2][
+	hlp1: make string! 1000 ; CLI help version
+	hlp2: make string! 1000 ; Interactive help version
+	; Interactive version does not require `nest-name`
+	; and don't use `-` and `--` before option names
+	append hlp1 ajoin [
+		" ^[[33mUsage: ^[[1;32m"
+		second split-path system/options/boot
+		either system/product = 'Siskin [""][" siskin.r3 "]
+		" ^[[1;33m<nest-name> ^[[0;33m[options...] [targets...]^[[m^/"
+	]
+	append hlp2 ajoin [
+		" ^[[33mUsage: ^[[0;33m[options...] [targets...]^[[m^/"
+	]
+
+	foreach [short long doc] all-options [
+		long:  to word! skip long 2
+		short: to word! short
+		either short = '- [
+			append hlp1 "^/      --"
+			append hlp2 "^/      "
+		][
+			append hlp1 ajoin ["^/  -" short ", --"]
+			append hlp2 ajoin ["^/   " short ", "]
+			repend supported-commands [short long]
+		]
+		repend supported-commands [long long]
+		append hlp1 pad form long 10
+		append hlp1 as-green doc
+		append hlp2 pad form long 10
+		append hlp2 as-green doc
+	]
+	supported-commands: to map! supported-commands
+	help-options-cli: append hlp1 lf
+	help-options-int: append hlp2 lf
+]
+
+prepare-interactive: func[args [string!]][
+	; preprocess user input when runing as a Rebol script or from `ask` input
+	try/except [args: load args][
+		print-error ["Invalid command:" as-red args]
+		args: none
+	]
+	unless block? args [args: to block! args] ; in case that input was a single value
+	forall args [
+		change args any [select/case supported-commands args/1  to string! args/1]
+	]
+	args
+] 
+
+
 
 ;- environment -
 
@@ -70,9 +144,13 @@ nest-context: object [
 	rebuild?:     false ; if force compilation of all files (even if not modified)
 	no-eval?:     false
 	clang?:       false
+	run-result?:  false
+	update?:      false
 	CI?:          false
 	target-names: copy []
 	interactive?: false
+
+	force-compiler: none
 
 	android-sdk:  none
 	android-ndk:  none
@@ -98,88 +176,92 @@ cpp-extensions: [%.cc %.cpp %.cxx %.c++]
 do-args: closure/with [
 	"Main Sisking input processor"
 ][
+	init-options
 	system/options/quiet: false
 	;? system/options
+	;	? system/script/args
+	;	? system/options/args
+	args: system/options/args	
+
+	if string? args [ args: prepare-interactive args ]
+	if args [
+		; expand short options
+		forall args [
+			if string? args/1 [
+				parse args/1 [
+					"--" to end
+					|
+					#"-" copy ops: to end (
+						new: clear []
+						forall ops [
+							either tmp: select/case all-options ops/1 [
+								append new copy tmp 
+							][
+								print-warn ["Unknown option" as-red ops/1 as-purple "in" as-red args/1]
+							]
+						]
+						change/part args new 1
+					)
+				]
+			]
+		]
+		; check for early options...
+		case/all [
+			find args "--debug"   [ debug?: on ]
+			find args "--quiet"   [ system/options/quiet: on ]
+			find args "--version" [ print banner quit ]
+			find args "--help"    [ print banner print help-options-cli quit]
+		]
+	]
 
 	;@@ this is temporary hack before finding a better way how to handle raw args!
-	if "--script" = first system/options/args [
+	if all [args "--script" = first args] [
 		; I've added this option to be able preprocess builds using Rebol scripts
 		; without need to download Rebol as an additional utility (in GitHub actions)
-		script: to-rebol-file take remove system/options/args
+		script: to-rebol-file take remove args
 		if #"/" <> first script [ insert script system/options/path ]
-		if "--args" = first system/options/args [take system/options/args] ;ignored
+		if "--args" = first args [take args] ;ignored
 		;? script
-		;? system/options/args
+		;? args
 		print-debug ["Executing script:" as-red to-local-file script]
-		print-debug ["..with arguments:" as-red form system/options/args]
+		print-debug ["..with arguments:" as-red form args]
 		system/options/quiet: true
-		try/except [ do/args script system/options/args ][
-			sys/log/error 'rebol system/state/last-error
+		try/except [ do/args script args ][
+			print-error system/state/last-error
 			quit/return 1 ;@@ TODO: choose which error number to use
 		]
 		quit
 	]
 
-	print banner
-
-	if all [
-		none? system/script/args
-		block? system/options/args
-	] [
-		;@@ woraround for running nest file associated with Siskin utility on Windows
-		try [system/options/args/1: mold to-rebol-file system/options/args/1]
-		system/script/args: reform system/options/args
-	]
+	unless system/options/quiet [print banner]
 
 	change-dir root-dir: system/options/path
 
-	args: any [system/script/args system/options/args]
 	if debug? [?? args]
 	if all [string? args empty? args][args: none]
 	either all [args not empty? args][
-		if string? args [
-			try/except [args: load/all args][
-				print-error ["Failed to parse args:" as-red args]
-				exit
-			]
-		] 
 		unless block? args [args: reduce [args]]
-		parse args [
-			any [
-
-				set project: [word! | path! | any-string!] set command: [integer! | block! | any-string! | word! | none] (
-					project: to file! project
-					parts: split-path project
-					unless any [
-						'file = exists? nest: project
-						'file = exists? nest: join project %.nest
-						'file = exists? nest: join project %/.nest
-						'file = exists? nest: rejoin [%./ project %/ parts/2 %.nest ]
-						'file = exists? nest: rejoin [%./tree/ project %.nest]
-						'file = exists? nest: rejoin [%./tree/ project %/ parts/2 %.nest]
-						'file = exists? nest: rejoin [%./projects/ project %.nest]
-						'file = exists? nest: rejoin [%./projects/ project %/ parts/2 %.nest]
-					][
-						print-error ["Nest not found:" as-red project]
-						exit
-					]
-					
-
-					;?? nest
-					try/except [ do-nest/with nest command][ print-error none ]
-				)
-				|
-				p: 1 skip (print-error reduce ["Unknown argument:" as-red p/1])
-			]
+		project: to file! take args
+		parts: split-path project
+		unless any [
+			'file = exists? nest: project
+			'file = exists? nest: join project %.nest
+			'file = exists? nest: join project %/.nest
+			'file = exists? nest: rejoin [%./ project %/ parts/2 %.nest ]
+			'file = exists? nest: rejoin [%./tree/ project %.nest]
+			'file = exists? nest: rejoin [%./tree/ project %/ parts/2 %.nest]
+			'file = exists? nest: rejoin [%./projects/ project %.nest]
+			'file = exists? nest: rejoin [%./projects/ project %/ parts/2 %.nest]
+		][
+			print-error ["Nest not found:" as-red project]
+			exit
 		]
+
+		;?? nest
+		try/except [ do-nest nest args ][ print-error none ]
 	][
 		; Script may be evaluated from inside Siskin utility or as a Rebol script! 
-		print ajoin [
-			" ^[[33mUsage: ^[[1;32m"
-			second split-path system/options/boot
-			either system/product = 'Siskin [""][" siskin.r3 "]
-			" ^[[1;33mnest-name ^[[0;33m[commands]^[[m"
-		] 
+		print help-options-cli
 		exit
 	]
 ] :nest-context
@@ -269,7 +351,7 @@ do-rebol2: closure/with [code [string! file!]][
 				rebol2: write root-dir/rebol2.exe bin
 			][
 				; file is *.tar.gz
-				tar: decode 'tar decompress/gzip bin
+				tar: decode 'tar decompress bin 'gzip
 				rebol2: write root-dir/rebol2 tar/6/1
 				eval-cmd/v ["chmod +x" root-dir/rebol2]
 			]
@@ -658,15 +740,18 @@ parse-action: closure/with [
 	spec: preprocess nest
 ] :nest-context
 
-do-nest: closure/with [
+do-nest: closure/with/extern [
 	nest [file!]
-	/with args
-	/and parent [map!]
+	args [block!]
+	/with parent [map!]
 ][
 	CI?: ("true" = get-env "CI")
 	print-info ["Processing nest:" as-green to-local-file clean-path nest]
-	try [args: load/all args] ;@@ review this!
-	interactive?: none? args
+
+	unless interactive?: empty? args [
+		print-info ["With commands:" as-green mold args]
+	]
+	
 	set [nest-root: nest:] split-path nest
 	nest-root: pushd nest-root
 	nest-spec: parse-nest nest none
@@ -699,7 +784,7 @@ do-nest: closure/with [
 		try/except [
 			nest-spec/gits: none
 			nest-spec/nest: none
-			do-nest/with/and nest args nest-spec
+			do-nest/with nest args nest-spec
 		][ print-error none ]
 		exit
 	]
@@ -707,141 +792,112 @@ do-nest: closure/with [
 
 	if debug? [??  eggs]
 
+	supported-commands/q: 'quit ; changed shortcut for use in the interactive mode
+
 	forever [
 		try/except [
-			if word? args [args: to string! args]
-			unless args [print-eggs]
-			if any [none? args all [block? args empty? args]][
+			if any [none? args all [block? args empty? args not CI?]][
+				;-- Interactive mode -------------------------
+				unless none? args [print-eggs]
 				args: ask as-green "^/Egg command: "
 				unless args [ quit ] ; CTRL+C
-				try/except [args: load args][
-					print-error ["Invalid command:" as-red args]
-					clear args
-					continue
+				args: prepare-interactive args
+				;? args
+				unless args [ continue ] ; in case of error
+			]
+
+			; make sure, that args are block even for a not interactive input
+			; (may be string when running Builder as a pure Rebol script with just a single argument)
+			unless block? args [args: reduce [args]]
+
+			if empty? args [ continue ]
+
+			; convert string arguments into options, integers or files
+			forall args [
+				unless string? args/1 [continue]
+				parse args/1 [
+					"--" to end (
+						if find all-options args/1 [
+							args/1: to word! remove/part args/1 2
+						]
+					)
+					| #"%" to end (
+						if file? tmp: try [load args/1][ change args tmp ]
+					)
+					| some chars_numbers end (change args to integer! args/1)
+					;| (change args to string! args/1)
 				]
 			]
-			unless block? args [args: reduce [args]]
-			if empty? args [
-				print-eggs
-				continue
-			]
+
 			if debug? [?? args]
 
 			no-eval?: false
+			run-result?: false
 			set-env "NEST_SPEC" none
 
 			debug?: off
 			system/options/log/siskin: 1
 
+			options: [
+				  'test    (no-eval?: true) ;-- like normal build command, but there are no evaluations
+				| 'clean   (rebuild?: true) ;@@ TODO: could be better used to delete all cache files
+				| 'v       (system/options/log/siskin: 1)
+				| 'vv      (system/options/log/siskin: 2)
+				| 'vvv     (system/options/log/siskin: 3)
+				| 'vvvv    (system/options/log/siskin: 4)
+				| 'verbose (system/options/log/siskin: system/options/log/siskin + 1)
+				| 'debug   (system/options/log/siskin: 4 debug?: on)
+				| 'quiet   (system/options/log/siskin: 0 debug?: off)
+				| 'run     (run-result?: on)
+				| 'msvc    (force-compiler: @msvc)
+				| 'xcode   (force-compiler: @xcode)
+				| 'update  (update?: on)
+			]
+			;? args
 			parse args [
 				any [
 					(
 						;-- reset states if there are more commands in one call
 						;@@ TODO: may need more additions!
-						rebuild?: false
-						clang?: false
+						rebuild?:    false
+						clang?:      false
+						run-result?: false
+						update?:     false
+						force-compiler: none
 					)
-					['t | 'test] (
-						;-- like normal build command, but there are no evaluations
-						no-eval?: true
-					)
-					| opt [['c | 'clean] (rebuild?: true)] set id: [integer! | file! | string!] (
-						build-target id
-					)
-					|
-					'v (system/options/log/siskin: 1)
-					|
-					'vv (system/options/log/siskin: 2)
-					|
-					'vvv (system/options/log/siskin: 3)
-					|
-					['quiet] (debug?: off system/options/log/siskin: 0)
-					|
-					['d | 'debug] (
-						debug?: true
-						system/options/log/siskin: 4
-					)
-					|
-					['r | 'run | 'e] (
-						if all [
-							object? result
-							file? result/name
-						][
-							print [as-green "^/Executing:" to-local-file result/name]
-							pushd first split-path result/name
-							eval-cmd/no-quit/v to-local-file result/name
-							popd
-						] 
-					)
-					| 'msvc set id: [integer! | file! | string!] (
-						try/except [
-							timestamp: now/time/precise
-							spec: get-spec id
-							spec/eggs: none
-							bat: msvc/make-project spec
-							eval-cmd/v ["CALL " bat]
-							;? spec
-							file: rejoin [
-								any [spec/root what-dir]
-								either spec/arch = 'x64 [%msvc/Release-x64/][%msvc/Release-Win32/]
-								spec/name
-							]
-							finalize-build spec file
-						] :on-error-quit
-					)
-					| 'xcode set id: [integer! | file! | string!] (
-						try/except [
-							timestamp: now/time/precise
-							spec: get-spec id
-							spec/eggs: none
-							spec/compiler: 'xcode
-							xcodeproj: xcode/make-project spec
 
-							
-							if debug? [
-								; to get info about xcodeproj:
-								eval-cmd/v ["xcodebuild -list -project " xcodeproj]
-								; to see settings:
-								eval-cmd/v ["xcodebuild -configuration Release -showBuildSettings -project " xcodeproj]
-							]
-
-							; to build xcodeproj:
-							unless no-eval? [
-								eval-cmd/v ["xcodebuild -configuration Release -project " xcodeproj " build" either debug? [""][" -quiet"]]
-								finalize-build spec spec/output
-							]
-							
-						] :on-error-quit
-					)
-					|
-					['u | 'update] set id: [integer! | none] (
-
-						project: either none? id [
-							nest-spec
-						][
-							default: copy/deep nest-spec
-							command: at commands (2 * id)
-							parse-spec command/1 default
-						]
-						foreach git project/gits [
-							print [as-green "Updating GIT:" git]
-							attempt [
-								pushd get-git-dir git
-								eval-cmd/vv {git pull}
+					any options
+					copy ids: some [integer! | file! | string!]
+					(
+						forall ids [
+							unless build-target ids/1 [break]
+							if all [
+								run-result?
+								not no-eval?
+								object? result
+								file? result/name
+							][
+								print [as-green "^/Executing:" to-local-file result/name]
+								pushd first split-path result/name
+								eval-cmd/no-quit/v to-local-file result/name
 								popd
-							]
+							] 
 						]
 					)
-					|
-					['q | 'quit] (interactive?: false)
+					| 'version (print banner)       break
+					| 'help    (print help-options-int) break
+					| some options ; these options are for building, but they should not be listed as unknown
+					| ['q | 'quit] (interactive?: false)
+					| p: 1 skip (print-error ["Unknown command:" as-red mold first p])
 				]
 			]
+			args: none
 		] :on-error-warn
-		clear args
+		
 		unless interactive? [break]
 	]
 	popd
-] :nest-context
+] :nest-context [debug?]
 
 
 get-spec: closure/with [
@@ -855,12 +911,26 @@ get-spec: closure/with [
 			command = name
 			command = select spec 'name
 		][
-			print [as-green "^/Building:" as-red name]
+			unless system/options/quiet [print [as-green "^/Building:" as-red name]]
 			return parse-nest spec copy/deep nest-spec
 		]
 		++ n
 	]
 	none
+] :nest-context
+
+update-gits: function/with [
+	spec [map!]
+][
+	;@@TODO: make sure not to update gits multiple time in one command batch
+	foreach git spec/gits [
+		unless system/options/quiet [print [as-green "Updating GIT:" git]]
+		attempt [
+			pushd get-git-dir git
+			eval-cmd/vv {git pull}
+			popd
+		]
+	]
 ] :nest-context
 
 build-target: closure/with [
@@ -871,17 +941,71 @@ build-target: closure/with [
 		unless spec: get-spec command [
 			print-error ["Command not handled:" as-red mold command]
 			print-failed
-			exit
+			return false
 		]
+		if update? [update-gits spec]
+
+		;@@ temporary using strings because of https://github.com/Oldes/Rebol-issues/issues/2466
+		;@@ use ref! once build with fixed Rebol version!!!
+		if force-compiler [
+		switch to string! force-compiler [
+			"msvc"  [build-msvc  spec  exit]
+			"xcode" [build-xcode spec  exit]
+		]]
+
 		try/except [build spec][
 			print-failed
-			exit
+			return false
+		]
+	] :on-error-quit
+	true
+] :nest-context
+
+build-msvc: function/with [
+	"Build using Microsoft's Visual Studio project"
+	spec [map!]
+][
+	try/except [
+		spec/eggs: none
+		bat: msvc/make-project spec
+		eval-cmd/v ["CALL " bat]
+		;? spec
+		file: rejoin [
+			any [spec/root what-dir]
+			either spec/arch = 'x64 [%msvc/Release-x64/][%msvc/Release-Win32/]
+			spec/name
+		]
+		finalize-build spec file
+	] :on-error-quit
+] :nest-context
+
+build-xcode: function/with [
+	"Build using Apple's XCode project"
+	spec [map!]
+][
+	try/except [
+		spec/eggs: none
+		spec/compiler: 'xcode
+		
+		xcodeproj: xcode/make-project spec
+
+		if debug? [
+			; to get info about xcodeproj:
+			eval-cmd/v ["xcodebuild -list -project " xcodeproj]
+			; to see settings:
+			eval-cmd/v ["xcodebuild -configuration Release -showBuildSettings -project " xcodeproj]
+		]
+
+		; to build xcodeproj:
+		unless no-eval? [
+			eval-cmd/v ["xcodebuild -configuration Release -project " xcodeproj " build" either debug? [""][" -quiet"]]
+			finalize-build spec spec/output
 		]
 	] :on-error-quit
 ] :nest-context
 
-
 build: function/with [
+	"Build using given specification"
 	spec [map!]
 ][
 	foreach [k v] defaults [
@@ -1229,7 +1353,11 @@ build: function/with [
 	n: length? spec/files
 	i: 0
 
-	if n > 0 [print [lf as-yellow "Compiling" as-green n as-yellow either n = 1 ["file:"]["files:"]]]
+	if n > 0 [
+		unless system/options/quiet [
+			print [lf as-yellow "Compiling" as-green n as-yellow either n = 1 ["file:"]["files:"]]
+		]
+	]
 	foreach file spec/files [
 		i: i + 1
 		;file: expand-env copy file
@@ -1258,10 +1386,10 @@ build: function/with [
 		]
 
 		target: rejoin [spec/objects force-relative-file file %.o]
-		target-short: rejoin [tmp-env to-local-file force-relative-file file %.o]
+		target-short: rejoin [tmp-env force-relative-file file %.o]
 
 		p: to integer! round 100 * i / n
-		prin rejoin [" [" pad/left p 4 "% ] "]
+		unless system/options/quiet [ prin rejoin [" [" pad/left p 4 "% ] "] ]
 
 		either any [
 			rebuild?
@@ -1270,19 +1398,22 @@ build: function/with [
 		][
 			make-dir/deep first split-path target
 
-			print [as-green "Building object:" to-local-file target-short]
+			unless system/options/quiet [
+				print [as-green "Building object:" as-yellow target-short]
+			]
 
 			eval-cmd/vvv [
 				compile
 				;source-type
 				to-local-file source
 				"-c" cflags "$DEFINES $INCLUDES"
-				"-o" target-short ;-- using environment variable to hold temp location
+				"-o" to-local-file target-short ;-- using environment variable to hold temp location
 			]
 		][
-			print ["^[[32mFile up to date^[[0m:" to-local-file target-short]
+			unless system/options/quiet [
+				print ["^[[32mFile up to date^[[0m:" to-local-file target-short]
+			]
 		]
-
 		store-object spec/objects/objects.txt target
 	]
 
@@ -1316,7 +1447,9 @@ build: function/with [
 	;- linking ...
 	if exists? spec/objects/objects.txt [
 		if not archive-only? [
-			print as-green "^/Linking binary:^/"
+			unless system/options/quiet [
+				print as-green "^/Linking binary:^/"
+			]
 			;append-flag lflags "-dynamiclib"
 			;probe get-env "CC"
 			eval-cmd/v [
@@ -1436,7 +1569,7 @@ finalize-build: closure/with [spec [map!] file [file! none!] /no-fail][
 		
 
 		
-		if all [macOS? system/options/log/siskin > 0] [
+		if all [macOS? system/options/log/siskin > 1] [
 			eval-cmd/v ["file" out-file]
 			eval-cmd/v ["otool -L" out-file]
 		]
@@ -1737,6 +1870,20 @@ normalize-file-name: func[
 	to file! name
 ]
 
+to-local-file: function [
+	file [file! string!]
+	/no-quote "Don't quote even when found spaces"
+][
+	file: lib/to-local-file file
+	if all [
+		not no-quote
+		find file #" "
+	][
+		append insert file #"^"" #"^""
+	]
+	file
+]
+
 append-flag: func[flags [string!] flag [string!]][
 	flag: append trim/tail flag #" "
 	unless find "-`" flag/1 [insert flag #"-"]
@@ -1846,7 +1993,7 @@ eval-cmd: function/with [
 		]
 		if res <> 0 [
 			if CI? [quit/return 1]
-			ask "^/^[[1;35;49mPress enter to continue.^[[0m"
+			ask as-purple "^/Press enter to continue."
 		]
 	][
 		res: call/wait/shell cmd
@@ -1857,7 +2004,8 @@ eval-cmd: function/with [
 
 store-object: func[list [file!] file [file! string!]][
 	write/append list rejoin [
-		replace/all to-local-file file #"\" #"/" ;on windows it must use *nix type of path
+		;using *nix type of path even on Windows + escaped spaces
+		replace/all to-local-file file #"\" #"/"
 		newline
 	]
 ]
