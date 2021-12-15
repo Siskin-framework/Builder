@@ -2,7 +2,7 @@ Rebol [
 	Title:  "Siskin Builder - core"
 	Type:    module
 	Name:    siskin
-	Version: 0.4.1
+	Version: 0.5.0
 	Author: "Oldes"
 	;Needs:  prebol
 	exports: [
@@ -16,7 +16,7 @@ Rebol [
 banner: next rejoin [{
 ^[[0;33m═╗
 ^[[0;33m ║^[[1;31m    .-.
-^[[0;33m ║^[[1;31m   /'v'\   ^[[0;33mSISKIN-Framework Builder 0.4.1 Rebol } rebol/version {
+^[[0;33m ║^[[1;31m   /'v'\   ^[[0;33mSISKIN-Framework Builder 0.5.0 Rebol } rebol/version {
 ^[[0;33m ║^[[1;31m  (/^[[0;31muOu^[[1;31m\)  ^[[0;33mhttps://github.com/Siskin-framework/Builder/
 ^[[0;33m ╚════^[[1;31m"^[[0;33m═^[[1;31m"^[[0;33m═══════════════════════════════════════════════════════════════════════^[[m}]
 
@@ -240,19 +240,6 @@ do-args: closure/with [
 	if debug? [?? args]
 	if all [string? args empty? args][args: none]
 	either all [args not empty? args][
-;		if string? args [
-;			try/except [
-;				args: next load/all args
-;				forall args [
-;					if tmp: select supported-commands args/1 [change args tmp]
-;				]
-;				args: head args
-;			][
-;				print-error ["Failed to parse args:" as-red args]
-;				exit
-;			]
-;		]
-? args
 		unless block? args [args: reduce [args]]
 		project: to file! take args
 		parts: split-path project
