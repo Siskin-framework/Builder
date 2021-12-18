@@ -19,7 +19,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Install Rebol
-        uses: oldes/install-rebol@v3.6.0
+        uses: oldes/install-rebol@v3.7.0
 
       # 32bit gcc version would fail for now (requires 32bit mingw)
       #    - name: Build 32bit Siskin using gcc
@@ -32,16 +32,14 @@ jobs:
       #        ./rebol3 siskin.r3 rebol/siskin %Siskin-x64
       #        MOVE ./tree/rebol/Siskin/build/Siskin-x64.exe ./Siskin-x64-gcc.exe
 
-      # As we are building using Rebol, there is just `msvc` instead of `--msvc`
-      # That will be changed once this will be fixed: https://github.com/Oldes/Rebol-issues/issues/2227
       - name: Build 32bit Siskin using msvc
         run: |
-          ./rebol3 siskin.r3 rebol/siskin msvc %Siskin-x86
+          ./rebol3 siskin.r3 rebol/siskin --msvc %Siskin-x86
           MOVE ./tree/rebol/Rebol/msvc/Release-Win32/Siskin-x86.exe ./
 
       - name: Build 64bit Siskin using msvc
         run: |
-          ./rebol3 siskin.r3 rebol/siskin msvc %Siskin-x64
+          ./rebol3 siskin.r3 rebol/siskin --msvc %Siskin-x64
           MOVE ./tree/rebol/Rebol/msvc/Release-x64/Siskin-x64.exe ./
 
       #- name: Test 32bit Siskin project (gcc)
@@ -100,7 +98,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Install Rebol
-        uses: oldes/install-rebol@v3.6.0
+        uses: oldes/install-rebol@v3.7.0
 
       #- name: Build 32bit Siskin using gcc
       #  run: ./rebol3 siskin.r3 rebol/siskin %Siskin-x86-libc
@@ -149,7 +147,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Install Rebol
-        uses: oldes/install-rebol@v3.6.0
+        uses: oldes/install-rebol@v3.7.0
 
       #It looks it's not possible to build 32bit macOS version anymore using GitHub actions!
       #
