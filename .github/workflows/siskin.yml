@@ -53,6 +53,8 @@ jobs:
       - name: Test 64bit Siskin project (msvc)
         run: ./Siskin-x64.exe
 
+      - name: List all possible test targets
+        run: ./Siskin-x64.exe test --list
       - name: Test build 1
         run: ./Siskin-x64.exe test test-1
       - name: Test build 2
@@ -113,6 +115,8 @@ jobs:
           mv ./tree/rebol/Siskin/build/Siskin-x64-libc ./
         #  mv ./tree/rebol/Siskin/build/Siskin-x86-libc ./
 
+      - name: List all possible test targets
+        run: ./Siskin-x64-libc test --list
       - name: Test build 1
         run: ./Siskin-x64-libc test test-1
       - name: Test build 2
@@ -164,6 +168,8 @@ jobs:
       - name: Move results into the root for uploading
         run: mv ./tree/rebol/Siskin/build/Siskin-x64-osx ./
 
+      - name: List all possible test targets
+        run: ./Siskin-x64-osx test --list
       - name: Test build 1
         run: ./Siskin-x64-osx test test-1
       - name: Test build 2

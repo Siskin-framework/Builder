@@ -35,6 +35,7 @@ all-options: [
     #"d" "--debug"   "Maximum verbosity and debug messages"
     #"h" "--help"    "Display available options"
     #"q" "--quiet"   "Minimum output"
+    #"l" "--list"    "List all possible targets (eggs) in the nest"
     #"r" "--run"     "Execute build product immediately"
     #"t" "--test"    "Soft run without real evaluation"
     #"u" "--update"  "Update all linked source repositories before build"
@@ -886,7 +887,8 @@ do-nest: closure/with/extern [
 							] 
 						]
 					)
-					| 'version (print banner)       break
+					| 'list    (print-eggs)
+					| 'version (print banner)           break
 					| 'help    (print help-options-int) break
 					| some options ; these options are for building, but they should not be listed as unknown
 					| ['q | 'quit] (interactive?: false)
