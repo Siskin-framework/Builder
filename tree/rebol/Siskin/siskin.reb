@@ -62,9 +62,11 @@ init-options: func[/local long short hlp1 hlp2][
 		second split-path system/options/boot
 		either system/product = 'Siskin [""][" siskin.r3 "]
 		" ^[[1;33m<nest-name> ^[[0;33m[options...] [targets...]^[[m^/"
+		"^/ Possible options:^/"
 	]
 	append hlp2 ajoin [
 		" ^[[33mUsage: ^[[0;33m[options...] [targets...]^[[m^/"
+		"^/ Possible options:^/"
 	]
 
 	foreach [short long doc] all-options [
@@ -175,6 +177,14 @@ chars-file:    charset [#"a" - #"z" #"A" - #"Z" #"0" - #"9" #"-" #"_" ] ;#"."
 
 cpp-extensions: [%.cc %.cpp %.cxx %.c++]
 
+throw-unknown-option: func[op][
+	print banner
+	print-error ["Unknown option:" as-red op]
+	prin  newline
+	print help-options-cli
+	quit/return 1
+]
+
 do-args: closure/with [
 	"Main Sisking input processor"
 ][
@@ -191,7 +201,11 @@ do-args: closure/with [
 		forall args [
 			if string? args/1 [
 				parse args/1 [
-					"--" to end
+					"--" to end (
+						unless find all-options args/1 [
+							throw-unknown-option args/1
+						]
+					)
 					|
 					#"-" copy ops: to end (
 						new: clear []
@@ -199,7 +213,7 @@ do-args: closure/with [
 							either tmp: select/case all-options ops/1 [
 								append new copy tmp 
 							][
-								print-warn ["Unknown option" as-red ops/1 as-purple "in" as-red args/1]
+								throw-unknown-option args/1
 							]
 						]
 						change/part args new 1
