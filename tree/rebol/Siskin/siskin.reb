@@ -149,6 +149,7 @@ nest-context: object [
 	CI?:          false
 	target-names: copy []
 	interactive?: false
+	result-code:  0     ; last returned result from eval-cmd 
 
 	force-compiler: none
 
@@ -864,6 +865,7 @@ do-nest: closure/with/extern [
 						run-result?: false
 						update?:     false
 						force-compiler: none
+						result-code: 0
 					)
 
 					any options
@@ -1463,9 +1465,12 @@ build: function/with [
 			]
 		]
 
-		if any [
-			archive-only?
-			find lflags "-shared"
+		if all [
+			any [
+				archive-only?
+				find lflags "-shared"
+			]
+			exists? out-file
 		][
 			print as-green "^/Making archive:^/"
 
@@ -1753,11 +1758,13 @@ print-ready: closure/with [][
 	result
 ] :nest-context
 
-print-failed: func[][
+print-failed: closure/with [][
+	result: result-code
+	if result = 0 [result: "output not found!"]
 	print-bird
-	print {^/^[[0;31m═[^[[1mSISKIN^[[0;31m]══^[[1;31m"^[[0;31m═^[[1;31m"^[[0;31m═>  ^[[1mBuild failed (output not found!)}
+	print ajoin [{^/^[[0;31m═[^[[1mSISKIN^[[0;31m]══^[[1;31m"^[[0;31m═^[[1;31m"^[[0;31m═>  ^[[1mBuild failed (} result {)}]
 	none
-]
+] :nest-context
 
 
 force-relative-file: func[file][
@@ -1941,6 +1948,7 @@ eval-cmd: function/with [
 	/vvv  "print debug"
 	/force "evaluate even when no-eval is used"
 ][
+	result-code: 0
 	if block? cmd [
 		attempt [cmd: reduce cmd]
 		local: copy ""
@@ -1984,22 +1992,27 @@ eval-cmd: function/with [
 	;clear err
 
 	either no-pipe [
-		res: call/wait/shell cmd
+		result-code: call/wait/shell cmd
 		if all [file? log-file exists? log-file] [
-			either res <> 0 [
+			either result-code <> 0 [
 				print-error read/string log-file
 			][	print read/string log-file ]
 			delete log-file
 		]
-		if res <> 0 [
+		if result-code <> 0 [
 			if CI? [quit/return 1]
 			ask as-purple "^/Press enter to continue."
 		]
 	][
-		res: call/wait/shell cmd
-		if all [res <> 0 not no-quit][ quit/return 1 ]
+		result-code: call/wait/shell cmd
+		if all [
+			result-code <> 0 not no-quit not interactive?
+		][
+			print-failed
+			quit/return result-code
+		]
 	]
-	res
+	result-code
 ] :nest-context
 
 store-object: func[list [file!] file [file! string!]][

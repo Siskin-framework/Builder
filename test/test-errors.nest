@@ -31,4 +31,9 @@ eggs: only [
 		123
 		file: %main.c
 	]
+	"Test error: error in source file" [
+		name: %error-6
+		info "Intended error follows!"
+		file: %hello-error.c
+	]
 ]
