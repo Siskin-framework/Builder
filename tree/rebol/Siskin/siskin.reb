@@ -196,6 +196,26 @@ do-args: closure/with [
 	args: system/options/args	
 
 	if string? args [ args: prepare-interactive args ]
+
+	;@@ this is temporary hack before finding a better way how to handle raw args!
+	if all [args "--script" = first args] [
+		; I've added this option to be able preprocess builds using Rebol scripts
+		; without need to download Rebol as an additional utility (in GitHub actions)
+		script: to-rebol-file take remove args
+		if #"/" <> first script [ insert script system/options/path ]
+		if "--args" = first args [take args] ;ignored
+		;? script
+		;? args
+		print-debug ["Executing script:" as-red to-local-file script]
+		print-debug ["..with arguments:" as-red form args]
+		system/options/quiet: true
+		try/except [ do/args script args ][
+			print-error system/state/last-error
+			quit/return 1 ;@@ TODO: choose which error number to use
+		]
+		quit
+	]
+	
 	if args [
 		; expand short options
 		forall args [
@@ -228,25 +248,6 @@ do-args: closure/with [
 			find args "--version" [ print banner quit ]
 			find args "--help"    [ print banner print help-options-cli quit]
 		]
-	]
-
-	;@@ this is temporary hack before finding a better way how to handle raw args!
-	if all [args "--script" = first args] [
-		; I've added this option to be able preprocess builds using Rebol scripts
-		; without need to download Rebol as an additional utility (in GitHub actions)
-		script: to-rebol-file take remove args
-		if #"/" <> first script [ insert script system/options/path ]
-		if "--args" = first args [take args] ;ignored
-		;? script
-		;? args
-		print-debug ["Executing script:" as-red to-local-file script]
-		print-debug ["..with arguments:" as-red form args]
-		system/options/quiet: true
-		try/except [ do/args script args ][
-			print-error system/state/last-error
-			quit/return 1 ;@@ TODO: choose which error number to use
-		]
-		quit
 	]
 
 	unless system/options/quiet [print banner]
