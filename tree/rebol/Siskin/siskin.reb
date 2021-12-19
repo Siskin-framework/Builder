@@ -144,6 +144,8 @@ nest-context: object [
 
 	nest-root:    none
 	nest-spec:    none
+	nest-file:    none
+	nest-time:    none
 	rebuild?:     false ; if force compilation of all files (even if not modified)
 	no-eval?:     false
 	clang?:       false
@@ -406,7 +408,9 @@ parse-nest: closure/with [
 	dest [map! block! none!]
 ][
 	;if file? nest [print-info ["Parsing nest:" as-green nest]]
-
+	if file? nest [
+		nest-time: modified? nest
+	]
 	spec: preprocess nest
 
 	case [
@@ -763,55 +767,65 @@ do-nest: closure/with/extern [
 	/with parent [map!]
 ][
 	CI?: ("true" = get-env "CI")
-	print-info ["Processing nest:" as-green to-local-file clean-path nest]
-
-	unless interactive?: empty? args [
-		print-info ["With commands:" as-green mold args]
-	]
-	
-	set [nest-root: nest:] split-path nest
-	nest-root: pushd nest-root
-	nest-spec: parse-nest nest none
-	if none? nest-spec [exit]
-
-	if parent [
-		foreach [k v] parent [
-			if any [none? v all [series? v empty? v]] [continue]
-			;print ["extending:" mold k mold v]
-			extend nest-spec k v
-		]
-		;not empty? parent/eggs] [
-		;;@@ using so far just eggs
-		;nest-spec/eggs: parent/eggs
-	]
-
-	if debug? [?? nest-spec]
-	any[
-		all [any-string? nest-spec/root 'dir = exists? nest-root: clean-path nest-spec/root]
-		nest-root: clean-path first split-path nest
-	]
-	add-env "NEST_ROOT" nest-root
-	pushd make-dir/deep nest-root
-
-	clone-gits nest-spec/gits
-
-	eggs: nest-spec/eggs
-	if file? nest: nest-spec/nest [
-		; nest has a link to another nest
-		try/except [
-			nest-spec/gits: none
-			nest-spec/nest: none
-			do-nest/with nest args nest-spec
-		][ print-error none ]
-		exit
-	]
-	unless block? eggs: nest-spec/eggs [ exit ]
-
-	if debug? [??  eggs]
-
 	supported-commands/q: 'quit ; changed shortcut for use in the interactive mode
 
+	nest-file: any [to-real-file nest nest]
 	forever [
+		if any [
+			none? nest-time
+			none? nest-file
+			all [
+				date? tmp: query/mode nest-file 'date
+				nest-time < tmp
+			]
+		][
+			print-info ["Processing nest:" as-green to-local-file clean-path nest]
+
+			unless interactive?: empty? args [
+				print-info ["With commands:" as-green mold args]
+			]
+			nest-time: tmp
+			set [nest-root: nest:] split-path nest-file
+			nest-root: pushd nest-root
+			nest-spec: parse-nest nest none
+			if none? nest-spec [exit]
+
+			if parent [
+				foreach [k v] parent [
+					if any [none? v all [series? v empty? v]] [continue]
+					;print ["extending:" mold k mold v]
+					extend nest-spec k v
+				]
+				;not empty? parent/eggs] [
+				;;@@ using so far just eggs
+				;nest-spec/eggs: parent/eggs
+			]
+
+			if debug? [?? nest-spec]
+			any[
+				all [any-string? nest-spec/root 'dir = exists? nest-root: clean-path nest-spec/root]
+				nest-root: clean-path first split-path nest
+			]
+			add-env "NEST_ROOT" nest-root
+			pushd make-dir/deep nest-root
+
+			clone-gits nest-spec/gits
+
+			eggs: nest-spec/eggs
+			if file? nest: nest-spec/nest [
+				; nest has a link to another nest
+				try/except [
+					nest-spec/gits: none
+					nest-spec/nest: none
+					do-nest/with nest args nest-spec
+				][ print-error none ]
+				exit
+			]
+			unless block? eggs: nest-spec/eggs [ exit ]
+
+			if debug? [??  eggs]
+		]
+
 		try/except [
 			if any [none? args all [block? args empty? args not CI?]][
 				;-- Interactive mode -------------------------
