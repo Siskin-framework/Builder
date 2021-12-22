@@ -1785,7 +1785,7 @@ print-ready: closure/with [][
 	prin {^/^[[0;32m        [ SIZE ]: ^[[1;37m} prin               result/size
 	prin {^/^[[0;32m        [ DATE ]: ^[[1;37m} prin               result/date
 	prin {^/^[[0;32m        [ TIME ]: ^[[1;37m} prin now/time/precise - timestamp
-	prin "^/^/"
+	prin "^/^/^[[m"
 	result
 ] :nest-context
 
@@ -1793,7 +1793,7 @@ print-failed: closure/with [][
 	result: result-code
 	if result = 0 [result: "output not found!"]
 	print-bird
-	print ajoin [{^/^[[0;31m═[^[[1mSISKIN^[[0;31m]══^[[1;31m"^[[0;31m═^[[1;31m"^[[0;31m═>  ^[[1mBuild failed (} result {)}]
+	print ajoin [{^/^[[0;31m═[^[[1mSISKIN^[[0;31m]══^[[1;31m"^[[0;31m═^[[1;31m"^[[0;31m═>  ^[[1mBuild failed (} result {)^[[m}]
 	none
 ] :nest-context
 
