@@ -21,6 +21,7 @@ files: [
 	%common/transform.c
 	%common/dictionary.c
 	%common/platform.c
+	%common/shared_dictionary.c
 ]
 
 tool-files:  [
@@ -36,6 +37,7 @@ tool-files:  [
 	%enc/brotli_bit_stream.c
 	%enc/cluster.c
 	%enc/command.c
+	%enc/compound_dictionary.c
 	%enc/compress_fragment.c
 	%enc/compress_fragment_two_pass.c
 	%enc/dictionary_hash.c
