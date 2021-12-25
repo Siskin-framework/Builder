@@ -260,7 +260,7 @@ do-args: closure/with [
 	if all [string? args empty? args][args: none]
 	either all [args not empty? args][
 		unless block? args [args: reduce [args]]
-		project: to file! take args
+		project: to-rebol-file take args
 		parts: split-path project
 		unless any [
 			'file = exists? nest: project
