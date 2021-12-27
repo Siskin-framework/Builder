@@ -72,11 +72,8 @@ jobs:
       - name: Test build multiple at once
         run: ./Siskin-x64.exe test 1 2 "test-8 spaced"
 
-      - name: Test build 1 (MSVC)
-        run: ./Siskin-x64.exe test --msvc test-1
-      - name: Test build 1 (MSVC)
-        run: ./Siskin-x64.exe test --msvc test-1
-      
+      - name: Test build 8 (MSVC)
+        run: ./Siskin-x64.exe test --msvc 8      
 
       - uses: actions/upload-artifact@v2
         with:
