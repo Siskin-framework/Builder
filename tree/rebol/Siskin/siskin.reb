@@ -2,7 +2,7 @@ Rebol [
 	Title:  "Siskin Builder - core"
 	Type:    module
 	Name:    siskin
-	Version: 0.5.0
+	Version: 0.6.0
 	Author: "Oldes"
 	;Needs:  prebol
 	exports: [
@@ -16,7 +16,7 @@ Rebol [
 banner: next rejoin [{
 ^[[0;33m═╗
 ^[[0;33m ║^[[1;31m    .-.
-^[[0;33m ║^[[1;31m   /'v'\   ^[[0;33mSISKIN-Framework Builder 0.5.0 Rebol } rebol/version {
+^[[0;33m ║^[[1;31m   /'v'\   ^[[0;33mSISKIN-Framework Builder 0.6.0 Rebol } rebol/version {
 ^[[0;33m ║^[[1;31m  (/^[[0;31muOu^[[1;31m\)  ^[[0;33mhttps://github.com/Siskin-framework/Builder/
 ^[[0;33m ╚════^[[1;31m"^[[0;33m═^[[1;31m"^[[0;33m═══════════════════════════════════════════════════════════════════════^[[m}]
 
@@ -166,8 +166,10 @@ nest-context: object [
 	out-file:     none
 
 	defaults: make map! [
-		output: %build/
-		temp:   %tmp/
+		output:  %build/
+		temp:    %tmp/
+		debug?:  off
+		verbose: 0
 	]
 	s: p: val: valid: none
 ]
@@ -245,7 +247,7 @@ do-args: closure/with [
 		]
 		; check for early options...
 		case/all [
-			find args "--debug"   [ debug?: on ]
+			find args "--debug"   [ defaults/debug?: debug?: on defaults/verbose: 4]
 			find args "--quiet"   [ system/options/quiet: on ]
 			find args "--version" [ print banner quit ]
 			find args "--help"    [ print banner print help-options-cli quit]
@@ -866,8 +868,8 @@ do-nest: closure/with/extern [
 			run-result?: false
 			set-env "NEST_SPEC" none
 
-			debug?: off
-			system/options/log/siskin: 1
+			debug?: defaults/debug?
+			system/options/log/siskin: defaults/verbose
 
 			options: [
 				  'test    (no-eval?: true) ;-- like normal build command, but there are no evaluations
@@ -1001,7 +1003,7 @@ build-msvc: function/with [
 	try/except [
 		spec/eggs: none
 		bat: msvc/make-project spec
-		eval-cmd/v ["CALL " bat]
+		eval-cmd/v [bat]
 		;? spec
 		file: rejoin [
 			any [spec/root what-dir]
@@ -2257,7 +2259,7 @@ add-env-path: func[
 		; adding in front of other paths so it's most likely to be used!
 		insert env-paths path
 		print-info ["Adding PATH:" as-green path]
-		set-env "PATH" rejoin [to-local-file path #";" get-env "PATH"]
+		set-env "PATH" rejoin [to-local-file/no-quote path #";" get-env "PATH"]
 	]
 ]
 
