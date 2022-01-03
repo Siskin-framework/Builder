@@ -2,7 +2,7 @@ Rebol [
 	Title:  "Siskin Builder - core"
 	Type:    module
 	Name:    siskin
-	Version: 0.6.0
+	Version: 0.7.0
 	Author: "Oldes"
 	;Needs:  prebol
 	exports: [
@@ -16,15 +16,17 @@ Rebol [
 banner: next rejoin [{
 ^[[0;33m═╗
 ^[[0;33m ║^[[1;31m    .-.
-^[[0;33m ║^[[1;31m   /'v'\   ^[[0;33mSISKIN-Framework Builder 0.6.0 Rebol } rebol/version {
+^[[0;33m ║^[[1;31m   /'v'\   ^[[0;33mSISKIN-Framework Builder 0.7.0 Rebol } rebol/version {
 ^[[0;33m ║^[[1;31m  (/^[[0;31muOu^[[1;31m\)  ^[[0;33mhttps://github.com/Siskin-framework/Builder/
 ^[[0;33m ╚════^[[1;31m"^[[0;33m═^[[1;31m"^[[0;33m═══════════════════════════════════════════════════════════════════════^[[m}]
 
        import 'prebol
 msvc:  import 'msvc
 xcode: import 'xcode
+mmake: import 'mmake
  msvc/siskin:
-xcode/siskin:  self
+xcode/siskin:
+mmake/siskin:  self
 
 debug?: off
 
@@ -43,6 +45,7 @@ all-options: [
     #"V" "--version" "Show version number and quit"
 	  -  "--msvc"    "Create Visual Studio project and use it for a build"
 	  -  "--xcode"   "Create XCode project and use it for a build"
+	  -  "--make"    "Create makefile and use it for a build"
 ]
 
 ; mapping of commands used in the interactive input into command line arguments
@@ -884,6 +887,7 @@ do-nest: closure/with/extern [
 				| 'run     (run-result?: on)
 				| 'msvc    (force-compiler: @msvc)
 				| 'xcode   (force-compiler: @xcode)
+				| 'make    (force-compiler: @make)
 				| 'update  (update?: on)
 			]
 			;? args
@@ -986,6 +990,7 @@ build-target: closure/with [
 		switch to string! force-compiler [
 			"msvc"  [build-msvc  spec  exit]
 			"xcode" [build-xcode spec  exit]
+			"make"  [build-make  spec  exit]
 		]]
 
 		try/except [build spec][
@@ -1036,6 +1041,18 @@ build-xcode: function/with [
 			eval-cmd/v ["xcodebuild -configuration Release -project " xcodeproj " build" either debug? [""][" -quiet"]]
 			finalize-build spec spec/output
 		]
+	] :on-error-quit
+] :nest-context
+
+build-make: function/with [
+	"Build using GNU makefile"
+	spec [map!]
+][
+	try/except [
+		spec/eggs: none
+		file: mmake/make-project spec
+		eval-cmd/v ["make -f" file]
+		finalize-build spec to file! spec/name
 	] :on-error-quit
 ] :nest-context
 
@@ -2289,4 +2306,16 @@ valid-sign-identity?: function[sign][
 		print-info "Sign identity is valid."
 		true
 	]
+]
+
+prepare-dir: func[tag dir [file! string!]][
+	dir: dirize dir
+	unless exists? dir [
+		sys/log/more 'SISKIN [tag "made dir:^[[33m" to-local-file dir]
+		if error? try [make-dir/deep dir][
+			print ["Cannot make directory: " mold dir]
+			halt
+		]
+	]
+	dir
 ]

@@ -84,15 +84,7 @@ make-guid: func[/from name /local id] [
 	id
 ]
 prepare-dir: func[dir [file! string!]][
-	dir: dirize dir
-	unless exists? dir [
-		sys/log/more 'SISKIN ["MSVC made dir:^[[33m" to-local-file dir]
-		if error? try [make-dir/deep dir][
-			print ["Cannot make directory: " mold dir]
-			halt
-		]
-	]
-	dir
+	clean-path siskin/prepare-dir 'MSVC dir
 ]
 write-file: func[file [file! block!] data][
 	if block? file [file: rejoin file]
@@ -261,8 +253,8 @@ make-project: func[
 	]
 	siskin/print-info ["MSVC platform toolset:" as-green TOOLSET-VERSION]
 
-	dir-bin: clean-path prepare-dir any [spec/out-dir %.]
-	dir-vs:  clean-path prepare-dir %msvc
+	dir-bin: prepare-dir any [spec/out-dir %.]
+	dir-vs:  prepare-dir %msvc
 
 	if name: spec/name [
 		set [dir name] split-path name

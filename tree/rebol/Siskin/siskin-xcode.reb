@@ -66,15 +66,7 @@ make-uuid: function[type [any-string!] name [any-string!]][
 	uuid
 ]
 prepare-dir: func[dir [file! string!]][
-	dir: dirize dir
-	unless exists? dir [
-		sys/log/more 'SISKIN ["Xcode made dir:^[[33m" to-local-file dir]
-		if error? try [make-dir/deep dir][
-			print ["Cannot make directory: " mold dir]
-			halt
-		]
-	]
-	dir
+	clean-path siskin/prepare-dir 'XCode dir
 ]
 write-file: func[file [file! block!] data][
 	if block? file [file: rejoin file]
@@ -205,7 +197,7 @@ make-project: func[
 	unless siskin [siskin: system/modules/siskin]
 	output: make string! 30000
 
-	dir-bin: clean-path prepare-dir any [spec/out-dir %.]
+	dir-bin: prepare-dir any [spec/out-dir %.]
 
 
 	if name: spec/name [
@@ -213,7 +205,7 @@ make-project: func[
 		if all [dir-bin dir <> %./][append dir-bin dir]
 	]
 
-	dir-out: clean-path prepare-dir rejoin [%make/ name %.xcodeproj/]
+	dir-out: prepare-dir rejoin [%make/ name %.xcodeproj/]
 
 
 	unless spec/root [
