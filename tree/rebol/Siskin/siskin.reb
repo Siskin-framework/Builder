@@ -9,6 +9,7 @@ Rebol [
 		windows?
 		macOS?
 		linux?
+		openbsd?
 		posix?
 	]
 ]
@@ -1157,6 +1158,7 @@ build: function/with [
 					["-Wl,--stack="                 spec/stack-size  ]
 				][	["-Wl,-stack:0x" skip to-binary spec/stack-size 4]]
 			]
+			OpenBSD?
 			Linux? [
 				;This does not work with Apple's clang!
 				append lflags join "-Wl,-z,stack-size=" spec/stack-size
@@ -1780,7 +1782,8 @@ eval-code: function/with [
 windows?: does [system/platform = 'Windows]
 macOS?:   does [to logic! find [macOS Macintosh] system/platform]
 linux?:   does [system/platform = 'Linux]
-posix?:   does [to logic! find [linux macos macintosh] system/platform]
+openbsd?: does [system/platform = 'OpenBSD]
+posix?:   does [to logic! find [linux macos openbsd macintosh] system/platform]
 
 print-error: func[err][ sys/log/error 'SISKIN any [err system/state/last-error] ]
 print-info:  func[msg][ sys/log/info  'SISKIN msg ]
