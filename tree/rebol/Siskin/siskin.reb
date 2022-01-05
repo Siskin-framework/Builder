@@ -262,6 +262,8 @@ do-args: closure/with [
 		]
 	]
 
+	unless system/options/quiet [print banner]
+
 	;- (temp hack): allow identify real platform
 	if system/platform = 'Linux [
 		tmp: copy ""
@@ -273,9 +275,7 @@ do-args: closure/with [
 			print-info ["System platform changed to:" as-green tmp]
 		]
 	]
-
-	unless system/options/quiet [print banner]
-
+	
 	change-dir root-dir: system/options/path
 
 	if debug? [?? args]
