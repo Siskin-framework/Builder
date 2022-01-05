@@ -73,4 +73,18 @@ eggs: only [
 			:make-siskin-x64
 		]
 	]
+	#if OpenBSD? [
+		"Siskin x64" [
+			name:     %Siskin-x64-openbsd
+			:make-siskin-x64
+			:target-openbsd
+		]
+	]
+	#if FreeBSD? [
+		"Siskin x64" [
+			name:     %Siskin-x64-freebsd
+			:make-siskin-x64
+			:target-freebsd
+		]
+	]
 ]
