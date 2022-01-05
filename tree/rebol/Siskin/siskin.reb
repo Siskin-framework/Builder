@@ -268,9 +268,9 @@ do-args: closure/with [
 		call/shell/output/wait "uname -s" tmp
 		tmp: to word! trim/all tmp
 		if find [OpenBSD FreeBSD] tmp [
-			unprotect :system/platform
+			unprotect 'system/platform
 			system/platform: tmp
-			print-
+			print-info ["System platform changed to:" as-green tmp]
 		]
 	]
 
