@@ -21,10 +21,10 @@ make-siskin: [
 	
 	mezz-lib-files: [
 		%../../Siskin/prebol.reb
-		%../../Siskin/siskin.reb
 		%../../Siskin/siskin-make.reb
 		%../../Siskin/siskin-msvc.reb
 		%../../Siskin/siskin-xcode.reb
+		%../../Siskin/siskin.reb ; must be last!
 	]
 	boot-host-files: [
 		%../../Siskin/siskin-do.reb
