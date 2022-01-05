@@ -2,7 +2,7 @@ Rebol [
 	Title:  "Siskin Builder - core"
 	Type:    module
 	Name:    siskin
-	Version: 0.7.0
+	Version: 0.7.1
 	Author: "Oldes"
 	;Needs:  prebol
 	exports: [
@@ -17,7 +17,7 @@ Rebol [
 banner: next rejoin [{
 ^[[0;33m═╗
 ^[[0;33m ║^[[1;31m    .-.
-^[[0;33m ║^[[1;31m   /'v'\   ^[[0;33mSISKIN-Framework Builder 0.7.0 Rebol } rebol/version {
+^[[0;33m ║^[[1;31m   /'v'\   ^[[0;33mSISKIN-Framework Builder 0.7.1 Rebol } rebol/version {
 ^[[0;33m ║^[[1;31m  (/^[[0;31muOu^[[1;31m\)  ^[[0;33mhttps://github.com/Siskin-framework/Builder/
 ^[[0;33m ╚════^[[1;31m"^[[0;33m═^[[1;31m"^[[0;33m═══════════════════════════════════════════════════════════════════════^[[m}]
 
@@ -31,7 +31,7 @@ mmake/siskin:  self
 
 debug?: off
 
-append system/options/log [siskin: 0]
+append system/options/log [siskin: 1]
 
 all-options: [
     #"c" "--clean"   "Remove cached results before build"
@@ -47,6 +47,7 @@ all-options: [
 	  -  "--msvc"    "Create Visual Studio project and use it for a build"
 	  -  "--xcode"   "Create XCode project and use it for a build"
 	  -  "--make"    "Create makefile and use it for a build"
+	  -  "--git-ssh" "Clone gits using password-protected SSH key"
 ]
 
 ; mapping of commands used in the interactive input into command line arguments
@@ -158,6 +159,7 @@ nest-context: object [
 	CI?:          false
 	target-names: copy []
 	interactive?: false
+	git-ssh?:     false
 	result-code:  0     ; last returned result from eval-cmd 
 
 	force-compiler: none
@@ -255,6 +257,7 @@ do-args: closure/with [
 			find args "--quiet"   [ system/options/quiet: on ]
 			find args "--version" [ print banner quit ]
 			find args "--help"    [ print banner print help-options-cli quit]
+			find args "--git-ssh" [ git-ssh?: on]
 		]
 	]
 
@@ -505,9 +508,9 @@ parse-nest: closure/with [
 		| quote git:        set val: [url! | block!]   ( append dest/gits val )
 		| quote github:     set val: [path! | file! | ref!] (
 			if ref? val [val: join %Siskin-framework/ val]
-			append dest/gits either CI? [
-				join https://github.com/ [val %.git]
-			][	to url! rejoin [git@github.com #":" val %.git] ]
+			append dest/gits either all [git-ssh? not CI? ][
+				as url! join "git@github.com:" [val %.git]
+			][	join https://github.com/ [val %.git] ]
 		) opt [set val: [refinement!] (append dest/gits val)] ;optional branch
 		| quote eggs: [opt 'only (clear dest/eggs) ] set val: block! (
 			append dest/eggs preprocess val
@@ -780,6 +783,7 @@ do-nest: closure/with/extern [
 		if any [
 			none? nest-time
 			none? nest-file
+			parent
 			all [
 				date? tmp: query/mode nest-file 'date
 				nest-time < tmp
@@ -890,6 +894,7 @@ do-nest: closure/with/extern [
 				| 'xcode   (force-compiler: @xcode)
 				| 'make    (force-compiler: @make)
 				| 'update  (update?: on)
+				| 'git-ssh (git-ssh?: on)
 			]
 			;? args
 			parse args [
@@ -901,6 +906,7 @@ do-nest: closure/with/extern [
 						clang?:      false
 						run-result?: false
 						update?:     false
+						git-ssh?:    false
 						force-compiler: none
 						result-code: 0
 					)
@@ -920,7 +926,7 @@ do-nest: closure/with/extern [
 								pushd first split-path result/name
 								eval-cmd/no-quit/v to-local-file result/name
 								popd
-							] 
+							]
 						]
 					)
 					| 'list    (print-eggs)
