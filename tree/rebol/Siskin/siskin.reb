@@ -2,7 +2,7 @@ Rebol [
 	Title:  "Siskin Builder - core"
 	Type:    module
 	Name:    siskin
-	Version: 0.7.1
+	Version: 0.7.2
 	Author: "Oldes"
 	;Needs:  prebol
 	exports: [
@@ -18,7 +18,7 @@ Rebol [
 banner: next rejoin [{
 ^[[0;33m═╗
 ^[[0;33m ║^[[1;31m    .-.
-^[[0;33m ║^[[1;31m   /'v'\   ^[[0;33mSISKIN-Framework Builder 0.7.1 Rebol } rebol/version {
+^[[0;33m ║^[[1;31m   /'v'\   ^[[0;33mSISKIN-Framework Builder 0.7.2 Rebol } rebol/version {
 ^[[0;33m ║^[[1;31m  (/^[[0;31muOu^[[1;31m\)  ^[[0;33mhttps://github.com/Siskin-framework/Builder/
 ^[[0;33m ╚════^[[1;31m"^[[0;33m═^[[1;31m"^[[0;33m═══════════════════════════════════════════════════════════════════════^[[m}]
 
@@ -172,12 +172,13 @@ nest-context: object [
 	result:       none
 	out-file:     none
 
-	defaults: make map! [
+	defaults: context [
 		output:  %build/
 		temp:    %tmp/
-		debug?:  off
-		verbose: 0
+		debug?:  #[false]
+		verbose: 1
 	]
+
 	s: p: val: valid: none
 ]
 
@@ -802,7 +803,8 @@ do-nest: closure/with/extern [
 				nest-time < tmp
 			]
 		][
-			print-info ["Processing nest:" as-green to-local-file clean-path nest]
+
+			if nest [print-info ["Processing nest:" as-green to-local-file clean-path nest]]
 
 			unless interactive?: empty? args [
 				print-info ["With commands:" as-green mold args]
@@ -1824,10 +1826,10 @@ print-ready: closure/with [][
 	print-bird
 	prin {^/^[[0;32m═[^[[1mSISKIN^[[0;32m]══^[[1;31m"^[[0;32m═^[[1;31m"^[[0;32m═>  ^[[1mBuild READY}
 	prin {^/^[[0;32m │}
-	prin {^/^[[0;32m └──────[ FILE ]: ^[[1;37m} prin to-local-file result/name
-	prin {^/^[[0;32m        [ SIZE ]: ^[[1;37m} prin               result/size
-	prin {^/^[[0;32m        [ DATE ]: ^[[1;37m} prin               result/date
-	prin {^/^[[0;32m        [ TIME ]: ^[[1;37m} prin now/time/precise - timestamp
+	prin {^/^[[0;32m └──────[ FILE ]: ^[[m} prin to-local-file result/name
+	prin {^/^[[0;32m        [ SIZE ]: ^[[m} prin               result/size
+	prin {^/^[[0;32m        [ DATE ]: ^[[m} prin               result/date
+	prin {^/^[[0;32m        [ TIME ]: ^[[m} prin now/time/precise - timestamp
 	prin "^/^/^[[m"
 	result
 ] :nest-context
