@@ -23,6 +23,7 @@ make-siskin: [
 		%../../Siskin/prebol.reb
 		%../../Siskin/siskin-msvc.reb
 		%../../Siskin/siskin-xcode.reb
+		%../../Siskin/siskin-mmake.reb
 		%../../Siskin/siskin.reb
 	]
 	boot-host-files: [
