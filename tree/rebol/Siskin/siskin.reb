@@ -10,6 +10,7 @@ Rebol [
 		macOS?
 		linux?
 		openbsd?
+		freebsd?
 		posix?
 	]
 ]
@@ -258,6 +259,18 @@ do-args: closure/with [
 			find args "--version" [ print banner quit ]
 			find args "--help"    [ print banner print help-options-cli quit]
 			find args "--git-ssh" [ git-ssh?: on]
+		]
+	]
+
+	;- (temp hack): allow identify real platform
+	if system/platform = 'Linux [
+		tmp: copy ""
+		call/shell/output/wait "uname -s" tmp
+		tmp: to word! trim/all tmp
+		if find [OpenBSD FreeBSD] tmp [
+			unprotect :system/platform
+			system/platform: tmp
+			print-
 		]
 	]
 
@@ -1762,7 +1775,7 @@ eval-code: function/with [
 			eval-cmd/v join " CALL " to-local-file val
 		)
 		| 'cmd set dir [file! | none!] set val string! (
-			print ["cmd." mold dir]
+			;print ["cmd." mold dir]
 			if dir [
 				if not exists? dir [make-dir/deep dir]
 				pushd dir
@@ -1780,7 +1793,7 @@ eval-code: function/with [
 		|
 		p:
 		1 skip (
-			print [as-red "??? " mold first p]
+			print-error ["Unknown cmd:" as-red mold/flat first p]
 		)
 	]]
 ] :nest-context
@@ -1789,7 +1802,9 @@ windows?: does [system/platform = 'Windows]
 macOS?:   does [to logic! find [macOS Macintosh] system/platform]
 linux?:   does [system/platform = 'Linux]
 openbsd?: does [system/platform = 'OpenBSD]
-posix?:   does [to logic! find [linux macos openbsd macintosh] system/platform]
+freebsd?: does [system/platform = 'FreeBSD]
+posix?:   does [to logic! find [linux macos openbsd freebsd macintosh] system/platform]
+
 
 print-error: func[err][ sys/log/error 'SISKIN any [err system/state/last-error] ]
 print-info:  func[msg][ sys/log/info  'SISKIN msg ]
