@@ -113,18 +113,18 @@ jobs:
         run: sudo apt-get install gcc-multilib
 
       - name: Build 32bit Rebol/Base using gcc
-        run: ./rebol3 siskin.r3 make/rebol3.nest %rebol3-base-linux-x86
+        run: ./rebol3 siskin.r3 rebol %rebol3-base-linux-x86
       - name: Build 32bit Rebol/Core using gcc
-        run: ./rebol3 siskin.r3 make/rebol3.nest %rebol3-core-linux-x86
+        run: ./rebol3 siskin.r3 rebol %rebol3-core-linux-x86
       - name: Build 32bit Rebol/Bulk using gcc
-        run: ./rebol3 siskin.r3 make/rebol3.nest %rebol3-bulk-linux-x86
+        run: ./rebol3 siskin.r3 rebol %rebol3-bulk-linux-x86
 
       - name: Build 64bit Rebol/Base using gcc
-        run: ./rebol3 siskin.r3 make/rebol3.nest %rebol3-base-linux-x64
+        run: ./rebol3 siskin.r3 rebol %rebol3-base-linux-x64
       - name: Build 64bit Rebol/Core using gcc
-        run: ./rebol3 siskin.r3 make/rebol3.nest %rebol3-core-linux-x64
+        run: ./rebol3 siskin.r3 rebol %rebol3-core-linux-x64
       - name: Build 64bit Rebol/Bulk using gcc
-        run: ./rebol3 siskin.r3 make/rebol3.nest %rebol3-bulk-linux-x64
+        run: ./rebol3 siskin.r3 rebol %rebol3-bulk-linux-x64
 
       - name: Create archives from each version
         run: |
