@@ -168,9 +168,9 @@ jobs:
 
       - name: Create archives from each version
         run: |
-          gzip -9 ./tree/rebol/Rebol/build/rebol3-base-x64-osx
-          gzip -9 ./tree/rebol/Rebol/build/rebol3-core-x64-osx
-          gzip -9 ./tree/rebol/Rebol/build/rebol3-bulk-x64-osx
+          gzip -9 ./tree/rebol/Rebol/build/rebol3-base-macos-x64
+          gzip -9 ./tree/rebol/Rebol/build/rebol3-core-macos-x64
+          gzip -9 ./tree/rebol/Rebol/build/rebol3-bulk-macos-x64
           gzip -9 ./tree/rebol/Rebol/build/lib-rebol3-core-macos-x64.dylib
           gzip -9 ./tree/rebol/Rebol/build/host-core-macos-x64
 
