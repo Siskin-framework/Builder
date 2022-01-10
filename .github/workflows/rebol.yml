@@ -110,7 +110,7 @@ jobs:
         uses: oldes/install-rebol@v3.7.1
 
       - name: Install GCC multilib
-        run: apt-get install gcc-multilib
+        run: sudo apt-get install gcc-multilib
 
       - name: Build 32bit Rebol/Base using gcc
         run: ./siskin make/rebol3.nest %rebol3-base-linux-x86
