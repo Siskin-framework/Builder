@@ -1,0 +1,106 @@
+;-    .-.                                                                       
+;-   /'v'\   SISKIN-Builder project file                                        
+;-  (/uOu\)  https://github.com/Siskin-framework/Builder/                       
+;-===="="=======================================================================
+
+github: mackron/miniaudio
+
+source:   %miniaudio/
+include:  %miniaudio/
+
+compiler: clang
+arch:     x64
+strip:    on
+optimize: 2
+
+#if Posix? [
+	libraries: [%dl %m %pthread]
+]
+
+eggs: [
+	"Example: custom_backend.c" [
+		name: %custom_backend
+		file: only %examples/custom_backend.c
+	]
+	"Example: custom_decoder.c" [
+		name: %custom_decoder
+		file: only %examples/custom_decoder.c
+	]
+	"Example: custom_decoder_engine.c" [
+		name: %custom_decoder_engine
+		file: only %examples/custom_decoder_engine.c
+	]
+	"Example: data_source_chaining.c" [
+		name: %data_source_chaining
+		file: only %examples/data_source_chaining.c
+	]
+	"Example: duplex_effect.c" [
+		name: %duplex_effect
+		file: only %examples/duplex_effect.c
+	]
+	"Example: engine_advanced.c" [
+		name: %engine_advanced
+		file: only %examples/engine_advanced.c
+	]
+	"Example: engine_effects.c" [
+		name: %engine_effects
+		file: only %examples/engine_effects.c
+	]
+	"Example: engine_hello_world.c" [
+		name: %engine_hello_world
+		file: only %examples/engine_hello_world.c
+	]
+	"Example: engine_sdl.c" [
+		name: %engine_sdl
+		file: only %examples/engine_sdl.c
+	]
+	"Example: engine_steamaudio.c" [
+		name: %engine_steamaudio
+		file: only %examples/engine_steamaudio.c
+	]
+	"Example: node_graph.c" [
+		name: %node_graph
+		file: only %examples/node_graph.c
+	]
+	"Example: resource_manager.c" [
+		name: %resource_manager
+		file: only %examples/resource_manager.c
+	]
+	"Example: resource_manager_advanced.c" [
+		name: %resource_manager_advanced
+		file: only %examples/resource_manager_advanced.c
+	]
+	"Example: simple_capture.c" [
+		name: %simple_capture
+		file: only %examples/simple_capture.c
+	]
+	"Example: simple_duplex.c" [
+		name: %simple_duplex
+		file: only %examples/simple_duplex.c
+	]
+	"Example: simple_enumeration.c" [
+		name: %simple_enumeration
+		file: only %examples/simple_enumeration.c
+	]
+	"Example: simple_loopback.c" [
+		name: %simple_loopback
+		file: only %examples/simple_loopback.c
+	]
+	"Example: simple_looping.c" [
+		name: %simple_looping
+		file: only %examples/simple_looping.c
+	]
+	"Example: simple_mixing.c" [
+		name: %simple_mixing
+		file: only %examples/simple_mixing.c
+	]
+	"Example: simple_playback.c" [
+		name: %simple_playback
+		file: only %examples/simple_playback.c
+	]
+	"Example: simple_playback_sine.c" [
+		name: %simple_playback_sine
+		file: only %examples/simple_playback_sine.c
+	]
+]
+
