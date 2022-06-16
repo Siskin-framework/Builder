@@ -1,0 +1,708 @@
+;-    .-.                                                                       
+;-   /'v'\   SISKIN-Builder project file                                        
+;-  (/uOu\)  https://github.com/Siskin-framework/Builder/                       
+;-===="="=======================================================================
+
+name: "Sokol"
+
+github: floooh/sokol
+github: floooh/sokol-samples
+github: floooh/sokol-tools-bin
+github: floooh/cimgui-sokol-starterkit
+;github: floooh/libmodplug
+github: ocornut/imgui
+
+strip:    true
+arch:     x64
+temp-dir: %tmp/
+output:   %bin/
+
+compiler: clang
+
+#if Windows? [define:  _CRT_SECURE_NO_WARNINGS]
+
+include: %sokol/
+
+flags: [
+	;-mwindows ;no console - using windows subsystem
+	;-municode
+]
+
+;compiler: clang
+
+common-glfw: [
+	files: [
+		%sokol-samples/glfw/flextgl/flextGL
+	]
+	includes: [
+		%../glfw/glfw/include/
+	]
+	;libs:    [%kernel32 %msvcrt %user32]
+	libs: [
+		%opengl32
+		%../glfw/release-x64/
+		%glfw3
+		%gdi32
+	]
+	;defines: [WIN32]
+	;flags: [-mwindows]
+	defines: [
+		USE_GLFW
+		; GLFW_DLL
+	]
+
+]
+
+common-imgui: [
+	include: [
+		%imgui/
+	]
+	;#if Windows? [
+	;	compiler: x86_64-w64-mingw32-g++
+	;]
+	files: [
+		%imgui/imgui.cpp
+		%imgui/imgui_draw.cpp
+		%imgui/imgui_tables.cpp
+		%imgui/imgui_widgets.cpp
+	]
+	;cflags: [-fno-threadsafe-statics]
+	;cflags: [-fpermissive]
+]
+common-cimgui: [
+	include: %cimgui-sokol-starterkit/
+	include: %cimgui-sokol-starterkit/cimgui/
+	;include: %cimgui-sokol-starterkit/sokol/
+	;include: %/x/MingW/mingw-w64-headers/direct-x/include/ 
+	files: [
+		%cimgui-sokol-starterkit/cimgui/imgui/imgui.cpp
+		%cimgui-sokol-starterkit/cimgui/imgui/imgui_draw.cpp
+		%cimgui-sokol-starterkit/cimgui/imgui/imgui_demo.cpp
+		%cimgui-sokol-starterkit/cimgui/imgui/imgui_tables.cpp
+		%cimgui-sokol-starterkit/cimgui/imgui/imgui_widgets.cpp
+		%cimgui-sokol-starterkit/cimgui/cimgui.cpp
+	]
+	;#if Windows? [
+	;	compiler: x86_64-w64-mingw32-g++
+	;]
+]
+common-dbgui: [
+	:common-imgui
+	;compiler: gcc
+	file: %sokol-samples/libs/dbgui/dbgui.cc
+	defines: [USE_DBG_UI]
+]
+
+common-basisu: [
+	#if Windows? [
+		compiler: clang
+	]
+	files: [
+		;%sokol-samples/libs/basisu/basisu_transcoder.cpp
+		%sokol-samples/libs/basisu/sokol_basisu.cpp
+	]
+	include: [
+		%sokol-samples/libs/basisu/
+	]
+	defines: [BASISD_SUPPORT_BC7=0]
+]
+
+common-d3d11: [
+	files: [
+		%sokol-samples/d3d11/d3d11entry.c
+	]
+	includes: [
+		;Official mingw distro seems not to be up to date
+		;%/x/MingW/mingw-w64-headers/direct-x/include/ 
+		;Headers above downloaded from: https://sourceforge.net/p/mingw-w64/mingw-w64/ci/master/tarball?path=/mingw-w64-headers
+	]
+	libs: [%D3D11 %d3dx11_43 %uuid %d3dcompiler_43]
+	defines: [USE_D3D11]
+]
+
+common-emsc: [
+	compiler: emcc
+	bin-extension: html
+	flags:  only [-Os]
+	lflags: [
+		{-s USE_WEBGL2=1 -s FULL_ES3=1}
+		{-s WASM=1}
+		{--closure 1}
+		{-s "MALLOC='emmalloc'"}         ;EMSCRIPTEN_USE_EMMALLOC
+	]
+	strip: off
+]
+
+common-sapp: [
+	files: [
+		%sokol-samples/libs/sokol/sokol.c
+	]
+	includes: [
+		%sokol-samples/libs/sokol/
+		%sokol-samples/libs/
+		%sokol/util/
+	]
+	#if Windows? [
+		includes: [
+			%tmp/hlsl5/
+			;Official mingw distro seems not to be up to date
+			;%/x/MingW/mingw-w64-headers/direct-x/include/ 
+			;Headers above downloaded from: https://sourceforge.net/p/mingw-w64/mingw-w64/ci/master/tarball?path=/mingw-w64-headers
+		]
+		libs: [%D3D11  %uuid  %Ole32] ;%d3dx11_43 %d3dcompiler_43
+		defines: [
+			SOKOL_D3D11 SOKOL_HLSL5
+			_WIN32_WINNT=0x0600
+		]
+		flags: [-mwindows]
+	]
+	#if macOS? [
+		defines: [
+			SOKOL_METAL
+		]
+	]
+]
+
+ozz-anim: [
+	file:    %sokol-samples/libs/ozzanim/src/ozz_animation.cc
+	file:    %sokol-samples/libs/ozzanim/src/ozz_base.cc
+	file:    %sokol-samples/libs/ozzanim/src/mesh.cc
+	include: %sokol-samples/libs/ozzanim/include/
+]
+
+eggs: [
+;;	"Sokol WebAssembly - Texture array" [
+;;		:common-emsc
+;;		name: %wasm/arraytex
+;;		file: %sokol-samples/html5/arraytex-emsc.c
+;;	]
+;;	"Sokol WebAssembly - Blend" [
+;;		:common-emsc
+;;		name: %wasm/blend
+;;		file: %sokol-samples/html5/blend-emsc.c
+;;	]
+;;	"Sokol WebAssembly - Clear" [
+;;		:common-emsc
+;;		name: %wasm/clear
+;;		file: %sokol-samples/html5/clear-emsc.c
+;;	]
+;;	"Sokol WebAssembly - Cube" [
+;;		:common-emsc
+;;		name: %wasm/cube
+;;		file: %sokol-samples/html5/cube-emsc.c
+;;	]
+;;	"Sokol WebAssembly - updating texture per-frame with CPU generated data" [
+;;		:common-emsc
+;;		name: %wasm/dyntex
+;;		file: %sokol-samples/html5/dyntex-emsc.c
+;;	]
+;;	"Sokol WebAssembly - injecting native GL buffer and image resources" [
+;;		:common-emsc
+;;		name: %wasm/inject
+;;		file: %sokol-samples/html5/inject-emsc.c
+;;	]
+;;	"Sokol WebAssembly - Instanced rendering, static geometry vertex- and index-buffers, dynamically updated instance-data buffer" [
+;;		:common-emsc
+;;		name: %wasm/instancing
+;;		file: %sokol-samples/html5/instancing-emsc.c
+;;	]
+;;	"Sokol WebAssembly - Test mipmapping behaviour" [
+;;		:common-emsc
+;;		name: %wasm/mipmap
+;;		file: %sokol-samples/html5/mipmap-emsc.c
+;;	]
+;;	"Sokol WebAssembly - Multiple-render-target sample" [
+;;		:common-emsc
+;;		name: %wasm/mrt
+;;		file: %sokol-samples/html5/mrt-emsc.c
+;;	]
+;;	"Sokol WebAssembly - Simple offscreen rendering" [
+;;		:common-emsc
+;;		name: %wasm/offscreen
+;;		file: %sokol-samples/html5/offscreen-emsc.c
+;;	]
+;;	"Sokol WebAssembly - Indexed drawing, explicit vertex attr locations" [
+;;		:common-emsc
+;;		name: %wasm/quad
+;;		file: %sokol-samples/html5/quad-emsc.c
+;;	]
+;;	"Sokol WebAssembly - Textured cube" [
+;;		:common-emsc
+;;		name: %wasm/texcube
+;;		file: %sokol-samples/html5/texcube-emsc.c
+;;	]
+;;	"Sokol WebAssembly - Triangle" [
+;;		:common-emsc
+;;		name: %wasm/triangle
+;;		file: %sokol-samples/html5/triangle-emsc.c
+;;	]
+;;
+;;
+;;
+;;	"Sokol D3D11 - Texture array" [
+;;		name: %d3d11-arraytex
+;;		file: %sokol-samples/d3d11/arraytex-d3d11
+;;		:common-d3d11
+;;	]
+;;	"Sokol D3D11 - Binshader - Using HLSL shader bytecode with D3D11 backend." [
+;;		name: %d3d11-binshader
+;;		file: %sokol-samples/d3d11/binshader-d3d11.c
+;;		:common-d3d11
+;;	]
+;;	"Sokol D3D11 - Blend" [
+;;		name: %d3d11-blend
+;;		file: %sokol-samples/d3d11/blend-d3d11
+;;		:common-d3d11
+;;	]
+;;	"Sokol D3D11 - Render separate geometries in vertex- and index-buffers with buffer offsets" [
+;;		name: %d3d11-bufferoffsets
+;;		file: %sokol-samples/d3d11/bufferoffsets-d3d11
+;;		:common-d3d11
+;;	]
+;;	"Sokol D3D11 - Clear" [
+;;		name: %d3d11-clear
+;;		file: %sokol-samples/d3d11/clear-d3d11
+;;		:common-d3d11
+;;	]
+;;	"Sokol D3D11 - Cube" [
+;;		name: %d3d11-cube
+;;		file: %sokol-samples/d3d11/cube-d3d11
+;;		:common-d3d11
+;;	]
+;;	"Sokol D3D11 - updating texture per-frame with CPU generated data" [
+;;		name: %d3d11-dyntex
+;;		file: %sokol-samples/d3d11/dyntex-d3d11
+;;		:common-d3d11
+;;	]
+;;	"Sokol D3D11 - injecting native GL buffer and image resources" [
+;;		name: %d3d11-inject
+;;		file: %sokol-samples/d3d11/inject-d3d11
+;;		:common-d3d11
+;;	]
+;;	"Sokol D3D11 - Instanced rendering, static geometry vertex- and index-buffers, dynamically updated instance-data buffer" [
+;;		name: %d3d11-instancing
+;;		file: %sokol-samples/d3d11/instancing-d3d11
+;;		:common-d3d11
+;;	]
+;;	"Sokol D3D11 - Test mipmapping behaviour" [
+;;		name: %d3d11-mipmap
+;;		file: %sokol-samples/d3d11/mipmap-d3d11
+;;		:common-d3d11
+;;	]
+;;	"Sokol D3D11 - Multiple-render-target sample" [
+;;		name: %d3d11-mrt
+;;		file: %sokol-samples/d3d11/mrt-d3d11
+;;		:common-d3d11
+;;	]
+;;	"Sokol D3D11 - Simple offscreen rendering" [
+;;		name: %d3d11-offscreen
+;;		file: %sokol-samples/d3d11/offscreen-d3d11
+;;		:common-d3d11
+;;	]
+;;	"Sokol D3D11 - Indexed drawing, explicit vertex attr locations" [
+;;		name: %d3d11-quad
+;;		file: %sokol-samples/d3d11/quad-d3d11
+;;		:common-d3d11
+;;	]
+;;	"Sokol D3D11 - Textured cube" [
+;;		name: %d3d11-texcube
+;;		file: %sokol-samples/d3d11/texcube-d3d11
+;;		:common-d3d11
+;;	]
+;;	"Sokol D3D11 - Triangle" [
+;;		name: %d3d11-triangle
+;;		file: %sokol-samples/d3d11/triangle-d3d11
+;;		:common-d3d11
+;;	]
+;;
+;;
+;;	"Sokol GLFW - Texture array" [
+;;		name: %glfw-arraytex
+;;		file: %sokol-samples/glfw/arraytex-glfw
+;;		:common-glfw
+;;	]
+;;	"Sokol GLFW - Blend" [
+;;		name: %glfw-blend
+;;		file: %sokol-samples/glfw/blend-glfw
+;;		:common-glfw
+;;	]
+;;	"Sokol GLFW - Render separate geometries in vertex- and index-buffers with buffer offsets" [
+;;		name: %glfw-bufferoffsets
+;;		file: %sokol-samples/glfw/bufferoffsets-glfw
+;;		:common-glfw
+;;	]
+;;	"Sokol GLFW - Clear" [
+;;		name: %glfw-clear
+;;		file: %sokol-samples/glfw/clear-glfw
+;;		:common-glfw
+;;	]
+;;	"Sokol GLFW - Cube" [
+;;		name: %glfw-cube
+;;		file: %sokol-samples/glfw/cube-glfw
+;;		:common-glfw
+;;	]
+;;	"Sokol GLFW - updating texture per-frame with CPU generated data" [
+;;		name: %glfw-dyntex
+;;		file: %sokol-samples/glfw/dyntex-glfw
+;;		:common-glfw
+;;	]
+;;	"Sokol GLFW - injecting native GL buffer and image resources" [
+;;		name: %glfw-inject
+;;		file: %sokol-samples/glfw/inject-glfw
+;;		:common-glfw
+;;	]
+;;	"Sokol GLFW - Instanced rendering, static geometry vertex- and index-buffers, dynamically updated instance-data buffer" [
+;;		name: %glfw-instancing
+;;		file: %sokol-samples/glfw/instancing-glfw
+;;		:common-glfw
+;;	]
+;;	"Sokol GLFW - Test mipmapping behaviour" [
+;;		name: %glfw-mipmap
+;;		file: %sokol-samples/glfw/mipmap-glfw
+;;		:common-glfw
+;;	]
+;;	"Sokol GLFW - Multiple-render-target sample" [
+;;		name: %glfw-mrt
+;;		file: %sokol-samples/glfw/mrt-glfw
+;;		:common-glfw
+;;	]
+;;	"Sokol GLFW - How to use sokol-gfx with multiple GLFW windows and GL contexts." [
+;;		name: %glfw-multiwindow
+;;		file: %sokol-samples/glfw/multiwindow-glfw.c
+;;		:common-glfw
+;;	]
+;;	"Sokol GLFW - noninterleaved - How to use non-interleaved vertex data" [
+;;		name: %glfw-noninterleaved
+;;		file: %sokol-samples/glfw/noninterleaved-glfw.c
+;;		:common-glfw
+;;	]
+;;	"Sokol GLFW - Simple offscreen rendering" [
+;;		name: %glfw-offscreen
+;;		file: %sokol-samples/glfw/offscreen-glfw
+;;		:common-glfw
+;;	]
+;;	"Sokol GLFW - Indexed drawing, explicit vertex attr locations" [
+;;		name: %glfw-quad
+;;		file: %sokol-samples/glfw/quad-glfw
+;;		:common-glfw
+;;	]
+;;	"Sokol GLFW - Textured cube" [
+;;		name: %glfw-texcube
+;;		file: %sokol-samples/glfw/texcube-glfw
+;;		:common-glfw
+;;	]
+;;	"Sokol GLFW - Triangle" [
+;;		name: %glfw-triangle
+;;		file: %sokol-samples/glfw/triangle-glfw
+;;		:common-glfw
+;;	]
+;;
+;;	"Test triangle D3D11" [
+;;		name: %test-triangle-d3d11
+;;		file: %src/triangle.c
+;;		includes: [%src/]
+;;		:common-d3d11
+;;	]
+;;	"Test triangle GLFW" [
+;;		name: %test-triangle-glfw
+;;		file: %src/triangle
+;;		includes: [%src/]
+;;		:common-glfw
+;;	]
+
+	
+	"SAPP Arraytex" [
+		:common-sapp
+		name: %sapp-arraytex
+		file: %sokol-samples/sapp/arraytex-sapp.c
+	]
+	"SAPP Basisu - demo of how to use Basis Universal textures" [
+		:common-sapp
+		name: %sapp-basisu
+		file: %sokol-samples/sapp/basisu-sapp.c
+		file: %sokol-samples/libs/basisu/sokol_basisu.cpp
+	]
+	"SAPP Blend" [
+		:common-sapp
+		name: %sapp-blend
+		file: %sokol-samples/sapp/blend-sapp.c
+	]
+	"SAPP Bufferoffsets" [
+		:common-sapp
+		name: %sapp-bufferoffsets
+		file: %sokol-samples/sapp/bufferoffsets-sapp.c
+	]
+	"SAPP cGLTF - A simple(!) GLTF viewer" [
+		:common-sapp
+		:common-basisu
+		name: %sapp-cgltf
+		file: %sokol-samples/libs/stb/stb_image.c
+		file: %sokol-samples/sapp/cgltf-sapp.c
+		file: %sokol-samples/libs/util/fileutil.c
+	]
+	"SAPP Clear" [
+		:common-sapp
+		name: %sapp-clear
+		file: %sokol-samples/sapp/clear-sapp.c
+	]
+	"SAPP Cubemaprt" [
+		:common-sapp
+		name: %sapp-cubemaprt
+		file: %sokol-samples/sapp/cubemaprt-sapp.c
+	]
+	"SAPP Cube" [
+		:common-sapp
+		name: %sapp-cube
+		file: %sokol-samples/sapp/cube-sapp.c
+	]
+	"SAPP Debugtext-context - Demonstrate rendering to offscreen render targets with contexts." [
+		:common-sapp
+		name: %sapp-debugtext-context
+		file: %sokol-samples/sapp/debugtext-context-sapp.c
+	]
+	"SAPP Debugtext-printf - Simple text rendering with sokol_debugtext.h, formatting, tabs, etc..." [
+		:common-sapp
+		name: %sapp-debugtext-printf
+		file: %sokol-samples/sapp/debugtext-printf-sapp.c
+	]
+	"SAPP Debugtext - Text rendering with sokol_debugtext.h, test builtin fonts." [
+		:common-sapp
+		name: %sapp-debugtext
+		file: %sokol-samples/sapp/debugtext-sapp.c
+	]
+	"SAPP Droptest - Test drag'n'drop file loading." [
+		:common-sapp
+		:common-cimgui
+		name: %sapp-droptest
+		file: %sokol-samples/sapp/droptest-sapp.c
+	]
+	"SAPP Dyntex - Update dynamic texture with CPU-generated data each frame" [
+		:common-sapp
+		name: %sapp-dyntex
+		file: %sokol-samples/sapp/dyntex-sapp.c
+	]
+	"SAPP Events" [
+		:common-sapp
+		:common-imgui
+		name: %sapp-events
+		file: %sokol-samples/sapp/events-sapp.cc
+		flags: [-mconsole]
+		#if Windows? [library: %gdi32]
+	]
+	"SAPP Fontstash" [
+		:common-sapp
+		name: %sapp-fontstash
+		file: %sokol-samples/sapp/fontstash-sapp.c
+		file: %sokol-samples/libs/util/fileutil.c
+	]
+	"SAPP Icon" [
+		:common-sapp
+		name: %sapp-icon
+		file: %sokol-samples/sapp/icon-sapp.c
+	]
+;	"SAPP imGui dock" [
+;		:common-sapp
+;		:common-imgui
+;		name: %sapp-imgui-dock
+;		file: %sokol-samples/sapp/imgui-dock-sapp.cc
+;		file: %imgui/imgui_demo.cpp
+;	]
+	"SAPP imGui hiDPI" [
+		:common-sapp
+		:common-imgui
+		name: %sapp-imgui-highdpi
+		file: %sokol-samples/sapp/imgui-highdpi-sapp.cc
+		file: %imgui/imgui_demo.cpp
+	]
+	"SAPP imGui" [
+		:common-sapp
+		:common-imgui
+		name: %sapp-imgui
+		file: %sokol-samples/sapp/imgui-sapp.cc
+		file: %imgui/imgui_demo.cpp
+	]
+	"SAPP Instancing" [
+		:common-sapp
+		name: %sapp-instancing
+		file: %sokol-samples/sapp/instancing-sapp.c
+	]
+	"SAPP Load PNG" [
+		:common-sapp
+		name: %sapp-loadpng
+		file: %sokol-samples/sapp/loadpng-sapp.c
+		file: %sokol-samples/libs/stb/stb_image.c
+		file: %sokol-samples/libs/util/fileutil.c
+	]
+	"SAPP Mipmap" [
+		:common-sapp
+		name: %sapp-mipmap
+		file: %sokol-samples/sapp/mipmap-sapp.c
+	]
+	"SAPP Multi render targets" [
+		:common-sapp
+		name: %sapp-mrt
+		file: %sokol-samples/sapp/mrt-sapp.c
+	]
+	"SAPP noentry" [
+		:common-sapp
+		name: %sapp-noentry
+		file: %sokol-samples/sapp/noentry-sapp.c
+		defines: SOKOL_NO_ENTRY
+		#if Windows? [defines: _WIN32]
+	]
+	"SAPP Noninterleaved" [
+		:common-sapp
+		name: %sapp-noninterleaved
+		file: %sokol-samples/sapp/noninterleaved-sapp.c
+	]
+	"SAPP offscreen" [
+		:common-sapp
+		name: %sapp-offscreen
+		file: %sokol-samples/sapp/offscreen-sapp.c
+	]
+	"SAPP ozz-anim" [
+		:common-sapp
+		:common-imgui
+		:ozz-anim
+		name: %sapp-ozz-anim
+		file: %sokol-samples/sapp/ozz-anim-sapp.cc
+	]
+	"SAPP ozz-skin" [
+		:common-sapp
+		:common-imgui
+		:ozz-anim
+		name: %sapp-ozz-skin
+		file: %sokol-samples/sapp/ozz-skin-sapp.cc
+	]
+	"SAPP pixelformats" [
+		:common-sapp
+		:common-cimgui
+		name: %sapp-pixelformats
+		file: %sokol-samples/sapp/pixelformats-sapp.c
+	]
+	"SAPP plmpeg" [
+		:common-sapp
+		;:common-dbgui
+		name: %sapp-plmpeg
+		file: %sokol-samples/sapp/plmpeg-sapp.c
+		file: %sokol-samples/libs/util/fileutil.c
+	]
+	"SAPP Primtypes - Test/demonstrate the various primitive types" [
+		:common-sapp
+		;:common-dbgui
+		name: %sapp-primtypes
+		file: %sokol-samples/sapp/primtypes-sapp.c
+	]
+	"SAPP Quad" [
+		:common-sapp
+		name: %sapp-quad
+		file: %sokol-samples/sapp/quad-sapp.c
+	]
+;	"SAPP Restart" [
+;		:common-sapp
+;		name: %sapp-restart
+;		file: %sokol-samples/sapp/restart-sapp.c
+;	]
+	"SAPP sAudio" [
+		:common-sapp
+		name: %sapp-saudio
+		file: %sokol-samples/sapp/saudio-sapp.c
+	]
+	"SAPP sdf" [
+		:common-sapp
+		name: %sapp-sdf
+		file: %sokol-samples/sapp/sdf-sapp.c
+	]
+	"SAPP sgl-lines" [
+		:common-sapp
+		name: %sapp-sgl-lines
+		file: %sokol-samples/sapp/sgl-lines-sapp.c
+	]
+	"SAPP sgl-microui" [
+		:common-sapp
+		name: %sapp-sgl-microui
+		file: %sokol-samples/sapp/sgl-microui-sapp.c
+		file: %sokol-samples/libs/microui/microui.c
+	]
+	"SAPP sgl-points" [
+		:common-sapp
+		name: %sapp-sgl-points
+		file: %sokol-samples/sapp/sgl-points-sapp.c
+	]
+	"SAPP sgl" [
+		:common-sapp
+		name: %sapp-sgl
+		file: %sokol-samples/sapp/sgl-sapp.c
+	]
+	"SAPP Shadows" [
+		:common-sapp
+		name: %sapp-shadows
+		file: %sokol-samples/sapp/shadows-sapp.c
+	]
+	"SAPP Shapes" [
+		:common-sapp
+		name: %sapp-shapes
+		file: %sokol-samples/sapp/shapes-sapp.c
+	]
+	"SAPP Shapes transform" [
+		:common-sapp
+		name: %sapp-shapes-transform
+		file: %sokol-samples/sapp/shapes-transform-sapp.c
+	]
+;	"SAPP shdfeatures" [
+;		:common-sapp
+;		:common-cimgui
+;		name: %sapp-shdfeatures
+;		file: %sokol-samples/sapp/shdfeatures-sapp.c
+;	]
+	"SAPP tex3d" [
+		:common-sapp
+		name: %sapp-tex3d
+		file: %sokol-samples/sapp/tex3d-sapp.c
+	]
+	"SAPP Texture creation and rendering" [
+		:common-sapp
+		name: %sapp-texcube
+		file: %sokol-samples/sapp/texcube-sapp.c
+	]
+	"SAPP Triangle" [
+		:common-sapp
+		name: %sapp-triangle
+		file: %sokol-samples/sapp/triangle-sapp.c
+	]
+	"SAPP uniformtypes" [
+		:common-sapp
+		name: %sapp-uniformtypes
+		file: %sokol-samples/sapp/uniformtypes-sapp.c
+	]
+	"SAPP uvwrap" [
+		:common-sapp
+		name: %sapp-uvwrap
+		file: %sokol-samples/sapp/uvwrap-sapp.c
+	]
+;
+;		"SAPP Cube experiments" [
+;			:common-sapp
+;			name: %sapp-cube-exp
+;			file: %src/sapp-cube.c
+;			flags: [-mconsole]
+;		]
+
+	"Generate shader includes" [
+		do %generate-shaders.r3
+	]
+
+	"Update gits" [
+		cmd %sokol/ {git pull}
+		cmd %sokol-samples/ {git pull}
+		cmd %sokol-tools-bin/ {git pull}
+		cmd %cimgui-sokol-starterkit/ {git pull}
+	]
+	"cimgui demo" [
+		:common-cimgui
+		name:    %cimgui-demo
+		file:    %cimgui-sokol-starterkit/demo.c
+		file:    %cimgui-sokol-starterkit/sokol/sokol.c
+		include: %cimgui-sokol-starterkit/sokol/
+	]
+]
