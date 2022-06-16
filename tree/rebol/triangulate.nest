@@ -1,0 +1,6 @@
+;-    .-.                                                                       
+;-   /'v'\   SISKIN-Builder project file                                        
+;-  (/uOu\)  https://github.com/Siskin-framework/Builder/                       
+;-===="="=======================================================================
+github: @Rebol-Triangulate
+nest:   %Rebol-Triangulate/Rebol-Triangulate.nest
