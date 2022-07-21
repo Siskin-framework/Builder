@@ -30,9 +30,6 @@ jobs:
     - name: Build QoiConv utility
       run: ./rebol3 siskin.r3 utility/qoi qoiconv
 
-    - name: Test QoiConv
-      run: ./tree/utility/build/qoiconv
-
     ###############################################################################
     # Collecting build artifacts...
     - uses: actions/upload-artifact@v2
