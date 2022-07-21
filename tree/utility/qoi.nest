@@ -1,0 +1,23 @@
+;-    .-.                                                                       
+;-   /'v'\   SISKIN-Builder project file                                        
+;-  (/uOu\)  https://github.com/Siskin-framework/Builder/                       
+;-===="="=======================================================================
+
+github:   @qoi
+github:   nothings/stb
+source:   %qoi/
+include:  %qoi/
+include:  %stb/
+compiler: gcc
+arch:     x64
+strip:    on
+optimize: 2
+#if Windows? [upx: on]
+#if macOS?   [compiler: clang]
+
+eggs: [
+	"Utility: qoiconv" [
+		name: %qoiconv
+		file: %qoiconv.c
+	]
+]

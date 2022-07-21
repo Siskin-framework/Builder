@@ -1,0 +1,41 @@
+name: 'Build QOI'
+on:
+  # Triggers the workflow on push or pull request events but only for the main branch
+  # push:
+  #   branches: [ main ]
+  # pull_request:
+  #   branches: [ main ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  build_qoi:
+    name: QOI
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - windows-latest
+          - macOS-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Install Rebol
+      uses: oldes/install-rebol@v3.7.1
+
+    - name: Build QoiConv utility
+      run: ./rebol3 siskin.r3 utility/qoi.nest qoiconv
+
+    - name: Test QoiConv
+      run: ./tree/utility/triangle/build/qoiconv
+
+    ###############################################################################
+    # Collecting build artifacts...
+    - uses: actions/upload-artifact@v2
+      with:
+        name: qoiconv-${{matrix.os}}-CI-${{github.run_id}}
+        path: ./tree/utility/build/qoiconv*
