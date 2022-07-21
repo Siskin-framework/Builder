@@ -28,7 +28,7 @@ jobs:
       uses: oldes/install-rebol@v3.7.1
 
     - name: Build QoiConv utility
-      run: ./rebol3 siskin.r3 utility/qoi.nest qoiconv
+      run: ./rebol3 siskin.r3 utility/qoi qoiconv
 
     - name: Test QoiConv
       run: ./tree/utility/triangle/build/qoiconv
