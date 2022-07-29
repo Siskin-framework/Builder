@@ -1543,7 +1543,7 @@ build: function/with [
 				archive-only?
 				find lflags "-shared"
 			]
-			exists? out-file
+			out-file ; does not have to exist!
 		][
 			print as-green "^/Making archive:^/"
 
