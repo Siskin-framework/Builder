@@ -1,0 +1,144 @@
+;-    .-.                                                                       
+;-   /'v'\   SISKIN-Builder project file                                        
+;-  (/uOu\)  https://github.com/Siskin-framework/Builder/                       
+;-===="="=======================================================================
+
+name: "GLFW"
+
+github: glfw/glfw
+
+strip:    true
+arch:     x64
+source:   %glfw/
+include:  %glfw/include
+include:  %glfw/deps
+;temp-dir: %tmp/
+;output:   %bin/
+
+optimize: 2
+
+compiler: clang
+
+
+
+#if Windows? [
+	library: %gdi32
+	library: %User32 ;= Keyboard and Mouse Input...
+	library: %Shell32 ;= Drag related api
+	defines: [_GLFW_WIN32 UNICODE _UNICODE _CRT_SECURE_NO_WARNINGS]
+]
+
+glfw3: [
+	files: [
+		%src/context.c
+		%src/init.c
+		%src/input.c
+		%src/monitor.c
+		%src/platform.c
+		%src/vulkan.c
+		%src/window.c
+		%src/egl_context.c
+		%src/osmesa_context.c
+		%src/null_init.c
+		%src/null_monitor.c
+		%src/null_window.c
+		%src/null_joystick.c
+	]
+	#if windows? [
+		files: [
+			;%win32_time.h %win32_thread.h
+			%src/win32_module.c
+			%src/win32_time.c
+			%src/win32_thread.c
+			%src/win32_init.c
+			%src/win32_monitor.c
+			%src/win32_window.c
+			%src/win32_joystick.c
+			%src/wgl_context.c
+		]
+	]
+]
+
+eggs: [
+	"Static glfw3 library" [
+		:glfw3
+		name:  %glfw3
+		flag:  archive-only
+		strip:  false
+	]
+	"Test: allocator" [
+		name:    %allocator
+		file:    %tests/allocator.c
+		file:    %deps/getopt.c
+		library: %glfw3
+	]
+	"Test: clipboard" [
+		name:    %clipboard
+		file:    %tests/clipboard.c
+		file:    %deps/getopt.c
+		library: %glfw3
+	]
+	"Test: iconify" [
+		name:    %iconify
+		file:    %tests/iconify.c
+		file:    %deps/getopt.c
+		library: %glfw3
+	]
+	"example: boing" [
+		name: %example-boing
+		file: %examples/boing.c
+		library: %glfw3
+	]
+	"example: gears" [
+		name: %example-gears
+		file: %examples/gears.c
+		library: %glfw3
+	]
+	"example: heightmap" [
+		name: %example-heightmap
+		file: %examples/heightmap.c
+		library: %glfw3
+	]
+	"example: offscreen" [
+		name: %example-offscreen
+		file: %examples/offscreen.c
+		library: %glfw3
+	]
+	"example: particles" [
+		name: %example-particles
+		file: %examples/particles.c
+		file: %deps/getopt.c
+		file: %deps/tinycthread.c
+		library: %glfw3
+	]
+	"example: sharing" [
+		name: %example-sharing
+		file: %examples/sharing.c
+		library: %glfw3
+	]
+	"example: splitview" [
+		name: %example-splitview
+		file: %examples/splitview.c
+		library: %glfw3
+	]
+	"example: triangle-opengl" [
+		name: %example-triangle-opengl
+		file: %examples/triangle-opengl.c
+		library: %glfw3
+	]
+	"example: triangle-opengles" [
+		name: %example-triangle-opengles
+		file: %examples/triangle-opengles.c
+		library: %glfw3
+	]
+	"example: wave" [
+		name: %example-wave
+		file: %examples/wave.c
+		library: %glfw3
+	]
+	"example: windows" [
+		name: %example-windows
+		file: %examples/windows.c
+		library: %glfw3
+	]
+]
