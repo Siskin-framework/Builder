@@ -39,6 +39,7 @@ make-siskin: [
 ]
 make-siskin-x86: [:make-siskin :arch-x86 #if windows? [target: x86-win32]]
 make-siskin-x64: [:make-siskin :arch-x64 #if windows? [target: x64-win32]]
+make-siskin-arm: [:make-siskin :arch-arm64]
 
 eggs: only [
 	#if Windows? [
@@ -71,6 +72,11 @@ eggs: only [
 			name:     %Siskin-x64-osx
 			compiler: clang
 			:make-siskin-x64
+		]
+		"Siskin arm64" [
+			name:     %Siskin-arm-osx
+			compiler: clang
+			:make-siskin-arm
 		]
 	]
 	#if OpenBSD? [
