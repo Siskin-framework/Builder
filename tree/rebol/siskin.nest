@@ -14,7 +14,7 @@ make-siskin: [
 	:include-mezz-ansi
 	:include-codec-ico
 	:include-codec-zip
-	:include-https
+	:include-prot-https
 	:include-prebol
 	:common
 	:common-host
