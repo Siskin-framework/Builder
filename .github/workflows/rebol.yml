@@ -154,6 +154,32 @@ jobs:
       - name: Install Rebol
         uses: oldes/install-rebol@v3.10.0
 
+      - name: Install the Apple certificate
+      # https://docs.github.com/en/actions/guides/installing-an-apple-certificate-on-macos-runners-for-xcode-development
+        env:
+          BUILD_CERTIFICATE_BASE64: ${{ secrets.MACOS_CERTIFICATE }}
+          P12_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PWD }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+        run: |
+          # create variables
+          CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
+          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+
+          # import certificate from secrets
+          echo -n "$BUILD_CERTIFICATE_BASE64" | base64 --decode --output $CERTIFICATE_PATH
+
+          # create temporary keychain
+          security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+
+          # import certificate to keychain
+          security import $CERTIFICATE_PATH -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
+          security list-keychain -d user -s $KEYCHAIN_PATH
+
+          # list available codesigning identities
+          security find-identity -v -p codesigning
+
       - name: Build 64bit Rebol/Base using clang
         run: ./rebol3 siskin.r3 rebol %rebol3-base-macos-x64
       - name: Build 64bit Rebol/Core using clang
@@ -172,6 +198,19 @@ jobs:
         run: ./rebol3 siskin.r3 rebol %lib-rebol3-core-macos-x64
       - name: Build 64bit Rebol/Core as a host application
         run: ./rebol3 siskin.r3 rebol %host-core-macos-x64
+
+      - name: Codesign executables
+        env: 
+          MACOS_IDENTITY_ID: ${{ secrets.MACOS_IDENTITY_ID }}
+        run: |
+          /usr/bin/codesign --force -s $MACOS_IDENTITY_ID ./tree/rebol/Rebol/build/rebol3-base-macos-x64 -v
+          /usr/bin/codesign --force -s $MACOS_IDENTITY_ID ./tree/rebol/Rebol/build/rebol3-core-macos-x64 -v
+          /usr/bin/codesign --force -s $MACOS_IDENTITY_ID ./tree/rebol/Rebol/build/rebol3-bulk-macos-x64 -v
+          /usr/bin/codesign --force -s $MACOS_IDENTITY_ID ./tree/rebol/Rebol/build/rebol3-base-macos-arm64 -v
+          /usr/bin/codesign --force -s $MACOS_IDENTITY_ID ./tree/rebol/Rebol/build/rebol3-core-macos-arm64 -v
+          /usr/bin/codesign --force -s $MACOS_IDENTITY_ID ./tree/rebol/Rebol/build/rebol3-bulk-macos-arm64 -v
+          /usr/bin/codesign --force -s $MACOS_IDENTITY_ID ./tree/rebol/Rebol/build/lib-rebol3-core-macos-x64.dylib -v
+          /usr/bin/codesign --force -s $MACOS_IDENTITY_ID ./tree/rebol/Rebol/build/host-core-macos-x64 -v
 
       - name: Create archives from each version
         run: |
