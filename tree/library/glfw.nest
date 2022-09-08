@@ -19,13 +19,26 @@ optimize: 2
 
 compiler: clang
 
-
+flag: std=c99
 
 #if Windows? [
 	library: %gdi32
 	library: %User32 ;= Keyboard and Mouse Input...
 	library: %Shell32 ;= Drag related api
 	defines: [_GLFW_WIN32 UNICODE _UNICODE _CRT_SECURE_NO_WARNINGS]
+]
+#if macOS? [
+	defines: [_GLFW_COCOA UNICODE _UNICODE]
+	frameworks: [Cocoa IOKit CoreFoundation]
+	flags: [
+		-fno-objc-arc
+		-mmacosx-version-min=11.5
+		-fPIC
+		;"-isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk"
+	]
+	lflag: "-Wl,-search_paths_first,-headerpad_max_install_names"
+	arch: arm64
+	flags: ["-arch arm64"]
 ]
 
 glfw3: [
@@ -57,6 +70,21 @@ glfw3: [
 			%src/wgl_context.c
 		]
 	]
+	#if macos? [
+		files: [
+			%src/cocoa_init.m
+			%src/cocoa_joystick.m
+			%src/cocoa_monitor.m
+			%src/cocoa_time.c
+			%src/cocoa_window.m
+			%src/nsgl_context.m
+			%src/posix_module.c
+			;%src/posix_poll.c
+			%src/posix_thread.c
+			;%src/posix_time.c
+		]
+		flag: -Wno-documentation
+	]
 ]
 
 eggs: [
@@ -65,6 +93,12 @@ eggs: [
 		name:  %glfw3
 		flag:  archive-only
 		strip:  false
+	]
+	"triangle-opengl" [
+		name: %triangle-opengl
+		file: %examples/triangle-opengl.c
+		:glfw3
+		cflags: [-fno-objc-arc]
 	]
 	"Test: allocator" [
 		name:    %allocator
