@@ -133,14 +133,25 @@ common-emsc: [
 	strip: off
 ]
 
+target-arm64: [
+	arch: arm64
+	;flags: ["-arch arm64"]
+	flags: "-target arm64-apple-darwin"
+	define: _FILE_OFFSET_BITS=64
+	define: __LP64__ ; has long (integer) 64 bits
+	define: __arm64__
+	define: TO_OSX_X64
+]
+
 common-sapp: [
 	files: [
-		%sokol-samples/libs/sokol/sokol.c
+		%sokol-samples/libs/sokol/sokol.m
 	]
 	includes: [
 		%sokol-samples/libs/sokol/
 		%sokol-samples/libs/
 		%sokol/util/
+		%tmp/glsl/
 	]
 	#if Windows? [
 		includes: [
@@ -159,6 +170,16 @@ common-sapp: [
 	#if macOS? [
 		defines: [
 			SOKOL_METAL
+		]
+		:target-arm64
+		frameworks: [
+			AudioToolbox
+			CoreFoundation
+			CoreGraphics
+			QuartzCore
+			Metal
+			MetalKit
+			AppKit
 		]
 	]
 ]
