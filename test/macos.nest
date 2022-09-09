@@ -1,0 +1,48 @@
+;-    .-.                                                                       
+;-   /'v'\   SISKIN-Builder project file                                        
+;-  (/uOu\)  https://github.com/Siskin-framework/Builder/                       
+;-===="="=======================================================================
+
+;@@ This file is only for macOS builds!                                         
+#if macOS?   [
+	compiler:  clang
+	source:   %macos/
+	sign:      off
+	flag:      fno-objc-arc
+	framework: Cocoa
+
+	target-arm64: [
+		arch: arm64
+		flag: "-arch arm64"
+	]
+	target-x64: [
+		arch: x86_64
+		flag: "-arch x86_64"
+	]	
+
+	bundle: [
+		Version: 1.0.0
+		CFBundleShortVersionString: "1.0"
+		Copyright: "Copyright © 2022 Oldes. All rights reserved."
+		Icon: %../assets/Siskin.iconset
+	]
+
+	eggs: [
+		"Hello macOS app (arm)" [
+			:target-arm64
+			name: %macos-arm
+			file: %main.m
+			bundle: [
+				title: "Hello Mac (arm64 version)"
+			]
+		]
+		"Hello macOS app (intel)" [
+			:target-x64
+			name: %macos-x64
+			file: %main.m
+			bundle: [
+				title: "Hello Mac (x86_64 version)"
+			]
+		]
+	]
+]

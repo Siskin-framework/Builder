@@ -2,7 +2,7 @@ Rebol [
 	Title:  "Siskin Builder - core"
 	Type:    module
 	Name:    siskin
-	Version: 0.7.2
+	Version: 0.8.0
 	Author: "Oldes"
 	;Needs:  prebol
 	exports: [
@@ -18,7 +18,7 @@ Rebol [
 banner: next rejoin [{
 ^[[0;33m═╗
 ^[[0;33m ║^[[1;31m    .-.
-^[[0;33m ║^[[1;31m   /'v'\   ^[[0;33mSISKIN-Framework Builder 0.7.2 Rebol } rebol/version {
+^[[0;33m ║^[[1;31m   /'v'\   ^[[0;33mSISKIN-Framework Builder 0.8.0 Rebol } rebol/version {
 ^[[0;33m ║^[[1;31m  (/^[[0;31muOu^[[1;31m\)  ^[[0;33mhttps://github.com/Siskin-framework/Builder/
 ^[[0;33m ╚════^[[1;31m"^[[0;33m═^[[1;31m"^[[0;33m═══════════════════════════════════════════════════════════════════════^[[m}]
 
@@ -101,7 +101,7 @@ prepare-interactive: func[args [string!]][
 	; preprocess user input when runing as a Rebol script or from `ask` input
 	try/except [args: load args][
 		print-error ["Invalid command:" as-red args]
-		args: none
+		return none
 	]
 	unless block? args [args: to block! args] ; in case that input was a single value
 	forall args [
@@ -124,6 +124,7 @@ nest-context: object [
 		temp:       none
 		sign:       none
 		output:     none ;%bin/
+		bundle:     none
 		source:     %""
 		objects:    none
 		gits:       []
@@ -171,6 +172,7 @@ nest-context: object [
 	timestamp:    none
 	result:       none
 	out-file:     none
+	app-file:     none ;; bundle output
 
 	defaults: context [
 		output:  %build/
@@ -533,6 +535,13 @@ parse-nest: closure/with [
 		| quote arch:       set val:  word!               ( dest/arch:       val )
 		| quote root:       set val:  file!               ( dest/root: clean-path val )
 		| quote sign:      [set val: string! | logic]     ( dest/sign:       val )
+		| quote bundle:     set val:  block!              (
+			either block? dest/bundle [
+				append dest/bundle val
+			][
+				dest/bundle: val
+			]
+		)
 		|[quote temp-dir: | quote temp:  ] set val: file! ( dest/temp:       val )
 		|[quote out-dir:  | quote output:] set val: file! ( dest/output:     val )
 		|[quote compiler: | quote cc:    ] [
@@ -1006,14 +1015,13 @@ build-target: closure/with [
 		]
 		if update? [update-gits spec]
 
-		;@@ temporary using strings because of https://github.com/Oldes/Rebol-issues/issues/2466
-		;@@ use ref! once build with fixed Rebol version!!!
 		if force-compiler [
-		switch to string! force-compiler [
-			"msvc"  [build-msvc  spec  exit]
-			"xcode" [build-xcode spec  exit]
-			"make"  [build-make  spec  exit]
-		]]
+			switch force-compiler [
+				@msvc  [build-msvc  spec  exit]
+				@xcode [build-xcode spec  exit]
+				@make  [build-make  spec  exit]
+			]
+		]
 
 		try/except [build spec][
 			print-failed
@@ -1161,6 +1169,7 @@ build: function/with [
 		lflags
 		libs
 		compiler
+		bundle
 	]
 
 	;- prepare libs & flags
@@ -1394,6 +1403,14 @@ build: function/with [
 		]
 	]
 
+	if spec/bundle [
+		switch/default system/platform [
+			macOS [ try/except [prepare-macos-bundle spec] :on-error-throw ]
+		][
+			print-warn ["Bundle specified but not supported on this platform:" system/platform]
+		]
+	]
+
 	add-env "_" undirize spec/objects
 	;tmp-env: either windows? ["%_%"]["${_}"]
 	tmp-env: either windows? ["$_\"]["$_/"]
@@ -1543,7 +1560,7 @@ build: function/with [
 				archive-only?
 				find lflags "-shared"
 			]
-			out-file ; does not have to exist!
+			;out-file ; does not have to exist!
 		][
 			print as-green "^/Making archive:^/"
 
@@ -1555,6 +1572,8 @@ build: function/with [
 				unless find/part tmp/2 %lib 3 [insert tmp/2 %lib]
 			]
 			archive: join tmp/1 tmp/2
+
+			delete archive
 
 			unless ar [
 				print-error ["AR tool not found!^/Compilation failed!"]
@@ -1625,6 +1644,8 @@ finalize-build: closure/with [spec [map!] file [file! none!] /no-fail][
 			][
 				unless valid-sign-identity? sign [
 					print-error "Sign identity defined but not found as a valid one!"
+					print-info "Use `security find-identity -v -p codesigning` to list identities."
+					print-info "Store identity in SISKIN_SIGN_IDENTITY environmental variable."
 					sign: none
 				]
 			]
@@ -1641,15 +1662,22 @@ finalize-build: closure/with [spec [map!] file [file! none!] /no-fail][
 		if spec/upx [
 			try/except [do-upx out-file][print-error system/state/last-error]
 		]
-		if all [sign macOS?][
-			eval-cmd/v rejoin [{codesign --sign "} sign {" -f -o runtime } out-file]
-		]
-		
 
-		
-		if all [macOS? system/options/log/siskin > 1] [
-			eval-cmd/v ["file" out-file]
-			eval-cmd/v ["otool -L" out-file]
+		if macOS? [
+			if sign [
+				eval-cmd/v rejoin [{codesign --sign "} sign {" -f -o runtime } out-file]
+			]
+
+			if app-file [
+				;- force Finder to update its cache
+				eval-cmd/v [%touch app-file]
+			]
+
+			;- print info about the output
+			if system/options/log/siskin > 1 [
+				eval-cmd/v ["file" out-file]
+				eval-cmd/v ["otool -L" out-file]
+			]
 		]
 		print-ready
 		return true
@@ -2080,7 +2108,7 @@ eval-cmd: function/with [
 			ask as-purple "^/Press enter to continue."
 		]
 	][
-		result-code: call/wait/shell cmd
+		try/except [result-code: call/wait/shell cmd] :print-error
 		if all [
 			result-code <> 0 not no-quit not interactive?
 		][
@@ -2345,3 +2373,62 @@ prepare-dir: func[tag dir [file! string!]][
 	]
 	dir
 ]
+
+prepare-macos-bundle: function/with [
+	spec
+][
+	exe-name: second split-path out-file
+	app-file: clean-path rejoin [spec/output exe-name %.app]
+	contents-dir: app-file/Contents
+	make-dir/deep resources-dir: contents-dir/Resources
+
+	out-file: append dirize contents-dir/MacOS exe-name
+
+	if file? ico: select spec/bundle 'icon [
+		ico-type: suffix? ico
+		;? ico-type
+		if %.png = ico-type [
+			ico-dir: rejoin [spec/temp exe-name %.iconset]
+			if exists? ico-dir [try [delete-dir ico-dir]]
+			make-dir/deep ico-dir
+			;eval-cmd ["cp " ico ico-dir...
+			;@@ TODO!!!
+		]
+		if %.iconset = ico-type [
+			eval-cmd/v ["iconutil -c icns -o " resources-dir/app.icns ico]
+			spec/bundle/icon: "app" 
+		]
+	]
+
+	dict: make map! 10
+	dict/(@CFBundleExecutable): :exe-name
+
+	Info.plist: {<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>}
+	
+	parse spec/bundle [some [
+		[ quote id:        (key: @CFBundleIdentifier)      
+		| quote title:     (key: @CFBundleName)  
+		| quote version:   (key: @CFBundleVersion)
+		| quote copyright: (key: @NSHumanReadableCopyright)
+		| quote icon:      (key: @CFBundleIconFile)
+		| set key set-word!
+		] set val: skip ( dict/:key: :val )
+		| end
+		| copy val: to [set-word! | end] (
+			print-warn ["Ignoring bundle specification:" as-red mold/flat :val]
+		)
+	]]
+	foreach [key val] dict [
+		append Info.plist ajoin [
+			LF TAB <key>    :key </key>
+			LF TAB <string> :val </string>
+		]
+	]
+	append Info.plist {^/</dict>^/</plist>}
+
+	write contents-dir/Info.plist probe Info.plist
+
+] :nest-context
