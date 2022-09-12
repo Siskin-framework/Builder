@@ -2,7 +2,7 @@ Rebol [
 	Title:  "Siskin Builder - core"
 	Type:    module
 	Name:    siskin
-	Version: 0.8.0
+	Version: 0.8.1
 	Author: "Oldes"
 	;Needs:  prebol
 	exports: [
@@ -18,7 +18,7 @@ Rebol [
 banner: next rejoin [{
 ^[[0;33m═╗
 ^[[0;33m ║^[[1;31m    .-.
-^[[0;33m ║^[[1;31m   /'v'\   ^[[0;33mSISKIN-Framework Builder 0.8.0 Rebol } rebol/version {
+^[[0;33m ║^[[1;31m   /'v'\   ^[[0;33mSISKIN-Framework Builder 0.8.1 Rebol } rebol/version {
 ^[[0;33m ║^[[1;31m  (/^[[0;31muOu^[[1;31m\)  ^[[0;33mhttps://github.com/Siskin-framework/Builder/
 ^[[0;33m ╚════^[[1;31m"^[[0;33m═^[[1;31m"^[[0;33m═══════════════════════════════════════════════════════════════════════^[[m}]
 
@@ -1393,6 +1393,15 @@ build: function/with [
 			Macintosh [
 				if find spec/lflags "-shared" [
 					add-extension out-file %.dylib
+
+					if spec/version [
+						unless find lflags "-current_version " [
+							append lflags ajoin ["-current_version " spec/version SP]
+						]
+						unless find lflags "-compatibility_version " [
+							append lflags ajoin ["-compatibility_version " spec/version SP]
+						]
+					] 
 				]
 			]
 			Linux [
