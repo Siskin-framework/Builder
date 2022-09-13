@@ -144,9 +144,6 @@ target-arm64: [
 ]
 
 common-sapp: [
-	files: [
-		%sokol-samples/libs/sokol/sokol.m
-	]
 	includes: [
 		%sokol-samples/libs/sokol/
 		%sokol-samples/libs/
@@ -154,6 +151,7 @@ common-sapp: [
 		%tmp/glsl/
 	]
 	#if Windows? [
+		file: %sokol-samples/libs/sokol/sokol.c
 		includes: [
 			%tmp/hlsl5/
 			;Official mingw distro seems not to be up to date
@@ -168,6 +166,7 @@ common-sapp: [
 		flags: [-mwindows]
 	]
 	#if macOS? [
+		file: %sokol-samples/libs/sokol/sokol.m
 		defines: [
 			SOKOL_METAL
 		]
