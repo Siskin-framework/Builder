@@ -1,0 +1,25 @@
+;-    .-.                                                                       
+;-   /'v'\   SISKIN-Builder project file                                        
+;-  (/uOu\)  https://github.com/Siskin-framework/Builder/                       
+;-===="="=======================================================================
+
+github:   @lzw-ab
+source:   %lzw-ab/
+compiler: gcc
+arch:     x64
+strip:    on
+#if Windows? [upx: on]
+#if macOS?   [compiler: clang]
+
+file: %lzwlib.c
+
+eggs: [
+	"lzwtester" [
+		name: %lzwtester
+		file: %lzwtester.c
+	]
+	"lzwfilter" [
+		name: %lzwfilter
+		file: %lzwfilter.c
+	]
+]
