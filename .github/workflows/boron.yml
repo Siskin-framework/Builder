@@ -18,7 +18,7 @@ jobs:
       matrix:
         os:
           - ubuntu-latest
-          - windows-latest
+#         - windows-latest # needs installed zlib library on Windows 
           - macOS-latest
     steps:
     - name: Checkout repository
@@ -30,10 +30,13 @@ jobs:
     - name: Build Boron
       run: ./rebol3 siskin.r3 boron 1
 
+    - name: Test Boron
+      run: ./tree/boron/build/boron ./tree/boron/code/test/func.b
+
 
     ###############################################################################
     # Collecting build artifacts...
     - uses: actions/upload-artifact@v2
       with:
         name: boron-${{matrix.os}}-CI-${{github.run_id}}
-        path: ./tree/utility/build/*
+        path: ./tree/boron/build/*
