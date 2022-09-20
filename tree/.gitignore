@@ -1,6 +1,7 @@
 /*
 !/.gitignore
 !/audio/
+!/boron/
 !/rebol/
 !/red/
 !/utility/

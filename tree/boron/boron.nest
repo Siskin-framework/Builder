@@ -1,0 +1,104 @@
+;~ Siskin project nest file ~;
+git: https://git.code.sf.net/p/urlan/boron/code
+
+version: 2.0.8
+compiler: gcc
+optimize: 3
+
+source: %code/
+includes: [
+	%code/include/
+	%code/eval/
+	%code/support/
+	%code/urlan/
+]
+
+define: [
+;	CONFIG_ASSEMBLE
+	CONFIG_CHECKSUM
+	CONFIG_COMPRESS=1
+	CONFIG_HASHMAP
+	CONFIG_EXECUTE
+;	CONFIG_READLINE
+;	CONFIG_STATIC
+;	CONFIG_TIMECODE
+;	CONFIG_THREAD
+;	CONFIG_ATOM-LIMIT
+;	CONFIG_ATOM-NAMES
+	CONFIG_LINENOISE
+]
+
+
+files: [
+	%urlan/env.c
+	%urlan/array.c
+	%urlan/binary.c
+	%urlan/block.c
+	%urlan/coord.c
+	%urlan/date.c
+	%urlan/path.c
+	%urlan/string.c
+	%urlan/context.c
+	%urlan/gc.c
+	%urlan/serialize.c
+	%urlan/tokenize.c
+	%urlan/vector.c
+	%urlan/parse_block.c
+	%urlan/parse_string.c
+	%support/str.c
+	%support/mem_util.c
+	%support/quickSortIndex.c
+	%support/fpconv.c
+	
+	%eval/boron.c
+	%eval/port_file.c
+	%eval/wait.c
+
+	%support/linenoise.c
+	%urlan/hashmap.c
+]
+#either Windows? [
+	file: %win32/os.c
+	library: %Ws2_32
+	upx: on
+][
+	file: %unix/os.c
+	flag: -fPIC
+	library: %m
+	library: %z
+]
+
+include-random: [
+	define: CONFIG_RANDOM
+	file: %support/well512.c
+	file: %eval/random.c
+]
+include-socket: [
+	define: CONFIG_SOCKET
+	file: %eval/port_socket.c
+]
+
+flag: -std=gnu99
+library: %z
+
+:include-random
+:include-socket
+
+eggs: [
+	"Boron" [
+		name: %boron
+		file: %eval/main.c
+	]
+	"Boron library" [
+		#either Windows? [
+			name: %boron
+		][	name: %libboron flag: "-Wl,-soname,libboron.so"]
+		flag: shared
+	]
+	"Boron (using dynamic library)" [
+		name: %boron-host
+		file: none
+		file: %eval/main.c
+		shared: %boron
+	]
+]
