@@ -11,6 +11,7 @@
 [![Build bzip2](https://github.com/Siskin-framework/Builder/actions/workflows/bzip2.yml/badge.svg)](https://github.com/Siskin-framework/Builder/actions/workflows/bzip2.yml)
 [![Build LZ4](https://github.com/Siskin-framework/Builder/actions/workflows/lz4.yml/badge.svg)](https://github.com/Siskin-framework/Builder/actions/workflows/lz4.yml)
 [![Build LZFSE](https://github.com/Siskin-framework/Builder/actions/workflows/lzfse.yml/badge.svg)](https://github.com/Siskin-framework/Builder/actions/workflows/lzfse.yml) 
+[![Build LZW](https://github.com/Siskin-framework/Builder/actions/workflows/lzw.yml/badge.svg)](https://github.com/Siskin-framework/Builder/actions/workflows/lzw.yml)
 
 ## Here is a screen capture from a little bit older version in action:
 
