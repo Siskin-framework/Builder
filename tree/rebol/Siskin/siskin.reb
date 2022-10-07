@@ -2,7 +2,7 @@ Rebol [
 	Title:  "Siskin Builder - core"
 	Type:    module
 	Name:    siskin
-	Version: 0.8.1
+	Version: 0.9.0
 	Author: "Oldes"
 	;Needs:  prebol
 	exports: [
@@ -18,7 +18,7 @@ Rebol [
 banner: next rejoin [{
 ^[[0;33m═╗
 ^[[0;33m ║^[[1;31m    .-.
-^[[0;33m ║^[[1;31m   /'v'\   ^[[0;33mSISKIN-Framework Builder 0.8.1 Rebol } rebol/version {
+^[[0;33m ║^[[1;31m   /'v'\   ^[[0;33mSISKIN-Framework Builder 0.9.0 Rebol } rebol/version {
 ^[[0;33m ║^[[1;31m  (/^[[0;31muOu^[[1;31m\)  ^[[0;33mhttps://github.com/Siskin-framework/Builder/
 ^[[0;33m ╚════^[[1;31m"^[[0;33m═^[[1;31m"^[[0;33m═══════════════════════════════════════════════════════════════════════^[[m}]
 
@@ -137,8 +137,10 @@ nest-context: object [
 		defines:    []
 		includes:   []
 		resource:   none
+		entitlements: none
 		rflags:     ""   ; resource options
 		cflags:     ""
+		cppflags:   ""
 		lflags:     ""
 		stack-size: none
 		cc:         none
@@ -216,7 +218,7 @@ do-args: closure/with [
 		; I've added this option to be able preprocess builds using Rebol scripts
 		; without need to download Rebol as an additional utility (in GitHub actions)
 		script: to-rebol-file take remove args
-		if #"/" <> first script [ insert script system/options/path ]
+		if rel-path? script [ insert script system/options/path ]
 		if "--args" = first args [take args] ;ignored
 		;? script
 		;? args
@@ -448,10 +450,10 @@ parse-nest: closure/with [
 	falsy:  ['false | 'off | 'none | quote 0]
 
 	reserved-words: [
-		ar arch assembly cc cflags clean compiler define defines file files
+		ar arch assembly cc cflags cppflags clean compiler define defines file files
 		flags git github include includes lflags libraries library libs
 		name needs optimize out-dir output shared source stack-size strip
-		eggs temp temp-dir tools upx framework frameworks info
+		eggs temp temp-dir tools upx framework frameworks info entitlements
 	]
 
 	get-spec-block-value: func[spec [map!] what /local block][
@@ -473,7 +475,7 @@ parse-nest: closure/with [
 			file: files/1
 			switch/default type?/word file [
 				file! [
-					if file <> #"/" [file: join src-dir file]
+					if rel-path? file [file: join src-dir file]
 					append block clean-path file
 				]
 				get-word! [
@@ -612,6 +614,18 @@ parse-nest: closure/with [
 				]
 			]
 		]
+		|[quote cppflags: | quote cppflag:] any [
+			['only | 'none]       (clear dest/cppflags)
+			| set val: any-string! (append-flag dest/cppflags val)
+			| p: block! :p into [
+				some [
+					set val: 1 skip (
+						val: form val
+						append-flag dest/cppflags val
+					)
+				]
+			]
+		]
 		|[quote rflags: | quote resource-options:] any [
 			['only | 'none]       (clear dest/rflags)
 			| set val: any-string! (append-flag dest/rflags val)
@@ -638,6 +652,10 @@ parse-nest: closure/with [
 			opt-get-word
 			set val: [word! | string! | ref! | block!] (add-to dest 'defines val)
 		]
+		| quote entitlements: set val file! (
+			if rel-path? val [val: join what-dir val]
+			dest/entitlements: val
+		)
 
 		|[quote library: | quote libraries: | quote libs:] 
 			opt ['only (clear dest/libraries)]
@@ -1166,14 +1184,17 @@ build: function/with [
 		includes
 		stack-size
 		cflags
+		cppflags
 		lflags
 		libs
 		compiler
 		bundle
+		entitlements
 	]
 
 	;- prepare libs & flags
 	cflags: spec/cflags
+	cppflags: spec/cppflags
 	lflags: spec/lflags
 
 	; stack size
@@ -1241,7 +1262,8 @@ build: function/with [
 					continue
 				]
 			]
-			append append shared to-local-file join spec/output file #" "
+			;if rel-path? file [insert file spec/output]
+			append append shared to-local-file file #" "
 		]
 	]
 
@@ -1264,6 +1286,7 @@ build: function/with [
 	]
 
 	append cflags #" "
+	append cppflags #" "
 	append lflags #" "
 
 	spec/libraries: libs
@@ -1298,6 +1321,7 @@ build: function/with [
 		libraries
 		shared
 		cflags
+		cppflags
 		lflags
 		arch
 	]
@@ -1507,7 +1531,9 @@ build: function/with [
 				compile
 				;source-type
 				to-local-file source
-				"-c" cflags "$DEFINES $INCLUDES"
+				"-c" cflags
+				either suffix == %.cpp [cppflags][""]
+				"$DEFINES $INCLUDES"
 				"-o" to-local-file target-short ;-- using environment variable to hold temp location
 			]
 		][
@@ -1674,7 +1700,11 @@ finalize-build: closure/with [spec [map!] file [file! none!] /no-fail][
 
 		if macOS? [
 			if sign [
-				eval-cmd/v rejoin [{codesign --sign "} sign {" -f -o runtime } out-file]
+				eval-cmd/v combine [
+					{codesign --sign "} (sign) {" -f}
+					(if spec/entitlements [join " --entitlements " spec/entitlements])
+					" -o runtime " (out-file)
+				]
 			]
 
 			if app-file [

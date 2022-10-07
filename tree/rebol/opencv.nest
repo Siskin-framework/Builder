@@ -1,0 +1,6 @@
+;-    .-.                                                                       
+;-   /'v'\   SISKIN-Builder project file                                        
+;-  (/uOu\)  https://github.com/Siskin-framework/Builder/                       
+;-===="="=======================================================================
+github: Oldes/Rebol-OpenCV
+nest:   %Rebol-OpenCV/Rebol-OpenCV.nest
