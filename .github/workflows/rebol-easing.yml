@@ -19,13 +19,13 @@ jobs:
     - name: Prepare 32bit Rebol/Easing extension
       run:  |
         MD ./build/ 2> nul
-        MOVE ./msvc/Release-Win32/easing-windows-x86.dll ./build/easing-windows-x86.rebx
+        MOVE ./tree/rebol/Rebol-$cname/msvc/Release-Win32/easing-windows-x86.dll ./build/easing-windows-x86.rebx
 
     - name: Build 64bit Rebol/Easing extension
       run: ./rebol3 siskin.r3 rebol/easing.nest --msvc  --msvc easing-windows-x64
 
     - name: Prepare 64bit Rebol/Easing extension
-      run:  MOVE ./msvc/Release-x64/easing-windows-x64.dll ./build/easing-windows-x64.rebx
+      run:  MOVE ./tree/rebol/Rebol-$cname/msvc/Release-x64/easing-windows-x64.dll ./build/easing-windows-x64.rebx
 
     - name: Minimal Rebol/Easing extension test
       run:  |
@@ -50,7 +50,9 @@ jobs:
       run: ./rebol3 siskin.r3 rebol/easing easing-linux-x64
 
     - name: Prepare 64bit Rebol Easing extension
-      run:  mv ./build/easing-linux-x64.so ./build/easing-linux-x64.rebx
+      run:  |
+        mkdir ./build
+        mv ./tree/rebol/Rebol-$cname/build/easing-linux-x64.so ./build/easing-linux-x64.rebx
 
     - name: Test Rebol/Easing extension
       run:  |
@@ -78,7 +80,9 @@ jobs:
       run: ./rebol3 siskin.r3 rebol/easing easing-macos-x64
 
     - name: Prepare 64bit Rebol Easing extension
-      run:  mv ./build/easing-macos-x64.dylib ./build/easing-macos-x64.rebx
+      run:  |
+        mkdir ./build 
+        mv ./tree/rebol/Rebol-$cname/build/easing-macos-x64.dylib ./build/easing-macos-x64.rebx
 
     - name: Test Rebol/Easing extension
       run:  |
