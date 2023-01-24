@@ -1,0 +1,6 @@
+;-    .-.                                                                       
+;-   /'v'\   SISKIN-Builder project file                                        
+;-  (/uOu\)  https://github.com/Siskin-framework/Builder/                       
+;-===="="=======================================================================
+github: @Rebol-Easing
+nest:   %Rebol-Easing/Rebol-Easing.nest

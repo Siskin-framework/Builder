@@ -1,0 +1,94 @@
+name: 'Rebol-Easing'
+on:
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Install Rebol
+      uses: oldes/install-rebol
+
+    - name: Build 32bit Rebol/Easing extension
+      run: rebol3 siskin.r3 rebol/easing.nest --msvc easing-windows-x86
+
+    - name: Prepare 32bit Rebol/Easing extension
+      run:  |
+        MD ./build/ 2> nul
+        MOVE ./msvc/Release-Win32/easing-windows-x86.dll ./build/easing-windows-x86.rebx
+
+    - name: Build 64bit Rebol/Easing extension
+      run: rebol3 siskin.r3 rebol/easing.nest --msvc  --msvc easing-windows-x64
+
+    - name: Prepare 64bit Rebol/Easing extension
+      run:  MOVE ./msvc/Release-x64/easing-windows-x64.dll ./build/easing-windows-x64.rebx
+
+    - name: Minimal Rebol/Easing extension test
+      run:  |
+        MOVE tree\rebol\Rebol-Easing\ci-test.r3 .\ci-test.r3
+        rebol3 ci-test.r3
+
+    - uses: actions/upload-artifact@v3
+      with:
+        name: Rebol-Easing-${{github.run_id}}
+        path: ./build/*.rebx
+
+  linux:
+    runs-on: ubuntu-18.04
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Install Rebol
+      uses: oldes/install-rebol
+
+    - name: Build 64bit Rebol/Easing extension
+      run: ./rebol3 siskin.r3 rebol/easing.nest easing-linux-x64
+
+    - name: Prepare 64bit Rebol Easing extension
+      run:  mv ./build/easing-linux-x64.so ./build/easing-linux-x64.rebx
+
+    - name: Test Rebol/Easing extension
+      run:  |
+        mv ./tree/rebol/Rebol-Easing/ci-test.r3 ./ci-test.r3
+        ./rebol3 ci-test.r3
+
+    - name: Compress 64bit Rebol/Easing extension
+      run:  gzip -9 ./build/easing-linux-x64.rebx
+
+    - uses: actions/upload-artifact@v3
+      with:
+        name: Rebol-Easing-${{github.run_id}}
+        path: ./build/*.gz
+
+  macos:
+    runs-on: macos-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Install Rebol
+      uses: oldes/install-rebol
+
+    - name: Build 64bit Rebol/Easing extension
+      run: ./rebol3 siskin.r3 rebol/easing.nest easing-macos-x64
+
+    - name: Prepare 64bit Rebol Easing extension
+      run:  mv ./build/easing-macos-x64.dylib ./build/easing-macos-x64.rebx
+
+    - name: Test Rebol/Easing extension
+      run:  |
+        mv ./tree/rebol/Rebol-Easing/ci-test.r3 ./ci-test.r3
+        ./rebol3 ci-test.r3
+
+    - name: Compress 64bit Rebol/Easing extension
+      run:  gzip -9 ./build/easing-macos-x64.rebx
+
+    - uses: actions/upload-artifact@v3
+      with:
+        name: Rebol-Easing-${{github.run_id}}
+        path: ./build/*.gz
