@@ -27,8 +27,8 @@ jobs:
 
     - name: Minimal Rebol/Easing extension test
       run:  |
-        MOVE tree\rebol\Rebol-Easing\ci-test.r3 .\ci-test.r3
-        ./rebol3 ci-test.r3
+        MOVE tree\rebol\Rebol-Easing\ci-test.r3 .\test-easing.r3
+        ./rebol3 test-easing.r3
 
     - uses: actions/upload-artifact@v3
       with:
@@ -36,7 +36,7 @@ jobs:
         path: ./easing*.rebx
 
   linux:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
     - name: Checkout repository
       uses: actions/checkout@v3
@@ -52,8 +52,8 @@ jobs:
 
     - name: Test Rebol/Easing extension
       run:  |
-        mv ./tree/rebol/Rebol-Easing/ci-test.r3 ./ci-test.r3
-        ./rebol3 ci-test.r3
+        mv ./tree/rebol/Rebol-Easing/ci-test.r3 ./test-easing.r3
+        ./rebol3 test-easing.r3
 
     - name: Compress 64bit Rebol/Easing extension
       run:  gzip -9 ./easing-linux-x64.rebx
@@ -112,8 +112,8 @@ jobs:
 
     - name: Test Rebol/Easing extension
       run:  |
-        mv ./tree/rebol/Rebol-Easing/ci-test.r3 ./ci-test.r3
-        ./rebol3 ci-test.r3
+        mv ./tree/rebol/Rebol-Easing/ci-test.r3 ./test-easing.r3
+        ./rebol3 test-easing.r3
 
     - name: Compress 64bit Rebol/Easing extension
       run:  gzip -9 ./easing-macos-x64.rebx
