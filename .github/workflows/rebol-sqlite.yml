@@ -27,7 +27,7 @@ jobs:
 
     - name: Minimal Rebol/SQLite extension test
       run:  |
-        MOVE tree\rebol\Rebol-SQLite\test/sqlite-test.r3 .\test-sqlite.r3
+        MOVE tree\rebol\Rebol-SQLite\ci-test.r3 .\test-sqlite.r3
         ./rebol3 test-sqlite.r3
 
     - uses: actions/upload-artifact@v3
@@ -52,7 +52,7 @@ jobs:
 
     - name: Test Rebol/SQLite extension
       run:  |
-        mv ./tree/rebol/Rebol-SQLite/test/sqlite-test.r3 ./test-sqlite.r3
+        mv ./tree/rebol/Rebol-SQLite/ci-test.r3 ./test-sqlite.r3
         ./rebol3 test-sqlite.r3
 
     - name: Compress 64bit Rebol/SQLite extension
@@ -112,7 +112,7 @@ jobs:
 
     - name: Test Rebol/SQLite extension
       run:  |
-        mv ./tree/rebol/Rebol-SQLite/test/sqlite-test.r3 ./test-sqlite.r3
+        mv ./tree/rebol/Rebol-SQLite/ci-test.r3 ./test-sqlite.r3
         ./rebol3 test-sqlite.r3
 
     - name: Compress 64bit Rebol/SQLite extension
