@@ -1,0 +1,136 @@
+name: 'Rebol/MathPresso'
+on:
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Install Rebol
+      uses: oldes/install-rebol@v3.10.2
+    
+    - name: Build 32bit static MathPresso library
+      run: ./rebol3 siskin.r3 rebol/mathpresso static-lib-x86
+
+    - name: Build 32bit Rebol/MathPresso extension
+      run: ./rebol3 siskin.r3 rebol/mathpresso --msvc mathpresso-windows-x86
+
+    - name: Prepare 32bit Rebol/MathPresso extension
+      run:  MOVE ./tree/rebol/Rebol-MathPresso/msvc/Release-Win32/mathpresso-windows-x86.dll ./mathpresso-windows-x86.rebx
+    
+    - name: Build 64bit static MathPresso library
+      run: ./rebol3 siskin.r3 rebol/mathpresso static-lib-x64
+
+    - name: Build 64bit Rebol/MathPresso extension
+      run: ./rebol3 siskin.r3 rebol/mathpresso --msvc mathpresso-windows-x64
+
+    - name: Prepare 64bit Rebol/MathPresso extension
+      run:  MOVE ./tree/rebol/Rebol-MathPresso/msvc/Release-x64/mathpresso-windows-x64.dll ./mathpresso-windows-x64.rebx
+
+    - name: Minimal Rebol/MathPresso extension test
+      run:  |
+        MOVE tree\rebol\Rebol-MathPresso\ci-test.r3 .\test-mathpresso.r3
+        ./rebol3 test-mathpresso.r3
+
+    - uses: actions/upload-artifact@v3
+      with:
+        name: Rebol-MathPresso-${{github.run_id}}
+        path: ./mathpresso*.rebx
+
+  linux:
+    runs-on: ubuntu-20.04
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Install Rebol
+      uses: oldes/install-rebol@v3.10.2
+    
+    - name: Build 64bit static MathPresso library
+      run: ./rebol3 siskin.r3 rebol/mathpresso static-lib-x64
+
+    - name: Build 64bit Rebol/MathPresso extension
+      run: ./rebol3 siskin.r3 rebol/mathpresso mathpresso-linux-x64
+
+    - name: Prepare 64bit Rebol MathPresso extension
+      run:  mv ./tree/rebol/Rebol-MathPresso/build/mathpresso-linux-x64.so ./mathpresso-linux-x64.rebx
+
+    - name: Test Rebol/MathPresso extension
+      run:  |
+        mv ./tree/rebol/Rebol-MathPresso/ci-test.r3 ./test-mathpresso.r3
+        ./rebol3 test-mathpresso.r3
+
+    - name: Compress 64bit Rebol/MathPresso extension
+      run:  gzip -9 ./mathpresso-linux-x64.rebx
+
+    - uses: actions/upload-artifact@v3
+      with:
+        name: Rebol-MathPresso-${{github.run_id}}
+        path: ./mathpresso*.gz
+
+  macos:
+    runs-on: macos-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Install Rebol
+      uses: oldes/install-rebol@v3.10.2
+    
+    - name: Build 64bit static MathPresso library
+      run: ./rebol3 siskin.r3 rebol/mathpresso static-lib-x64
+
+    - name: Build 64bit Rebol/MathPresso extension
+      run: ./rebol3 siskin.r3 rebol/mathpresso mathpresso-macos-x64
+
+    - name: Install the Apple certificate
+    # https://docs.github.com/en/actions/guides/installing-an-apple-certificate-on-macos-runners-for-xcode-development
+      env:
+        BUILD_CERTIFICATE_BASE64: ${{ secrets.MACOS_CERTIFICATE }}
+        P12_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PWD }}
+        KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+      run: |
+        # create variables
+        CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
+        KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+
+        # import certificate from secrets
+        echo -n "$BUILD_CERTIFICATE_BASE64" | base64 --decode --output $CERTIFICATE_PATH
+
+        # create temporary keychain
+        security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+        security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
+        security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+
+        # import certificate to keychain
+        security import $CERTIFICATE_PATH -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
+        security list-keychain -d user -s $KEYCHAIN_PATH
+
+        # list available codesigning identities
+        security find-identity -v -p codesigning
+  
+    - name: Codesign executables
+      env: 
+        MACOS_IDENTITY_ID: ${{ secrets.MACOS_IDENTITY_ID }}
+      run: |
+        /usr/bin/codesign --force -s $MACOS_IDENTITY_ID ./tree/rebol/Rebol-MathPresso/build/mathpresso-macos-x64.dylib -v
+
+    - name: Prepare 64bit Rebol MathPresso extension
+      run:  mv ./tree/rebol/Rebol-MathPresso/build/mathpresso-macos-x64.dylib ./mathpresso-macos-x64.rebx
+
+    - name: Test Rebol/MathPresso extension
+      run:  |
+        mv ./tree/rebol/Rebol-MathPresso/ci-test.r3 ./test-mathpresso.r3
+        ./rebol3 test-mathpresso.r3
+
+    - name: Compress 64bit Rebol/MathPresso extension
+      run:  gzip -9 ./mathpresso-macos-x64.rebx
+
+    - uses: actions/upload-artifact@v3
+      with:
+        name: Rebol-MathPresso-${{github.run_id}}
+        path: ./mathpresso*.gz
