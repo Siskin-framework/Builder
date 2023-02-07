@@ -33,7 +33,7 @@ jobs:
 
     - name: Minimal Rebol/Blend2D extension test
       run:  |
-        MOVE tree\rebol\Rebol-Blend2D\ci-test.r3 .\test-blend2d.r3
+        MOVE tree\rebol\Rebol-Blend2D\.github/ci-test.r3 .\test-blend2d.r3
         ./rebol3 test-blend2d.r3
 
     - uses: actions/upload-artifact@v3
@@ -61,7 +61,7 @@ jobs:
 
     - name: Test Rebol/Blend2D extension
       run:  |
-        mv ./tree/rebol/Rebol-Blend2D/ci-test.r3 ./test-blend2d.r3
+        mv ./tree/rebol/Rebol-Blend2D/.github/ci-test.r3 ./test-blend2d.r3
         ./rebol3 test-blend2d.r3
 
     - name: Compress 64bit Rebol/Blend2D extension
@@ -124,7 +124,7 @@ jobs:
 
     - name: Test Rebol/Blend2D extension
       run:  |
-        mv ./tree/rebol/Rebol-Blend2D/ci-test.r3 ./test-blend2d.r3
+        mv ./tree/rebol/Rebol-Blend2D/.github/ci-test.r3 ./test-blend2d.r3
         ./rebol3 test-blend2d.r3
 
     - name: Compress 64bit Rebol/Blend2D extension
