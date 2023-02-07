@@ -8,7 +8,9 @@
 
 # Rebol extension builds:
 
+[![Rebol/Blend2D](https://github.com/Siskin-framework/Builder/actions/workflows/rebol-blend2d.yml/badge.svg)](https://github.com/Siskin-framework/Builder/actions/workflows/rebol-blend2d.yml)
 [![Rebol/Easing](https://github.com/Siskin-framework/Builder/actions/workflows/rebol-easing.yml/badge.svg)](https://github.com/Siskin-framework/Builder/actions/workflows/rebol-easing.yml)
+[![Rebol/MathPresso](https://github.com/Siskin-framework/Builder/actions/workflows/rebol-mathpresso.yml/badge.svg)](https://github.com/Siskin-framework/Builder/actions/workflows/rebol-mathpresso.yml)
 [![Rebol/SQLite](https://github.com/Siskin-framework/Builder/actions/workflows/rebol-sqlite.yml/badge.svg)](https://github.com/Siskin-framework/Builder/actions/workflows/rebol-sqlite.yml)
 
 ## Compression Utility builds:
