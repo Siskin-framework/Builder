@@ -1,0 +1,136 @@
+name: 'Rebol/Blend2D'
+on:
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Install Rebol
+      uses: oldes/install-rebol@v3.10.2
+    
+    - name: Build 32bit static Blend2D library
+      run: ./rebol3 siskin.r3 rebol/blend2d static-lib-x86
+
+    - name: Build 32bit Rebol/Blend2D extension
+      run: ./rebol3 siskin.r3 rebol/blend2d --msvc blend2d-windows-x86
+
+    - name: Prepare 32bit Rebol/Blend2D extension
+      run:  MOVE ./tree/rebol/Rebol-Blend2D/msvc/Release-Win32/blend2d-windows-x86.dll ./blend2d-windows-x86.rebx
+    
+    - name: Build 64bit static Blend2D library
+      run: ./rebol3 siskin.r3 rebol/blend2d static-lib-x64
+
+    - name: Build 64bit Rebol/Blend2D extension
+      run: ./rebol3 siskin.r3 rebol/blend2d --msvc blend2d-windows-x64
+
+    - name: Prepare 64bit Rebol/Blend2D extension
+      run:  MOVE ./tree/rebol/Rebol-Blend2D/msvc/Release-x64/blend2d-windows-x64.dll ./blend2d-windows-x64.rebx
+
+    - name: Minimal Rebol/Blend2D extension test
+      run:  |
+        MOVE tree\rebol\Rebol-Blend2D\ci-test.r3 .\test-blend2d.r3
+        ./rebol3 test-blend2d.r3
+
+    - uses: actions/upload-artifact@v3
+      with:
+        name: Rebol-Blend2D-${{github.run_id}}
+        path: ./blend2d*.rebx
+
+  linux:
+    runs-on: ubuntu-20.04
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Install Rebol
+      uses: oldes/install-rebol@v3.10.2
+    
+    - name: Build 64bit static Blend2D library
+      run: ./rebol3 siskin.r3 rebol/blend2d static-lib-x64
+
+    - name: Build 64bit Rebol/Blend2D extension
+      run: ./rebol3 siskin.r3 rebol/blend2d blend2d-linux-x64
+
+    - name: Prepare 64bit Rebol Blend2D extension
+      run:  mv ./tree/rebol/Rebol-Blend2D/build/blend2d-linux-x64.so ./blend2d-linux-x64.rebx
+
+    - name: Test Rebol/Blend2D extension
+      run:  |
+        mv ./tree/rebol/Rebol-Blend2D/ci-test.r3 ./test-blend2d.r3
+        ./rebol3 test-blend2d.r3
+
+    - name: Compress 64bit Rebol/Blend2D extension
+      run:  gzip -9 ./blend2d-linux-x64.rebx
+
+    - uses: actions/upload-artifact@v3
+      with:
+        name: Rebol-Blend2D-${{github.run_id}}
+        path: ./blend2d*.gz
+
+  macos:
+    runs-on: macos-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Install Rebol
+      uses: oldes/install-rebol@v3.10.2
+    
+    - name: Build 64bit static Blend2D library
+      run: ./rebol3 siskin.r3 rebol/blend2d static-lib-x64
+
+    - name: Build 64bit Rebol/Blend2D extension
+      run: ./rebol3 siskin.r3 rebol/blend2d blend2d-macos-x64
+
+    - name: Install the Apple certificate
+    # https://docs.github.com/en/actions/guides/installing-an-apple-certificate-on-macos-runners-for-xcode-development
+      env:
+        BUILD_CERTIFICATE_BASE64: ${{ secrets.MACOS_CERTIFICATE }}
+        P12_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PWD }}
+        KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+      run: |
+        # create variables
+        CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
+        KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+
+        # import certificate from secrets
+        echo -n "$BUILD_CERTIFICATE_BASE64" | base64 --decode --output $CERTIFICATE_PATH
+
+        # create temporary keychain
+        security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+        security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
+        security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+
+        # import certificate to keychain
+        security import $CERTIFICATE_PATH -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
+        security list-keychain -d user -s $KEYCHAIN_PATH
+
+        # list available codesigning identities
+        security find-identity -v -p codesigning
+  
+    - name: Codesign executables
+      env: 
+        MACOS_IDENTITY_ID: ${{ secrets.MACOS_IDENTITY_ID }}
+      run: |
+        /usr/bin/codesign --force -s $MACOS_IDENTITY_ID ./tree/rebol/Rebol-Blend2D/build/blend2d-macos-x64.dylib -v
+
+    - name: Prepare 64bit Rebol Blend2D extension
+      run:  mv ./tree/rebol/Rebol-Blend2D/build/blend2d-macos-x64.dylib ./blend2d-macos-x64.rebx
+
+    - name: Test Rebol/Blend2D extension
+      run:  |
+        mv ./tree/rebol/Rebol-Blend2D/ci-test.r3 ./test-blend2d.r3
+        ./rebol3 test-blend2d.r3
+
+    - name: Compress 64bit Rebol/Blend2D extension
+      run:  gzip -9 ./blend2d-macos-x64.rebx
+
+    - uses: actions/upload-artifact@v3
+      with:
+        name: Rebol-Blend2D-${{github.run_id}}
+        path: ./blend2d*.gz
