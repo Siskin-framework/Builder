@@ -77,7 +77,7 @@ jobs:
       - name: Test Rebol Preprocessor
         run: |
           ./Siskin-x64.exe test test.r3
-          ./rebol3 ./build/test.r3
+          ./rebol3 ./test/build/test.r3
 
       - name: Test build 8 (MSVC)
         run: ./Siskin-x64.exe test --msvc 8      
@@ -141,7 +141,7 @@ jobs:
       - name: Test Rebol Preprocessor
         run: |
           ./Siskin-x64-libc test test.r3
-          ./rebol3 ./build/test.r3 
+          ./rebol3 ./test/build/test.r3 
 
       - name: Compress results before uploading
         run: |
@@ -238,7 +238,7 @@ jobs:
       - name: Test Rebol Preprocessor
         run: |
           ./Siskin-x64-osx test test.r3
-          ./rebol3 ./build/test.r3
+          ./rebol3 ./test/build/test.r3
 
       - name: Compress results before uploading
         run: gzip -9 ./Siskin-x64-osx
