@@ -972,7 +972,8 @@ do-nest: closure/with/extern [
 								print [as-green "^/Executing:" to-local-file result/name]
 								either find [%.reb %.r3 %.r] suffix? result/name [
 									;; result is a Rebol script!
-									launch/wait result/name
+									;launch/wait result/name
+									print-warn "Running Rebol scripts is not available from the Builder!"
 								][
 									pushd first split-path result/name
 									eval-cmd/no-quit/v to-local-file result/name

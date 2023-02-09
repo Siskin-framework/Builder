@@ -1,10 +1,12 @@
 name: 'Build Siskin'
 on:
-  # Triggers the workflow on push or pull request events but only for the master branch
-#  push:
-#    branches: [ master ]
-#  pull_request:
-#    branches: [ master ]
+  # Triggers the workflow when these files are modified
+  push:
+    paths:
+      - test/**
+      - tree/rebol/Siskin/**
+      - tree/rebol/siskin.nest
+      - .github/workflows/siskin.yml
 
 # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -73,7 +75,9 @@ jobs:
         run: ./Siskin-x64.exe test 1 2 "test-8 spaced"
 
       - name: Test Rebol Preprocessor
-        run: ./Siskin-x64.exe test --run test.r3
+        run: |
+          ./Siskin-x64.exe test test.r3
+          ./rebol3 ./build/test.r3
 
       - name: Test build 8 (MSVC)
         run: ./Siskin-x64.exe test --msvc 8      
@@ -135,7 +139,9 @@ jobs:
         run: ./Siskin-x64-libc test 1 2 "test-8 spaced"
 
       - name: Test Rebol Preprocessor
-        run: ./Siskin-x64-libc test --run test.r3
+        run: |
+          ./Siskin-x64-libc test test.r3
+          ./rebol3 ./build/test.r3 
 
       - name: Compress results before uploading
         run: |
@@ -230,7 +236,9 @@ jobs:
         run: ./Siskin-x64-osx test 1 2 "test-8 spaced"
 
       - name: Test Rebol Preprocessor
-        run: ./Siskin-x64-osx test --run test.r3
+        run: |
+          ./Siskin-x64-osx test test.r3
+          ./rebol3 ./build/test.r3
 
       - name: Compress results before uploading
         run: gzip -9 ./Siskin-x64-osx
