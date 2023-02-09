@@ -2,6 +2,7 @@
 /**/msvc/
 !/.github
 !/.gitignore
+!/.editorconfig
 !/tree/
 !/test/
 !/siskin.r3
