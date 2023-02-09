@@ -2,7 +2,7 @@ Rebol [
 	Title:  "Siskin Builder - core"
 	Type:    module
 	Name:    siskin
-	Version: 0.9.0
+	Version: 0.10.0
 	Author: "Oldes"
 	;Needs:  prebol
 	exports: [
@@ -18,7 +18,7 @@ Rebol [
 banner: next rejoin [{
 ^[[0;33m═╗
 ^[[0;33m ║^[[1;31m    .-.
-^[[0;33m ║^[[1;31m   /'v'\   ^[[0;33mSISKIN-Framework Builder 0.9.0 Rebol } rebol/version {
+^[[0;33m ║^[[1;31m   /'v'\   ^[[0;33mSISKIN-Framework Builder 0.10.0 Rebol } rebol/version {
 ^[[0;33m ║^[[1;31m  (/^[[0;31muOu^[[1;31m\)  ^[[0;33mhttps://github.com/Siskin-framework/Builder/
 ^[[0;33m ╚════^[[1;31m"^[[0;33m═^[[1;31m"^[[0;33m═══════════════════════════════════════════════════════════════════════^[[m}]
 
@@ -126,6 +126,7 @@ nest-context: object [
 		output:     none ;%bin/
 		bundle:     none
 		source:     %""
+		script:     none
 		objects:    none
 		gits:       []
 		files:      []
@@ -749,6 +750,10 @@ parse-nest: closure/with [
 			)
 		]
 		|
+		'preprocess set val: file! set args: [file! | none! | #[none]] (
+			add-pre-build dest ['preprocess val args]
+		)
+		|
 		set val: word! (
 			either find dest/actions val [
 				add-pre-build dest ['action val]
@@ -965,9 +970,14 @@ do-nest: closure/with/extern [
 								file? result/name
 							][
 								print [as-green "^/Executing:" to-local-file result/name]
-								pushd first split-path result/name
-								eval-cmd/no-quit/v to-local-file result/name
-								popd
+								either find [%.reb %.r3 %.r] suffix? result/name [
+									;; result is a Rebol script!
+									launch/wait result/name
+								][
+									pushd first split-path result/name
+									eval-cmd/no-quit/v to-local-file result/name
+									popd
+								]
 							]
 						]
 					)
@@ -1042,6 +1052,7 @@ build-target: closure/with [
 		]
 
 		try/except [build spec][
+			print-error system/state/last-error
 			print-failed
 			return false
 		]
@@ -1330,8 +1341,14 @@ build: function/with [
 	add-env "INCLUDES" trim includes
 	add-env "NEST_SPEC" to-local-file clean-path spec/objects/spec.reb
 
-	make-dir/deep spec/objects
-	save spec/objects/spec.reb spec
+	either empty? spec/files [
+		;; ignore compiler setting if there are no files to be compiled
+		spec/compiler: none
+	][
+		;; creates the dir only if there are any files to be compiled
+		make-dir/deep spec/objects
+		save spec/objects/spec.reb spec
+	]
 
 	;- preprocession phase..
 	unless empty? spec/pre-build [
@@ -1340,6 +1357,18 @@ build: function/with [
 	]
 
 	unless spec/compiler [
+		unless out-file [
+			out-file: spec/script ;; if Rebol preprocessor was used 
+		]
+		unless out-file [
+			;; if there is still no out-file, than the build failed
+			print-failed
+			exit
+		]
+		unless abs-path? out-file [
+			;; force the out-file to be absolute
+			out-file: clean-path rejoin [spec/output out-file]
+		]
 		unless finalize-build/no-fail spec out-file [
 			print-info "No compiler to use."
 		]
@@ -1659,11 +1688,22 @@ preprocess: func [
 ]
 
 finalize-build: closure/with [spec [map!] file [file! none!] /no-fail][
-	either any [
+	unless file [return true]
+	if file = spec/script [
+		;- special case, where result is just a preprocessed script
+		if 'file = exists? out-file: file [
+			print-ready
+			return true
+		]
+		unless no-fail [print-failed]
+		return true ; true, because we don't want any other warning in this case!
+	]
+	if any [
 		'file = exists? out-file: file
 		'file = exists? out-file: join file %.exe
 		'file = exists? out-file: join file %.dll
 	][
+		;- output is a result of compilation, so we may sign, strip, compress, etc.
 		if all [macOS? spec/sign <> false][
 			if any [
 				; 1. sign is environment variable...
@@ -1720,7 +1760,8 @@ finalize-build: closure/with [spec [map!] file [file! none!] /no-fail][
 		]
 		print-ready
 		return true
-	][	unless no-fail [print-failed]]
+	]
+	unless no-fail [print-failed]
 	false
 ] :nest-context
 
@@ -1821,6 +1862,15 @@ eval-code: function/with [
 				] :on-error-warn
 			)
 		]
+		|
+		'preprocess set arg1 file! set arg2 [file! | none! | #[none]] (
+			arg2: any [arg2 spec/name spec/target arg1]
+			unless abs-path? arg2 [
+				arg2: clean-path rejoin [spec/output arg2]
+			]
+			unless spec/script [spec/script: arg2]
+			preprocess-rebol arg1 arg2
+		)
 		|
 		'Rebol2 set val string! (do-rebol2 val)
 ;		| 'Red set val file! (
@@ -1972,6 +2022,26 @@ on-error-warn: func[err [error!]][
 attempt: func[code [block!] /local err][
 	try/except code :on-error-throw
 ]
+
+preprocess-rebol: function/with [
+	input  [file!]
+	output [file!]
+][
+	print-info  ["Preprocess Rebol source:" as-green to-local-file input]
+	print-debug ["Preprocessed output:    " as-green to-local-file output]
+	set [dir: input:] split-path input
+	pushd dir
+	try/except [
+		make-dir/deep first split-path output
+		blk: load/header input
+		hdr: take blk
+		process-source blk 0
+		unless no-eval? [
+			save/header output blk hdr
+		]
+	] :on-error-warn
+	popd
+] :nest-context
 
 pushd: function [
 	target [file!]

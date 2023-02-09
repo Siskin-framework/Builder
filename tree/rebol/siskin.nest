@@ -1,4 +1,7 @@
-;~ Siskin project nest file ~;
+;-    .-.                                                                       
+;-   /'v'\   SISKIN-Builder project file                                        
+;-  (/uOu\)  https://github.com/Siskin-framework/Builder/                       
+;-===="="=======================================================================
 github: @Rebol
 nest:   %Rebol/make/rebol3.nest
 compiler: gcc

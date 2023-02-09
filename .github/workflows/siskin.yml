@@ -72,6 +72,9 @@ jobs:
       - name: Test build multiple at once
         run: ./Siskin-x64.exe test 1 2 "test-8 spaced"
 
+      - name: Test Rebol Preprocessor
+        run: ./Siskin-x64.exe test --run test.r3
+
       - name: Test build 8 (MSVC)
         run: ./Siskin-x64.exe test --msvc 8      
 
@@ -130,6 +133,9 @@ jobs:
         run: ./Siskin-x64-libc test "test-8 spaced"
       - name: Test build multiple at once
         run: ./Siskin-x64-libc test 1 2 "test-8 spaced"
+
+      - name: Test Rebol Preprocessor
+        run: ./Siskin-x64-libc test --run test.r3
 
       - name: Compress results before uploading
         run: |
@@ -222,6 +228,9 @@ jobs:
         run: ./Siskin-x64-osx test "test-8 spaced"
       - name: Test build multiple at once
         run: ./Siskin-x64-osx test 1 2 "test-8 spaced"
+
+      - name: Test Rebol Preprocessor
+        run: ./Siskin-x64-osx test --run test.r3
 
       - name: Compress results before uploading
         run: gzip -9 ./Siskin-x64-osx

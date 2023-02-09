@@ -138,4 +138,9 @@ eggs: [
 		define: HAS_HELLO
 		shared: %libhello
 	]
+
+	"Preprocess Rebol script" [
+		name: %test.r3
+		preprocess %src/test.reb
+	]
 ]
