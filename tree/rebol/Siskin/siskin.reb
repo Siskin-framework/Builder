@@ -2,7 +2,7 @@ Rebol [
 	Title:  "Siskin Builder - core"
 	Type:    module
 	Name:    siskin
-	Version: 0.10.0
+	Version: 0.10.1
 	Author: "Oldes"
 	;Needs:  prebol
 	exports: [
@@ -18,7 +18,7 @@ Rebol [
 banner: next rejoin [{
 ^[[0;33m═╗
 ^[[0;33m ║^[[1;31m    .-.
-^[[0;33m ║^[[1;31m   /'v'\   ^[[0;33mSISKIN-Framework Builder 0.10.0 Rebol } rebol/version {
+^[[0;33m ║^[[1;31m   /'v'\   ^[[0;33mSISKIN-Framework Builder 0.10.1 Rebol } rebol/version {
 ^[[0;33m ║^[[1;31m  (/^[[0;31muOu^[[1;31m\)  ^[[0;33mhttps://github.com/Siskin-framework/Builder/
 ^[[0;33m ╚════^[[1;31m"^[[0;33m═^[[1;31m"^[[0;33m═══════════════════════════════════════════════════════════════════════^[[m}]
 
@@ -1253,23 +1253,32 @@ build: function/with [
 		append shared ajoin ["-L" to-local-file clean-path spec/output #" "]
 		foreach file spec/shared [
 			;file: preprocess-dirs file
+			set [dir: file:] split-path file
+			if dir <> %./ [
+				append shared ajoin ["-L" to-local-file clean-path dir #" "]
+			]
 			switch system/platform [
 				Windows   [
 					add-extension file either clang? [%.lib][%.dll]
 				]
 				macOS
 				Macintosh [
-					add-extension file %.dylib
-					if all [
-						find file #"/"
-						rel-path? file
-					][
-						append dylib-fix file
-					]
+					parse file [remove "lib" to end]
+					clear-extension file %.dylib
+					append shared ajoin ["-l" file #" "]
+					continue
+					
+					;add-extension file %.dylib
+					;if all [
+					;	find file #"/"
+					;	rel-path? file
+					;][
+					;	append dylib-fix file
+					;]
 				]
 				Linux     [
 					parse file [remove "lib" to end]
-					replace file %.so "" ;@@ TODO: use safer method!
+					clear-extension file %.so
 					append shared ajoin ["-l" file #" "]
 					continue
 				]
@@ -2252,11 +2261,14 @@ add-extension: func[
 	]
 ]
 clear-extension: func[file ext /local s][
-	if s: suffix? file [ clear find/last file s	]
+	if all [
+		s: suffix? file
+		any [none? ext s = ext]
+	][ clear find/last file s ]
 	file
 ]
 replace-extension: func[file ext][
-	clear-extension file ext
+	clear-extension file none
 	add-extension file ext
 	file
 ]
