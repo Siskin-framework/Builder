@@ -2,7 +2,7 @@ Rebol [
 	Title:  "Siskin Builder - core"
 	Type:    module
 	Name:    siskin
-	Version: 0.10.1
+	Version: 0.10.2
 	Author: "Oldes"
 	;Needs:  prebol
 	exports: [
@@ -18,7 +18,7 @@ Rebol [
 banner: next rejoin [{
 ^[[0;33m═╗
 ^[[0;33m ║^[[1;31m    .-.
-^[[0;33m ║^[[1;31m   /'v'\   ^[[0;33mSISKIN-Framework Builder 0.10.1 Rebol } rebol/version {
+^[[0;33m ║^[[1;31m   /'v'\   ^[[0;33mSISKIN-Framework Builder 0.10.2 Rebol } rebol/version {
 ^[[0;33m ║^[[1;31m  (/^[[0;31muOu^[[1;31m\)  ^[[0;33mhttps://github.com/Siskin-framework/Builder/
 ^[[0;33m ╚════^[[1;31m"^[[0;33m═^[[1;31m"^[[0;33m═══════════════════════════════════════════════════════════════════════^[[m}]
 
@@ -720,7 +720,7 @@ parse-nest: closure/with [
 			add-pre-build dest ['msbuild val args]
 		)
 		|
-		'cmd set dir [file! | none!] set val: string! (
+		'cmd set dir: opt file! set val: string! (
 			add-pre-build dest ['cmd dir val]
 		)
 		|
