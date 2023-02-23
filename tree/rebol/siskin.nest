@@ -5,6 +5,7 @@
 github: @Rebol
 nest:   %Rebol/make/rebol3.nest
 compiler: gcc
+#if macOS?   [ compiler: clang ]
 
 make-siskin: [
 	product:  Siskin
@@ -42,56 +43,57 @@ make-siskin: [
 ]
 make-siskin-x86: [:make-siskin :arch-x86 #if windows? [target: x86-win32]]
 make-siskin-x64: [:make-siskin :arch-x64 #if windows? [target: x64-win32]]
-make-siskin-arm: [:make-siskin :arch-arm64]
+make-siskin-aarch64: [:make-siskin :arch-arm64]
 
 eggs: only [
 	#if Windows? [
 		"Siskin x86" [
-			name:     %Siskin-x86
+			name:     %siskin-windows-x86
 			:make-siskin-x86
 		]
-		"Siskin x64" [
-			name:     %Siskin-x64
+		"Siskin x86_64" [
+			name:     %siskin-windows-x86_64
 			:make-siskin-x64
 		]
 	]
 	#if Linux? [
 		"Siskin x86" [
-			name:     %Siskin-x86-libc
+			name:     %siskin-linux-x86
 			:make-siskin-x86
 		]
-		"Siskin x64" [
-			name:     %Siskin-x64-libc
+		"Siskin x86_64" [
+			name:     %siskin-linux-x86_64
 			:make-siskin-x64
+		]
+		"Siskin aarch64" [
+			name:     %siskin-linux-aarch64
+			:make-siskin-aarch64
 		]
 	]
 	#if macOS? [
 		"Siskin x86" [
-			name:     %Siskin-x86-osx
-			compiler: clang
+			name:     %siskin-macos-x86
 			:make-siskin-x86
 		]
-		"Siskin x64" [
-			name:     %Siskin-x64-osx
-			compiler: clang
+		"Siskin x86_64" [
+			name:     %siskin-macos-x86_64
 			:make-siskin-x64
 		]
-		"Siskin arm64" [
-			name:     %Siskin-arm-osx
-			compiler: clang
-			:make-siskin-arm
+		"Siskin aarch64" [
+			name:     %siskin-macos-aarch64
+			:make-siskin-aarch64
 		]
 	]
 	#if OpenBSD? [
-		"Siskin x64" [
-			name:     %Siskin-x64-openbsd
+		"Siskin x86_64" [
+			name:     %siskin-openbsd-x86_64
 			:make-siskin-x64
 			:target-openbsd
 		]
 	]
 	#if FreeBSD? [
-		"Siskin x64" [
-			name:     %Siskin-x64-freebsd
+		"Siskin x86_64" [
+			name:     %Siskin-freebsd-x86_64
 			:make-siskin-x64
 			:target-freebsd
 		]

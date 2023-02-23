@@ -18,155 +18,156 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Install Rebol
-        uses: oldes/install-rebol@v3.10.0
+        uses: oldes/install-rebol@v3.10.3
 
       # 32bit gcc version would fail for now (requires 32bit mingw)
       #    - name: Build 32bit Siskin using gcc
       #      run: |
-      #        ./rebol3 siskin.r3 rebol/siskin %Siskin-x86
-      #        MOVE ./tree/rebol/Siskin/build/Siskin-x86.exe ./Siskin-x86-gcc.exe
+      #        ./rebol3 siskin.r3 rebol/siskin siskin-windows-x86
+      #        MOVE ./tree/rebol/Siskin/build/siskin-windows-x86.exe ./siskin-windows-x86-gcc.exe
       # 
       #    - name: Build 64bit Siskin using gcc
       #      run: |
-      #        ./rebol3 siskin.r3 rebol/siskin %Siskin-x64
-      #        MOVE ./tree/rebol/Siskin/build/Siskin-x64.exe ./Siskin-x64-gcc.exe
+      #        ./rebol3 siskin.r3 rebol/siskin siskin-windows-x86_64
+      #        MOVE ./tree/rebol/Siskin/build/siskin-windows-x86_64.exe ./siskin-windows-x86_64-gcc.exe
 
       - name: Build 32bit Siskin using msvc
         run: |
-          ./rebol3 siskin.r3 rebol/siskin --msvc %Siskin-x86
-          MOVE ./tree/rebol/Rebol/msvc/Release-Win32/Siskin-x86.exe ./
+          ./rebol3 siskin.r3 rebol/siskin --msvc siskin-windows-x86
+          MOVE ./tree/rebol/Rebol/msvc/Release-Win32/siskin-windows-x86.exe ./
 
       - name: Build 64bit Siskin using msvc
         run: |
-          ./rebol3 siskin.r3 rebol/siskin --msvc %Siskin-x64
-          MOVE ./tree/rebol/Rebol/msvc/Release-x64/Siskin-x64.exe ./
+          ./rebol3 siskin.r3 rebol/siskin --msvc siskin-windows-x86_64
+          MOVE ./tree/rebol/Rebol/msvc/Release-x64/siskin-windows-x86_64.exe ./
 
       #- name: Test 32bit Siskin project (gcc)
-      #  run: ./Siskin-x86-gcc.exe
+      #  run: ./siskin-windows-x86-gcc.exe
       #- name: Test 64bit Siskin project (gcc)
-      #  run: ./Siskin-x64-gcc.exe
+      #  run: ./siskin-windows-x86_64-gcc.exe
       - name: Test 32bit Siskin project (msvc)
-        run: ./Siskin-x86.exe
+        run: ./siskin-windows-x86.exe
       - name: Test 64bit Siskin project (msvc)
-        run: ./Siskin-x64.exe
+        run: ./siskin-windows-x86_64.exe
 
       - name: List all possible test targets
-        run: ./Siskin-x64.exe test --list
+        run: ./siskin-windows-x86_64.exe test --list
       - name: Test build 1
-        run: ./Siskin-x64.exe test test-1
+        run: ./siskin-windows-x86_64.exe test test-1
       - name: Test build 2
-        run: ./Siskin-x64.exe test test-2
+        run: ./siskin-windows-x86_64.exe test test-2
       - name: Test build 3
-        run: ./Siskin-x64.exe test test-3
+        run: ./siskin-windows-x86_64.exe test test-3
       - name: Test build 4
-        run: ./Siskin-x64.exe test test-4
+        run: ./siskin-windows-x86_64.exe test test-4
       - name: Test build 5
-        run: ./Siskin-x64.exe test test-5
+        run: ./siskin-windows-x86_64.exe test test-5
       - name: Test build 6
-        run: ./Siskin-x64.exe test test-6
+        run: ./siskin-windows-x86_64.exe test test-6
       - name: Test build 7
-        run: ./Siskin-x64.exe test test-7
+        run: ./siskin-windows-x86_64.exe test test-7
       - name: Test build 8
-        run: ./Siskin-x64.exe test "test-8 spaced"
+        run: ./siskin-windows-x86_64.exe test "test-8 spaced"
       - name: Test build multiple at once
-        run: ./Siskin-x64.exe test 1 2 "test-8 spaced"
+        run: ./siskin-windows-x86_64.exe test 1 2 "test-8 spaced"
 
       - name: Test Rebol Preprocessor
         run: |
-          ./Siskin-x64.exe test test.r3
+          ./siskin-windows-x86_64.exe test test.r3
           ./rebol3 ./test/build/test.r3
 
       - name: Test build 8 (MSVC)
-        run: ./Siskin-x64.exe test --msvc 8
+        run: ./siskin-windows-x86_64.exe test --msvc 8
 
       - name: Test only single command
-        run: ./Siskin-x64.exe test list-dir
+        run: ./siskin-windows-x86_64.exe test list-dir
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: Siskin-windows
           path: |
-            ./Siskin-x86.exe
-            ./Siskin-x64.exe
-          #  ./Siskin-x86-gcc.exe
-          #  ./Siskin-x64-gcc.exe
+            ./siskin-windows-x86.exe
+            ./siskin-windows-x86_64.exe
+          #  ./siskin-windows-x86-gcc.exe
+          #  ./siskin-windows-x86_64-gcc.exe
 
   linux:
     strategy:
       fail-fast: true
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-20.04]
+        #os: [ubuntu-latest]
         #os: [ubuntu-20.04, ubuntu-18.04]
 
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Install Rebol
-        uses: oldes/install-rebol@v3.10.0
+        uses: oldes/install-rebol@v3.10.3
 
       #- name: Build 32bit Siskin using gcc
-      #  run: ./rebol3 siskin.r3 rebol/siskin %Siskin-x86-libc
+      #  run: ./rebol3 siskin.r3 rebol/siskin siskin-linux-x86
 
       - name: Build 64bit Siskin using gcc
-        run: ./rebol3 siskin.r3 rebol/siskin %Siskin-x64-libc
+        run: ./rebol3 siskin.r3 rebol/siskin siskin-linux-x86_64
 
       - name: Move results into the root for uploading
         run: |
-          mv ./tree/rebol/Siskin/build/Siskin-x64-libc ./
-        #  mv ./tree/rebol/Siskin/build/Siskin-x86-libc ./
+          mv ./tree/rebol/Siskin/build/siskin-linux-x86_64 ./
+        #  mv ./tree/rebol/Siskin/build/siskin-linux-x86 ./
 
       - name: List all possible test targets
-        run: ./Siskin-x64-libc test --list
+        run: ./siskin-linux-x86_64 test --list
       - name: Test build 1
-        run: ./Siskin-x64-libc test test-1
+        run: ./siskin-linux-x86_64 test test-1
       - name: Test build 2
-        run: ./Siskin-x64-libc test test-2
+        run: ./siskin-linux-x86_64 test test-2
       - name: Test build 3
-        run: ./Siskin-x64-libc test test-3
+        run: ./siskin-linux-x86_64 test test-3
       - name: Test build 4
-        run: ./Siskin-x64-libc test test-4
+        run: ./siskin-linux-x86_64 test test-4
       - name: Test build 5
-        run: ./Siskin-x64-libc test test-5
+        run: ./siskin-linux-x86_64 test test-5
       - name: Test build 6
-        run: ./Siskin-x64-libc test test-6
+        run: ./siskin-linux-x86_64 test test-6
       - name: Test build 7
-        run: ./Siskin-x64-libc test test-7
+        run: ./siskin-linux-x86_64 test test-7
       - name: Test build 8
-        run: ./Siskin-x64-libc test "test-8 spaced"
+        run: ./siskin-linux-x86_64 test "test-8 spaced"
       - name: Test build multiple at once
-        run: ./Siskin-x64-libc test 1 2 "test-8 spaced"
+        run: ./siskin-linux-x86_64 test 1 2 "test-8 spaced"
 
       - name: Test Rebol Preprocessor
         run: |
-          ./Siskin-x64-libc test test.r3
+          ./siskin-linux-x86_64 test test.r3
           ./rebol3 ./test/build/test.r3 
 
       - name: Test only single command
-        run: ./Siskin-x64-libc test list-dir
+        run: ./siskin-linux-x86_64 test list-dir
 
       - name: Compress results before uploading
         run: |
-          gzip -9 ./Siskin-x64-libc
-        #  gzip -9 ./Siskin-x86-libc
+          gzip -9 ./siskin-linux-x86_64
+        #  gzip -9 ./siskin-linux-x86
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: Siskin-linux
-          path: ./Siskin-x*
+          path: ./siskin-linux*
 
   macos:
     runs-on: macos-12
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Install Rebol
-        uses: oldes/install-rebol@v3.10.0
+        uses: oldes/install-rebol@v3.10.3
 
       - name: Install the Apple certificate
       # https://docs.github.com/en/actions/guides/installing-an-apple-certificate-on-macos-runners-for-xcode-development
@@ -198,61 +199,61 @@ jobs:
       #
       #- name: Build 32bit Siskin
       #  run: |
-      #    ./rebol3 siskin.r3 rebol/siskin %Siskin-x86-osx
-      #    mv ./tree/rebol/Siskin/build/Siskin-x86-osx ./
+      #    ./rebol3 siskin.r3 rebol/siskin %siskin-windows-x86-osx
+      #    mv ./tree/rebol/Siskin/build/siskin-windows-x86-osx ./
 
-      - name: Build 64bit Siskin
-        run: ./rebol3 siskin.r3 rebol/siskin %Siskin-x64-osx
+      - name: Build x86_64 Siskin
+        run: ./rebol3 siskin.r3 rebol/siskin siskin-macos-x86_64
 
       - name: Build ARM64 Siskin
-        run: ./rebol3 siskin.r3 rebol/siskin %Siskin-arm-osx
+        run: ./rebol3 siskin.r3 rebol/siskin siskin-macos-aarch64
 
       - name: Move results into the root for uploading
         run: |
-          mv ./tree/rebol/Siskin/build/Siskin-x64-osx ./
-          mv ./tree/rebol/Siskin/build/Siskin-arm-osx ./
+          mv ./tree/rebol/Siskin/build/siskin-macos-x86_64 ./
+          mv ./tree/rebol/Siskin/build/siskin-macos-aarch64 ./
 
       - name: Codesign executables
         env: 
           MACOS_IDENTITY_ID: ${{ secrets.MACOS_IDENTITY_ID }}
         run: |
-          /usr/bin/codesign --force -s $MACOS_IDENTITY_ID ./Siskin-x64-osx -v
-          /usr/bin/codesign --force -s $MACOS_IDENTITY_ID ./Siskin-arm-osx -v
+          /usr/bin/codesign --force -s $MACOS_IDENTITY_ID ./siskin-macos-x86_64 -v
+          /usr/bin/codesign --force -s $MACOS_IDENTITY_ID ./siskin-macos-aarch64 -v
        
 
       - name: List all possible test targets
-        run: ./Siskin-x64-osx test --list
+        run: ./siskin-macos-x86_64 test --list
       - name: Test build 1
-        run: ./Siskin-x64-osx test test-1
+        run: ./siskin-macos-x86_64 test test-1
       - name: Test build 2
-        run: ./Siskin-x64-osx test test-2
+        run: ./siskin-macos-x86_64 test test-2
       - name: Test build 3
-        run: ./Siskin-x64-osx test test-3
+        run: ./siskin-macos-x86_64 test test-3
       - name: Test build 4
-        run: ./Siskin-x64-osx test test-4
+        run: ./siskin-macos-x86_64 test test-4
       - name: Test build 5
-        run: ./Siskin-x64-osx test test-5
+        run: ./siskin-macos-x86_64 test test-5
       - name: Test build 6
-        run: ./Siskin-x64-osx test test-6
+        run: ./siskin-macos-x86_64 test test-6
       - name: Test build 7
-        run: ./Siskin-x64-osx test test-7
+        run: ./siskin-macos-x86_64 test test-7
       - name: Test build 8
-        run: ./Siskin-x64-osx test "test-8 spaced"
+        run: ./siskin-macos-x86_64 test "test-8 spaced"
       - name: Test build multiple at once
-        run: ./Siskin-x64-osx test 1 2 "test-8 spaced"
+        run: ./siskin-macos-x86_64 test 1 2 "test-8 spaced"
 
       - name: Test Rebol Preprocessor
         run: |
-          ./Siskin-x64-osx test test.r3
+          ./siskin-macos-x86_64 test test.r3
           ./rebol3 ./test/build/test.r3
 
       - name: Test only single command
-        run: ./Siskin-x64-osx test list-dir
+        run: ./siskin-macos-x86_64 test list-dir
 
       - name: Compress results before uploading
-        run: gzip -9 ./Siskin-x64-osx
+        run: gzip -9 ./siskin-macos-x86_64
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
-          name: Siskin-osx
-          path: ./Siskin-x*
+          name: Siskin-macos
+          path: ./siskin-macos-*
