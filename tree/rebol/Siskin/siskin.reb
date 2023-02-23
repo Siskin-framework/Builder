@@ -1366,25 +1366,37 @@ build: function/with [
 		eval-code spec spec/pre-build
 	]
 
+	have-files?: not all [empty? spec/files empty? spec/assembly]
+	expect-build?: any [spec/script have-files?]
+
 	unless spec/compiler [
+		if have-files? [
+			;; if there are any files to be compiled, warn that the compiler is unknown
+			print-warning "No compiler to use."
+		]
 		unless out-file [
 			out-file: spec/script ;; if Rebol preprocessor was used 
 		]
 		unless out-file [
-			;; if there is still no out-file, than the build failed
-			print-failed
+			;; if there is still no expected output...
+			if have-files? [
+				;; and there are files to be compiled, than the build failed!
+				print-failed
+			]
+			;; else just exit (when target is just a pre-build script with no expected result or set of commands)
 			exit
 		]
+		;; the output is still expected...
 		unless abs-path? out-file [
 			;; force the out-file to be absolute
 			out-file: clean-path rejoin [spec/output out-file]
 		]
-		unless finalize-build/no-fail spec out-file [
-			print-info "No compiler to use."
-		]
+		;; so check if it exists...
+		finalize-build/no-fail spec out-file
+		;; and exit, because there is no compilation involved
 		exit
 	]
-	if all [empty? spec/files empty? spec/assembly] [
+	unless have-files? [
 		print-info "No files to compile."
 		exit
 	]

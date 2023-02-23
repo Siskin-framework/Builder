@@ -143,4 +143,9 @@ eggs: [
 		name: %test.r3
 		preprocess %src/test.reb
 	]
+	"List directory" [
+		name: %list-dir ;; used just to have nicer command when executing without interactive input
+		#if Windows? [ cmd "DIR"    ]
+		#if Posix?   [ cmd "ls -la" ]
+	]
 ]

@@ -80,7 +80,10 @@ jobs:
           ./rebol3 ./test/build/test.r3
 
       - name: Test build 8 (MSVC)
-        run: ./Siskin-x64.exe test --msvc 8      
+        run: ./Siskin-x64.exe test --msvc 8
+
+      - name: Test only single command
+        run: ./Siskin-x64.exe test list-dir
 
       - uses: actions/upload-artifact@v2
         with:
@@ -142,6 +145,9 @@ jobs:
         run: |
           ./Siskin-x64-libc test test.r3
           ./rebol3 ./test/build/test.r3 
+
+      - name: Test only single command
+        run: ./Siskin-x64-libc test list-dir
 
       - name: Compress results before uploading
         run: |
@@ -239,6 +245,9 @@ jobs:
         run: |
           ./Siskin-x64-osx test test.r3
           ./rebol3 ./test/build/test.r3
+
+      - name: Test only single command
+        run: ./Siskin-x64-osx test list-dir
 
       - name: Compress results before uploading
         run: gzip -9 ./Siskin-x64-osx
