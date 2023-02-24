@@ -43,7 +43,9 @@ make-siskin: [
 ]
 make-siskin-x86: [:make-siskin :arch-x86 #if windows? [target: x86-win32]]
 make-siskin-x64: [:make-siskin :arch-x64 #if windows? [target: x64-win32]]
-make-siskin-aarch64: [:make-siskin :arch-arm64]
+make-siskin-armv6: [:make-siskin :arch-armv6]
+make-siskin-armv7: [:make-siskin :arch-armv7]
+make-siskin-arm64: [:make-siskin :arch-arm64]
 
 eggs: only [
 	#if Windows? [
@@ -65,9 +67,17 @@ eggs: only [
 			name:     %siskin-linux-x86_64
 			:make-siskin-x64
 		]
+		"Siskin armv6" [
+			name:     %siskin-linux-armv6
+			:make-siskin-armv6
+		]
+		"Siskin armv7" [
+			name:     %siskin-linux-armv7
+			:make-siskin-armv7
+		]
 		"Siskin aarch64" [
 			name:     %siskin-linux-aarch64
-			:make-siskin-aarch64
+			:make-siskin-arm64
 		]
 	]
 	#if macOS? [
@@ -81,7 +91,7 @@ eggs: only [
 		]
 		"Siskin aarch64" [
 			name:     %siskin-macos-aarch64
-			:make-siskin-aarch64
+			:make-siskin-arm64
 		]
 	]
 	#if OpenBSD? [
