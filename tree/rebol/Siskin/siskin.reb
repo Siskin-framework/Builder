@@ -12,6 +12,7 @@ Rebol [
 		openbsd?
 		freebsd?
 		posix?
+		android?
 		haiku?
 	]
 ]
@@ -117,6 +118,7 @@ prepare-interactive: func[args [string!]][
 
 nest-context: object [
 	root-dir: none
+	target-platform: none
 	template: make map! reduce/only [ ;@@ the reduce/only is required when the source is embedded in exe!
 		name:       none
 		compiler:   none
@@ -310,6 +312,7 @@ do-args: closure/with [
 	][
 		; Script may be evaluated from inside Siskin utility or as a Rebol script! 
 		print help-options-cli
+		wait 2
 		exit
 	]
 ] :nest-context
@@ -318,7 +321,7 @@ do-strip: closure/with [spec [map!] file [file!]][
 	;-- strip resulted binary
 	any [
 		all [file? spec/strip       exists? strip: spec/strip]
-		all [spec/compiler = 'clang exists? strip: locate-tool 'llvm-strip none]
+		all [find [clang %clang] spec/compiler exists? strip: locate-tool 'llvm-strip none]
 		strip: locate-tool 'strip none
 	]
 	either exists? strip [
@@ -524,6 +527,7 @@ parse-nest: closure/with [
 	parse copy spec [any [
 		;x: (probe first x)
 		  quote name:       set val:  any-string!      ( dest/name: to string! val )
+		| quote platform:   set val:  word!            ( target-platform: val)
 		| quote tools:      set val:  any-string!      ( tools: expand-env val ) ; stored in nest-context!
 		| quote git:        set val: [url! | block!]   ( append dest/gits val )
 		| quote github:     set val: [path! | file! | ref!] (
@@ -549,7 +553,7 @@ parse-nest: closure/with [
 		|[quote temp-dir: | quote temp:  ] set val: file! ( dest/temp:       val )
 		|[quote out-dir:  | quote output:] set val: file! ( dest/output:     val )
 		|[quote compiler: | quote cc:    ] [
-			  set val: any-string! ( dest/cc: expand-env to-rebol-file val )
+			  set val: any-string! ( dest/cc: expand-env to-rebol-file val dest/compiler: second split-path dest/cc)
 			| falsy                ( dest/compiler: none)
 			| set val: word!       ( dest/compiler: val)
 		]
@@ -685,7 +689,7 @@ parse-nest: closure/with [
 					]
 					return false
 				]
-				if block? val [val: preprocess val]
+				;if block? val [val: preprocess val]
 				either all [val block? dest/:name] [
 					append dest/:name val
 				][	dest/(name): val]
@@ -1121,6 +1125,9 @@ build: function/with [
 	"Build using given specification"
 	spec [map!]
 ][
+	foreach [k v] spec [
+		if block? v [spec/:k: preprocess v ]
+	]
 	foreach [k v] defaults [
 		unless spec/:k [
 			print-debug ["Using default" k "as" as-red v]
@@ -1420,12 +1427,14 @@ build: function/with [
 	if debug? [try [eval-cmd/vv/no-quit [cc "--version"]]]
 
 	cc-dir: first split-path cc
+	
 	any [
 		all [spec/ar any [
 			exists? ar: spec/ar
 			exists? ar: add-extension copy spec/ar %.exe
 		]]
-		all [spec/compiler = 'clang
+		all [
+			find [clang %clang] spec/compiler
 			exists? ar: locate-tool 'llvm-ar spec/arch
 		]
 		exists? ar: locate-tool 'ar spec/arch
@@ -1940,13 +1949,21 @@ eval-code: function/with [
 	]]
 ] :nest-context
 
-windows?: does [system/platform = 'Windows]
-macOS?:   does [to logic! find [macOS Macintosh] system/platform]
-linux?:   does [system/platform = 'Linux]
-openbsd?: does [system/platform = 'OpenBSD]
-freebsd?: does [system/platform = 'FreeBSD]
-haiku?:   does [system/platform = 'Haiku]
-posix?:   does [to logic! find [linux macos openbsd freebsd macintosh haiku] system/platform]
+with :nest-context [
+	windows?: does [all [not target-platform  system/platform = 'Windows]]
+	macOS?:   does [to logic! find [macOS Macintosh] system/platform]
+	linux?:   does [system/platform = 'Linux]
+	openbsd?: does [system/platform = 'OpenBSD]
+	freebsd?: does [system/platform = 'FreeBSD]
+	haiku?:   does [system/platform = 'Haiku]
+	posix?:   does [
+		to logic! any [
+			find [linux macos openbsd freebsd haiku macintosh android] target-platform
+			find [linux macos openbsd freebsd haiku macintosh] system/platform
+		]
+	]
+	android?: does [target-platform = 'Android]
+]
 
 
 print-error: func[err][ sys/log/error 'SISKIN any [err system/state/last-error] ]
@@ -2418,7 +2435,9 @@ locate-tool: function/with [
 				]
 				add-env "ANDROID_NDK" android-ndk
 				add-env         "NDK" android-ndk ; it seems to be used quite a lot in tutorials
-				add-env "NDK_TOOLCHAIN" join android-ndk %toolchains/llvm/prebuilt/$OS_NAME/
+				add-env "NDK_TOOLCHAIN" join android-ndk %/toolchains/llvm/prebuilt/$OS_NAME/
+				add-env "SYSROOT" expand-env %$NDK_TOOLCHAIN/sysroot/
+				add-env-path  expand-env %$NDK_TOOLCHAIN/bin/
 				return  android-ndk
 			]
 		]
