@@ -296,21 +296,25 @@ make-project: func[
 	lib-paths: copy [] 
 	clear output
 	foreach lib join spec/libraries spec/shared [
+		either dir? lib [
+			append lib-paths lib
+		][
 		lib: split-path lib
-		append lib-paths lib/1
-		if lib/2 [
-			unless parse lib/2 [thru ".lib" end][
-				append lib/2 ".lib"
+			append lib-paths lib/1
+			if lib/2 [
+				unless parse lib/2 [thru ".lib" end][
+					append lib/2 ".lib"
+				]
+				append append output lib/2
+				either parse lib/2 [thru ".lib" end][";"][".lib;"]
 			]
-			append append output lib/2
-			either parse lib/2 [thru ".lib" end][";"][".lib;"]
 		]
 	]
 	ADDITIONAL-DEPENDENCIES: copy output
 	LIBRARY-PATH: copy ""
 	foreach path unique lib-paths [
 		if #"/" <> first path [insert path %../] 
-		append append LIBRARY-PATH path #";"
+		append append LIBRARY-PATH to-local-file path #";"
 	]
 
 	;-- collect RESOURCE-ITEM                                                   
