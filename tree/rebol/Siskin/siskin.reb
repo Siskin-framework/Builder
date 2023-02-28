@@ -2,7 +2,7 @@ Rebol [
 	Title:  "Siskin Builder - core"
 	Type:    module
 	Name:    siskin
-	Version: 0.10.2
+	Version: 0.10.3
 	Author: "Oldes"
 	;Needs:  prebol
 	exports: [
@@ -12,13 +12,14 @@ Rebol [
 		openbsd?
 		freebsd?
 		posix?
+		haiku?
 	]
 ]
 ;? system
 banner: next rejoin [{
 ^[[0;33m═╗
 ^[[0;33m ║^[[1;31m    .-.
-^[[0;33m ║^[[1;31m   /'v'\   ^[[0;33mSISKIN-Framework Builder 0.10.2 Rebol } rebol/version {
+^[[0;33m ║^[[1;31m   /'v'\   ^[[0;33mSISKIN-Framework Builder 0.10.3 Rebol } rebol/version {
 ^[[0;33m ║^[[1;31m  (/^[[0;31muOu^[[1;31m\)  ^[[0;33mhttps://github.com/Siskin-framework/Builder/
 ^[[0;33m ╚════^[[1;31m"^[[0;33m═^[[1;31m"^[[0;33m═══════════════════════════════════════════════════════════════════════^[[m}]
 
@@ -1944,7 +1945,8 @@ macOS?:   does [to logic! find [macOS Macintosh] system/platform]
 linux?:   does [system/platform = 'Linux]
 openbsd?: does [system/platform = 'OpenBSD]
 freebsd?: does [system/platform = 'FreeBSD]
-posix?:   does [to logic! find [linux macos openbsd freebsd macintosh] system/platform]
+haiku?:   does [system/platform = 'Haiku]
+posix?:   does [to logic! find [linux macos openbsd freebsd macintosh haiku] system/platform]
 
 
 print-error: func[err][ sys/log/error 'SISKIN any [err system/state/last-error] ]
