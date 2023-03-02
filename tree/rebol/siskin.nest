@@ -53,7 +53,7 @@ make-siskin-arm64: [:make-siskin :arch-arm64]
 eggs: only [
 	"Preprocess siskin.r3" [
 		name:   %siskin.r3
-		output: %Siskin/build/
+		output: %../Siskin/build/
 		preprocess %../Siskin/siskin-pr.reb ;; because by default we are in Rebol directory!
 	]
 	#if Windows? [
