@@ -4,14 +4,17 @@
 ;-===="="=======================================================================
 github: @Rebol
 nest:   %Rebol/make/rebol3.nest
-compiler: gcc
-#if macOS?   [ compiler: clang ]
 
 make-siskin: [
 	product:  Siskin
+	version:  0.10.3
+	
 	strip:    on
+	compiler: gcc
+
 	#if Windows? [upx: on ]
 	#if Posix?   [upx: off]
+	#if macOS?   [compiler: clang]
 	
 	output:   %../Siskin/build/
 
@@ -41,13 +44,18 @@ make-siskin: [
 	define: CUSTOM_STARTUP
 	do %make/pre-make.r3 "$NEST_SPEC"
 ]
-make-siskin-x86: [:make-siskin :arch-x86 #if windows? [target: x86-win32]]
-make-siskin-x64: [:make-siskin :arch-x64 #if windows? [target: x64-win32]]
+make-siskin-x86:   [:make-siskin :arch-x86 #if windows? [target: x86-win32]]
+make-siskin-x64:   [:make-siskin :arch-x64 #if windows? [target: x64-win32]]
 make-siskin-armv6: [:make-siskin :arch-armv6]
 make-siskin-armv7: [:make-siskin :arch-armv7]
 make-siskin-arm64: [:make-siskin :arch-arm64]
 
 eggs: only [
+	"Preprocess siskin.r3" [
+		name:   %siskin.r3
+		output: %Siskin/build/
+		preprocess %../Siskin/siskin-pr.reb ;; because by default we are in Rebol directory!
+	]
 	#if Windows? [
 		"Siskin x86" [
 			name:     %siskin-windows-x86

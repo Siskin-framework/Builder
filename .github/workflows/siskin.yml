@@ -257,3 +257,59 @@ jobs:
         with:
           name: Siskin-macos
           path: ./siskin-macos-*
+
+  script:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install Rebol
+        uses: oldes/install-rebol@v3.10.3
+
+
+      - name: Preprocess Siskin script
+        run: ./rebol3 siskin.r3 rebol/siskin siskin.r3
+
+      - name: Move results into the root for uploading
+        run: |
+          mv ./tree/rebol/Siskin/build/siskin.r3 ./build.r3
+
+
+      - name: List all possible test targets
+        run: ./rebol3 build.r3 test --list
+      - name: Test build 1
+        run: ./rebol3 build.r3 test test-1
+      - name: Test build 2
+        run: ./rebol3 build.r3 test test-2
+      - name: Test build 3
+        run: ./rebol3 build.r3 test test-3
+      - name: Test build 4
+        run: ./rebol3 build.r3 test test-4
+      - name: Test build 5
+        run: ./rebol3 build.r3 test test-5
+      - name: Test build 6
+        run: ./rebol3 build.r3 test test-6
+      - name: Test build 7
+        run: ./rebol3 build.r3 test test-7
+      - name: Test build 8
+        run: ./rebol3 build.r3 test "test-8 spaced"
+      - name: Test build multiple at once
+        run: ./rebol3 build.r3 test 1 2 "test-8 spaced"
+
+      - name: Test Rebol Preprocessor
+        run: |
+          ./rebol3 build.r3 test test.r3
+          ./rebol3 ./test/build/test.r3 
+
+      - name: Test only single command
+        run: ./rebol3 build.r3 test list-dir
+
+      - name: Compress results before uploading
+        run: gzip -9 ./build.r3
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: Siskin-script
+          path: ./build.r3.gz
+
