@@ -119,10 +119,10 @@ process-source: func [
 			data ; return it
 		]
 		#include-string [ ; Raw text data string
-			read file
+			read/string file
 		]
 		#include-binary [ ; Raw binary data (unloaded images, sounds).
-			read/binary file
+			read file
 		]
 		#include-block  [ ; Includes enclosed rebol block
 			data: load/all file
