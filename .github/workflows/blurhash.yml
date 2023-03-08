@@ -11,7 +11,7 @@ on:
 
 jobs:
   build_blurhash:
-    name: QOI
+    name: BlurHash
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -22,7 +22,7 @@ jobs:
           - macOS-latest
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
 
     - name: Install Rebol
       uses: oldes/install-rebol@v3.7.2
@@ -40,7 +40,7 @@ jobs:
 
     ###############################################################################
     # Collecting build artifacts...
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v3
       with:
         name: blurhash-${{matrix.os}}-CI-${{github.run_id}}
         path: ./tree/utility/build/blurhash*
