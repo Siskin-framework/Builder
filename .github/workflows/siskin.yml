@@ -338,9 +338,8 @@ jobs:
 
       - name: Compress result before uploading
         run: |
-          ls -la ./tree/rebol/Siskin/build/
-          mv ./tree/rebol/Siskin/build/siskin-haiku-x86 ./
-          gzip -9 ./siskin-haiku-x86
+          sudo mv ./tree/rebol/Siskin/build/siskin-haiku-x86 ./
+          sudo gzip -9 ./siskin-haiku-x86
 
       - uses: actions/upload-artifact@v3
         with:
@@ -369,9 +368,8 @@ jobs:
 
       - name: Compress result before uploading
         run: |
-          ls -la ./tree/rebol/Siskin/build/
-          mv ./tree/rebol/Siskin/build/siskin-haiku-x86_64 ./
-          gzip -9 ./siskin-haiku-x86_64
+          sudo mv ./tree/rebol/Siskin/build/siskin-haiku-x86_64 ./
+          sudo gzip -9 ./siskin-haiku-x86_64
 
       - uses: actions/upload-artifact@v3
         with:
