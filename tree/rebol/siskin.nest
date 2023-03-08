@@ -49,6 +49,23 @@ make-siskin-armv6: [:make-siskin :arch-armv6]
 make-siskin-armv7: [:make-siskin :arch-armv7]
 make-siskin-arm64: [:make-siskin :arch-arm64]
 
+#if Linux? [
+	cross-haiku-x86: [
+		compiler: %/tools/cross-tools-x86/bin/i586-pc-haiku-gcc
+		library:  %/system/lib/
+		flag: "--sysroot=/tools/cross-tools-x86/sysroot"
+		:target-haiku
+		:make-siskin-x86
+	]
+	cross-haiku-x64: [
+		compiler: %/tools/cross-tools-x86_64/bin/x86_64-unknown-haiku-gcc
+		library:  %/system/lib/
+		flag: "--sysroot=/tools/cross-tools-x86_64/sysroot"
+		:target-haiku
+		:make-siskin-x64
+	]
+]
+
 eggs: only [
 	"Preprocess siskin.r3" [
 		name:   %siskin.r3
@@ -93,6 +110,19 @@ eggs: only [
 			:target-linux
 			:make-siskin-arm64
 		]
+
+		;-- Haiku cross-compilation from a Docker image..     
+		;@@ https://hub.docker.com/r/haiku/cross-compiler/tags
+		;@@ docker.io/oldes/rebol-dev:haiku-x86
+		"Cross-compile Siskin for Haiku x86" [
+			name:     %siskin-haiku-x86
+			:cross-haiku-x86
+		]
+		;@@ docker.io/oldes/rebol-dev:haiku-x64
+		"Cross-compile Siskin for Haiku x86_64" [
+			name:     %siskin-haiku-x86_64
+			:cross-haiku-x64
+		]
 	]
 	#if macOS? [
 		"Siskin x86" [
@@ -116,15 +146,25 @@ eggs: only [
 			name:     %siskin-openbsd-x86_64
 			:target-openbsd
 			:make-siskin-x64
-			:target-openbsd
 		]
 	]
 	#if FreeBSD? [
 		"Siskin x86_64" [
-			name:     %Siskin-freebsd-x86_64
+			name:     %siskin-freebsd-x86_64
 			:target-freebsd
 			:make-siskin-x64
-			:target-freebsd
+		]
+	]
+	#if Haiku? [
+		"Siskin x86" [
+			name:     %siskin-haiku-x86
+			:target-haiku
+			:make-siskin-x86
+		]
+		"Siskin x86_64" [
+			name:     %siskin-haiku-x86_64
+			:target-haiku
+			:make-siskin-x64
 		]
 	]
 ]

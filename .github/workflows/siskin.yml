@@ -316,3 +316,58 @@ jobs:
           name: Siskin-script
           path: ./build.r3.gz
 
+  Haiku-x86:
+    strategy:
+      fail-fast: false
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
+      - name: Download Haiku Rebol-dev container
+        run: docker pull docker.io/oldes/rebol-dev:haiku-x86
+
+      - name: Build all Siskin for Haiku OS x86
+        run: docker run --rm -v $PWD:/siskin oldes/rebol-dev:haiku-x86 bash -c 'cd /siskin; rebol siskin.r3 rebol/siskin siskin-haiku-x86'
+
+      - name: Compress result before uploading
+        run: gzip -9 ./tree/rebol/Siskin/build/siskin-haiku-x86
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: Siskin-Haiku
+          path: ./tree/rebol/Siskin/build/*.gz
+
+  Haiku-x86_64:
+    strategy:
+      fail-fast: false
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
+      - name: Download Haiku Rebol-dev container
+        run: docker pull docker.io/oldes/rebol-dev:haiku-x64
+
+      - name: Build all Siskin for Haiku OS x86_64
+        run: docker run --rm -v $PWD:/siskin oldes/rebol-dev:haiku-x64 bash -c 'cd /siskin; rebol siskin.r3 rebol/siskin siskin-haiku-x86_64'
+
+      - name: Compress result before uploading
+        run: gzip -9 ./tree/rebol/Siskin/build/siskin-haiku-x86_64
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: Siskin-Haiku
+          path: ./tree/rebol/Siskin/build/*.gz
