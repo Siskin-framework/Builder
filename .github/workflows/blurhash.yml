@@ -1,0 +1,46 @@
+name: 'Build BlurHash'
+on:
+  # Triggers the workflow on push or pull request events but only for the main branch
+  # push:
+  #   branches: [ main ]
+  # pull_request:
+  #   branches: [ main ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  build_blurhash:
+    name: QOI
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - windows-latest
+          - macOS-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Install Rebol
+      uses: oldes/install-rebol@v3.7.2
+
+    - name: Build BlurHash encoder utility
+      run: ./rebol3 siskin.r3 utility/blurhash blurhash_encoder
+    - name: Build BlurHash decoder utility
+      run: ./rebol3 siskin.r3 utility/blurhash blurhash_decoder
+
+    - name: Test BlurHash encoder
+      run: ./tree/utility/build/blurhash_encoder 3 3 assets/siskin-48.png
+
+    - name: Test BlurHash decoder
+      run: ./tree/utility/build/blurhash_decoder eFC~Yk3UPArENH8b[pV@J8bIOXn+rrS}$P[E5,t7-UJQ1b+_oyt6jY 256 256 tmp.png
+
+    ###############################################################################
+    # Collecting build artifacts...
+    - uses: actions/upload-artifact@v2
+      with:
+        name: blurhash-${{matrix.os}}-CI-${{github.run_id}}
+        path: ./tree/utility/build/blurhash*

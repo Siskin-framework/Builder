@@ -1,0 +1,25 @@
+;-    .-.                                                                       
+;-   /'v'\   SISKIN-Builder project file                                        
+;-  (/uOu\)  https://github.com/Siskin-framework/Builder/                       
+;-===="="=======================================================================
+
+github:   @blurhash
+source:   %blurhash/C/
+
+compiler: gcc
+strip:    on
+
+#if Windows? [upx: on]
+#if macOS?   [compiler: clang]
+#if Linux?   [library: %m]
+
+eggs: [
+	"Utility: blurhash_encoder" [
+		name: %blurhash_encoder
+		files: [%encode_stb.c %encode.c] 
+	]
+	"Utility: blurhash_decoder" [
+		name: %blurhash_decoder
+		files: [%decode_stb.c %decode.c] 
+	]
+]
