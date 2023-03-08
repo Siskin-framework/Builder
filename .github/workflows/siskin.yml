@@ -337,12 +337,15 @@ jobs:
         run: docker run --rm -v $PWD:/siskin oldes/rebol-dev:haiku-x86 bash -c 'cd /siskin; rebol siskin.r3 rebol/siskin siskin-haiku-x86'
 
       - name: Compress result before uploading
-        run: gzip -9 ./tree/rebol/Siskin/build/siskin-haiku-x86
+        run: |
+          ls -la ./tree/rebol/Siskin/build/
+          mv ./tree/rebol/Siskin/build/siskin-haiku-x86 ./
+          gzip -9 ./siskin-haiku-x86
 
       - uses: actions/upload-artifact@v3
         with:
           name: Siskin-Haiku
-          path: ./tree/rebol/Siskin/build/*.gz
+          path: ./siskin-haiku-x86.gz
 
   Haiku-x86_64:
     strategy:
@@ -365,9 +368,12 @@ jobs:
         run: docker run --rm -v $PWD:/siskin oldes/rebol-dev:haiku-x64 bash -c 'cd /siskin; rebol siskin.r3 rebol/siskin siskin-haiku-x86_64'
 
       - name: Compress result before uploading
-        run: gzip -9 ./tree/rebol/Siskin/build/siskin-haiku-x86_64
+        run: |
+          ls -la ./tree/rebol/Siskin/build/
+          mv ./tree/rebol/Siskin/build/siskin-haiku-x86_64 ./
+          gzip -9 ./siskin-haiku-x86_64
 
       - uses: actions/upload-artifact@v3
         with:
           name: Siskin-Haiku
-          path: ./tree/rebol/Siskin/build/*.gz
+          path: ./siskin-haiku-x86_64.gz
