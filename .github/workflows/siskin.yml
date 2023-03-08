@@ -110,8 +110,11 @@ jobs:
       - name: Install Rebol
         uses: oldes/install-rebol@v3.7.2
 
-      #- name: Build 32bit Siskin using gcc
-      #  run: ./rebol3 siskin.r3 rebol/siskin siskin-linux-x86
+      - name: Install GCC multilib
+        run: sudo apt-get install gcc-multilib
+
+      - name: Build 32bit Siskin using gcc
+        run: ./rebol3 siskin.r3 rebol/siskin siskin-linux-x86
 
       - name: Build 64bit Siskin using gcc
         run: ./rebol3 siskin.r3 rebol/siskin siskin-linux-x86_64
@@ -119,7 +122,7 @@ jobs:
       - name: Move results into the root for uploading
         run: |
           mv ./tree/rebol/Siskin/build/siskin-linux-x86_64 ./
-        #  mv ./tree/rebol/Siskin/build/siskin-linux-x86 ./
+          mv ./tree/rebol/Siskin/build/siskin-linux-x86 ./
 
       - name: List all possible test targets
         run: ./siskin-linux-x86_64 test --list
@@ -153,7 +156,7 @@ jobs:
       - name: Compress results before uploading
         run: |
           gzip -9 ./siskin-linux-x86_64
-        #  gzip -9 ./siskin-linux-x86
+          gzip -9 ./siskin-linux-x86
 
       - uses: actions/upload-artifact@v3
         with:
