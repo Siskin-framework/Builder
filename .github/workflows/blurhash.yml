@@ -36,7 +36,7 @@ jobs:
       run: ./tree/utility/build/blurhash_encoder 3 3 assets/siskin-48.png
 
     - name: Test BlurHash decoder
-      run: ./tree/utility/build/blurhash_decoder eFC~Yk3UPArENH8b[pV@J8bIOXn+rrS}$P[E5,t7-UJQ1b+_oyt6jY 256 256 tmp.png
+      run: ./tree/utility/build/blurhash_decoder "KNEUlr3BXm3;[;NHs:NwwJ" 256 256 tmp.png
 
     ###############################################################################
     # Collecting build artifacts...
