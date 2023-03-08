@@ -59,52 +59,63 @@ eggs: only [
 	#if Windows? [
 		"Siskin x86" [
 			name:     %siskin-windows-x86
+			:target-windows
 			:make-siskin-x86
 		]
 		"Siskin x86_64" [
 			name:     %siskin-windows-x86_64
+			:target-windows
 			:make-siskin-x64
 		]
 	]
 	#if Linux? [
 		"Siskin x86" [
 			name:     %siskin-linux-x86
+			:target-linux
 			:make-siskin-x86
 		]
 		"Siskin x86_64" [
 			name:     %siskin-linux-x86_64
+			:target-linux
 			:make-siskin-x64
 		]
 		"Siskin armv6" [
 			name:     %siskin-linux-armv6
+			:target-linux
 			:make-siskin-armv6
 		]
 		"Siskin armv7" [
 			name:     %siskin-linux-armv7
+			:target-linux
 			:make-siskin-armv7
 		]
 		"Siskin aarch64" [
 			name:     %siskin-linux-aarch64
+			:target-linux
 			:make-siskin-arm64
 		]
 	]
 	#if macOS? [
 		"Siskin x86" [
 			name:     %siskin-macos-x86
+			:target-macos
 			:make-siskin-x86
 		]
 		"Siskin x86_64" [
 			name:     %siskin-macos-x86_64
+			:target-macos
 			:make-siskin-x64
 		]
 		"Siskin aarch64" [
 			name:     %siskin-macos-aarch64
+			:target-macos
 			:make-siskin-arm64
 		]
 	]
 	#if OpenBSD? [
 		"Siskin x86_64" [
 			name:     %siskin-openbsd-x86_64
+			:target-openbsd
 			:make-siskin-x64
 			:target-openbsd
 		]
@@ -112,6 +123,7 @@ eggs: only [
 	#if FreeBSD? [
 		"Siskin x86_64" [
 			name:     %Siskin-freebsd-x86_64
+			:target-freebsd
 			:make-siskin-x64
 			:target-freebsd
 		]
