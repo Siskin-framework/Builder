@@ -7,7 +7,7 @@ nest:   %Rebol/make/rebol3.nest
 
 make-siskin: [
 	product:  Siskin
-	;version:  0.10.3 ;!! Don't use this setting! Because it would be reported like internal Rebol version!
+	;version:  0.10.4 ;!! Don't use this setting! Because it would be reported like internal Rebol version!
 	
 	strip:    on
 	compiler: gcc
