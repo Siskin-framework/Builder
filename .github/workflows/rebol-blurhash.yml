@@ -1,0 +1,135 @@
+name: 'Rebol/BlurHash'
+on:
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Install Rebol
+      uses: oldes/install-rebol@v3.10.2
+      with:
+        product: Bulk
+
+    - name: Build 32bit Rebol/BlurHash extension
+      run: ./siskin Rebol-BlurHash.nest blurhash-windows-x86
+
+    - name: Prepare 32bit Rebol/BlurHash extension
+      run:  MOVE ./build/blurhash-windows-x86.dll ./blurhash-windows-x86.rebx
+
+    - name: Build 64bit Rebol/BlurHash extension
+      run: ./siskin Rebol-BlurHash.nest blurhash-windows-x64
+
+    - name: Prepare 64bit Rebol/BlurHash extension
+      run:  MOVE ./build/blurhash-windows-x64.dll ./blurhash-windows-x64.rebx
+
+    - name: Minimal Rebol/BlurHash extension test
+      run:  ./rebol3 ci-test.r3
+
+    - uses: actions/upload-artifact@v3
+      with:
+        name: Rebol-BlurHash-CI-${{github.run_id}}
+        path: ./*.rebx
+
+  linux:
+    runs-on: ubuntu-20.04
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Install Rebol
+      uses: oldes/install-rebol@v3.10.2
+      with:
+        product: Bulk
+
+    - name: Install GCC multilib
+      run: sudo apt-get install gcc-multilib
+
+    - name: Build 32bit Rebol/BlurHash extension
+      run: ./siskin Rebol-BlurHash.nest blurhash-linux-x86
+
+    - name: Prepare 32bit Rebol BlurHash extension
+      run:  mv ./build/blurhash-linux-x86.so ./blurhash-linux-x86.rebx
+
+    - name: Build 64bit Rebol/BlurHash extension
+      run: ./siskin Rebol-BlurHash.nest blurhash-linux-x64
+
+    - name: Prepare 64bit Rebol BlurHash extension
+      run:  mv ./build/blurhash-linux-x64.so ./blurhash-linux-x64.rebx
+
+    - name: Minimal Rebol/BlurHash extension test
+      run:  ./rebol3 ci-test.r3
+
+    - name: Compress 32bit Rebol/BlurHash extension
+      run:  gzip -9 ./blurhash-linux-x86.rebx
+    - name: Compress 64bit Rebol/BlurHash extension
+      run:  gzip -9 ./blurhash-linux-x64.rebx
+
+    - uses: actions/upload-artifact@v3
+      with:
+        name: Rebol-BlurHash-${{github.run_id}}
+        path: ./blurhash*.gz
+
+  macos:
+    runs-on: macos-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Install Rebol
+      uses: oldes/install-rebol@v3.10.2
+      with:
+        product: Bulk
+
+    - name: Build 64bit Rebol/BlurHash extension
+      run: ./rebol3 siskin.r3 rebol/blurhash blurhash-macos-x64
+
+    - name: Install the Apple certificate
+    # https://docs.github.com/en/actions/guides/installing-an-apple-certificate-on-macos-runners-for-xcode-development
+      env:
+        BUILD_CERTIFICATE_BASE64: ${{ secrets.MACOS_CERTIFICATE }}
+        P12_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PWD }}
+        KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+      run: |
+        # create variables
+        CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
+        KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+
+        # import certificate from secrets
+        echo -n "$BUILD_CERTIFICATE_BASE64" | base64 --decode --output $CERTIFICATE_PATH
+
+        # create temporary keychain
+        security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+        security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
+        security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+
+        # import certificate to keychain
+        security import $CERTIFICATE_PATH -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
+        security list-keychain -d user -s $KEYCHAIN_PATH
+
+        # list available codesigning identities
+        security find-identity -v -p codesigning
+  
+    - name: Codesign executables
+      env: 
+        MACOS_IDENTITY_ID: ${{ secrets.MACOS_IDENTITY_ID }}
+      run: |
+        /usr/bin/codesign --force -s $MACOS_IDENTITY_ID ./tree/rebol/Rebol-BlurHash/build/blurhash-macos-x64.dylib -v
+
+    - name: Prepare 64bit Rebol BlurHash extension
+      run:  mv ./tree/rebol/Rebol-BlurHash/build/blurhash-macos-x64.dylib ./blurhash-macos-x64.rebx
+
+    - name: Minimal Rebol/BlurHash extension test
+      run:  ./rebol3 ci-test.r3
+
+    - name: Compress 64bit Rebol/BlurHash extension
+      run:  gzip -9 ./blurhash-macos-x64.rebx
+
+    - uses: actions/upload-artifact@v3
+      with:
+        name: Rebol-BlurHash-${{github.run_id}}
+        path: ./blurhash*.gz
