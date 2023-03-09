@@ -339,12 +339,12 @@ do-upx: closure/with [file [file!]][
 		unless windows? [exit]
 		try/except [
 			print-info "Downloading UPX"
-			bin: read https://github.com/upx/upx/releases/download/v3.96/upx-3.96-win32.zip
-			if #{00AD82F88046686070C93993A47BE46D32684407} <> checksum bin 'sha1 [
+			bin: read https://github.com/upx/upx/releases/download/v4.0.2/upx-4.0.2-win32.zip
+			if #{28EE4E8C259C9A775C8BA8CB165C8CB5CC16B627C82F1E5FEF1EBA610EE9463D} <> checksum bin 'sha256 [
 				print-error "UPX binary checksum failed!"
 				exit
 			]
-			exe: codecs/zip/decode/only bin [%upx-3.96-win32/upx.exe]
+			exe: codecs/zip/decode/only bin [%upx-4.0.2-win32/upx.exe]
 			upx: write root-dir/upx.exe exe/2/2
 			add-env-path root-dir
 		] [	print-error system/state/last-error exit ]
