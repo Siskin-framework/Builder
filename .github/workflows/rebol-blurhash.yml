@@ -19,13 +19,13 @@ jobs:
       run: ./rebol3 siskin.r3 rebol/blurhash blurhash-windows-x86
 
     - name: Prepare 32bit Rebol/BlurHash extension
-      run:  MOVE ./build/blurhash-windows-x86.dll ./blurhash-windows-x86.rebx
+      run:  MOVE ./tree/rebol/Rebol-BlurHash/build/blurhash-windows-x86.dll ./blurhash-windows-x86.rebx
 
     - name: Build 64bit Rebol/BlurHash extension
       run: ./rebol3 siskin.r3 rebol/blurhash blurhash-windows-x64
 
     - name: Prepare 64bit Rebol/BlurHash extension
-      run:  MOVE ./build/blurhash-windows-x64.dll ./blurhash-windows-x64.rebx
+      run:  MOVE ./tree/rebol/Rebol-BlurHash/build/blurhash-windows-x64.dll ./blurhash-windows-x64.rebx
 
     - name: Minimal Rebol/BlurHash extension test
       run:  ./rebol3 ci-test.r3
@@ -53,13 +53,13 @@ jobs:
       run: ./rebol3 siskin.r3 rebol/blurhash blurhash-linux-x86
 
     - name: Prepare 32bit Rebol BlurHash extension
-      run:  mv ./build/blurhash-linux-x86.so ./blurhash-linux-x86.rebx
+      run:  mv ./tree/rebol/Rebol-BlurHash/build/blurhash-linux-x86.so ./blurhash-linux-x86.rebx
 
     - name: Build 64bit Rebol/BlurHash extension
       run: ./rebol3 siskin.r3 rebol/blurhash blurhash-linux-x64
 
     - name: Prepare 64bit Rebol BlurHash extension
-      run:  mv ./build/blurhash-linux-x64.so ./blurhash-linux-x64.rebx
+      run:  mv ./tree/rebol/Rebol-BlurHash/build/blurhash-linux-x64.so ./blurhash-linux-x64.rebx
 
     - name: Minimal Rebol/BlurHash extension test
       run:  ./rebol3 ci-test.r3
