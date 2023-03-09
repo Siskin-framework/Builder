@@ -3,6 +3,9 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
+env:
+  ProjectRoot: ./tree/rebol/Rebol-BlurHash
+  
 jobs:
   windows:
     runs-on: windows-latest
@@ -19,23 +22,21 @@ jobs:
       run: ./rebol3 siskin.r3 rebol/blurhash blurhash-windows-x86
 
     - name: Prepare 32bit Rebol/BlurHash extension
-      run:  MOVE ./tree/rebol/Rebol-BlurHash/build/blurhash-windows-x86.dll ./blurhash-windows-x86.rebx
+      run:  MOVE $ProjectRoot/build/blurhash-windows-x86.dll $ProjectRoot/blurhash-windows-x86.rebx
 
     - name: Build 64bit Rebol/BlurHash extension
       run: ./rebol3 siskin.r3 rebol/blurhash blurhash-windows-x64
 
     - name: Prepare 64bit Rebol/BlurHash extension
-      run:  MOVE ./tree/rebol/Rebol-BlurHash/build/blurhash-windows-x64.dll ./blurhash-windows-x64.rebx
+      run:  MOVE $ProjectRoot/build/blurhash-windows-x64.dll $ProjectRoot/blurhash-windows-x64.rebx
 
     - name: Minimal Rebol/BlurHash extension test
-      run:  |
-        MOVE tree\rebol\Rebol-BlurHash\ci-test.r3 .\test-blurhash.r3
-        ./rebol3 test-blurhash.r3
+      run:  ./rebol3 $ProjectRoot/ci-test.r3
 
     - uses: actions/upload-artifact@v3
       with:
         name: Rebol-BlurHash-CI-${{github.run_id}}
-        path: ./*.rebx
+        path: $ProjectRoot/*.rebx
 
   linux:
     runs-on: ubuntu-20.04
@@ -55,18 +56,16 @@ jobs:
       run: ./rebol3 siskin.r3 rebol/blurhash blurhash-linux-x86
 
     - name: Prepare 32bit Rebol BlurHash extension
-      run:  mv ./tree/rebol/Rebol-BlurHash/build/blurhash-linux-x86.so ./blurhash-linux-x86.rebx
+      run:  mv $ProjectRoot/build/blurhash-linux-x86.so $ProjectRoot/blurhash-linux-x86.rebx
 
     - name: Build 64bit Rebol/BlurHash extension
       run: ./rebol3 siskin.r3 rebol/blurhash blurhash-linux-x64
 
     - name: Prepare 64bit Rebol BlurHash extension
-      run:  mv ./tree/rebol/Rebol-BlurHash/build/blurhash-linux-x64.so ./blurhash-linux-x64.rebx
+      run:  mv $ProjectRoot/build/blurhash-linux-x64.so $ProjectRoot/blurhash-linux-x64.rebx
 
     - name: Minimal Rebol/BlurHash extension test
-      run:  |
-        mv ./tree/rebol/Rebol-BlurHash/ci-test.r3 ./test-blurhash.r3
-        ./rebol3 test-blurhash.r3
+      run:  ./rebol3 $ProjectRoot/ci-test.r3
 
     - name: Compress 32bit Rebol/BlurHash extension
       run:  gzip -9 ./blurhash-linux-x86.rebx
@@ -122,20 +121,18 @@ jobs:
       env: 
         MACOS_IDENTITY_ID: ${{ secrets.MACOS_IDENTITY_ID }}
       run: |
-        /usr/bin/codesign --force -s $MACOS_IDENTITY_ID ./tree/rebol/Rebol-BlurHash/build/blurhash-macos-x64.dylib -v
+        /usr/bin/codesign --force -s $MACOS_IDENTITY_ID $ProjectRoot/build/blurhash-macos-x64.dylib -v
 
     - name: Prepare 64bit Rebol BlurHash extension
-      run:  mv ./tree/rebol/Rebol-BlurHash/build/blurhash-macos-x64.dylib ./blurhash-macos-x64.rebx
+      run:  mv $ProjectRoot/build/blurhash-macos-x64.dylib $ProjectRoot/blurhash-macos-x64.rebx
 
     - name: Minimal Rebol/BlurHash extension test
-      run:  |
-        mv ./tree/rebol/Rebol-BlurHash/ci-test.r3 ./test-blurhash.r3
-        ./rebol3 test-blurhash.r3
+      run:  ./rebol3 $ProjectRoot/ci-test.r3
 
     - name: Compress 64bit Rebol/BlurHash extension
-      run:  gzip -9 ./blurhash-macos-x64.rebx
+      run:  gzip -9 $ProjectRoot/blurhash-macos-x64.rebx
 
     - uses: actions/upload-artifact@v3
       with:
         name: Rebol-BlurHash-${{github.run_id}}
-        path: ./blurhash*.gz
+        path: $ProjectRoot/blurhash*.gz
