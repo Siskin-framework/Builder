@@ -3,13 +3,12 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-env:
-  ProjectRoot: ./tree/rebol/Rebol-BlurHash
-  
 jobs:
   windows:
     runs-on: windows-latest
-    shell: bash
+    env:
+      ProjectRoot: .\tree\rebol\Rebol-BlurHash
+
     steps:
     - name: Checkout repository
       uses: actions/checkout@v3
@@ -23,24 +22,27 @@ jobs:
       run: ./rebol3 siskin.r3 rebol/blurhash blurhash-windows-x86
 
     - name: Prepare 32bit Rebol/BlurHash extension
-      run:  MOVE $ProjectRoot/build/blurhash-windows-x86.dll $ProjectRoot/blurhash-windows-x86.rebx
+      run:  MOVE $ProjectRoot\build\blurhash-windows-x86.dll $ProjectRoot\blurhash-windows-x86.rebx
 
     - name: Build 64bit Rebol/BlurHash extension
       run: ./rebol3 siskin.r3 rebol/blurhash blurhash-windows-x64
 
     - name: Prepare 64bit Rebol/BlurHash extension
-      run:  MOVE $ProjectRoot/build/blurhash-windows-x64.dll $ProjectRoot/blurhash-windows-x64.rebx
+      run:  MOVE $ProjectRoot\build\blurhash-windows-x64.dll $ProjectRoot\blurhash-windows-x64.rebx
 
     - name: Minimal Rebol/BlurHash extension test
-      run:  ./rebol3 $ProjectRoot/ci-test.r3
+      run:  ./rebol3 $ProjectRoot\ci-test.r3
 
     - uses: actions/upload-artifact@v3
       with:
         name: Rebol-BlurHash-CI-${{github.run_id}}
-        path: $ProjectRoot/*.rebx
+        path: $ProjectRoot\*.rebx
 
   linux:
     runs-on: ubuntu-20.04
+    env:
+      ProjectRoot: ./tree/rebol/Rebol-BlurHash
+
     steps:
     - name: Checkout repository
       uses: actions/checkout@v3
@@ -80,6 +82,9 @@ jobs:
 
   macos:
     runs-on: macos-latest
+    env:
+      ProjectRoot: ./tree/rebol/Rebol-BlurHash
+    
     steps:
     - name: Checkout repository
       uses: actions/checkout@v3
