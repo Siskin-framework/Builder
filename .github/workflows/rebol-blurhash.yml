@@ -9,6 +9,7 @@ env:
 jobs:
   windows:
     runs-on: windows-latest
+    shell: bash
     steps:
     - name: Checkout repository
       uses: actions/checkout@v3
