@@ -68,14 +68,14 @@ jobs:
       run:  ./rebol3 $ProjectRoot/ci-test.r3
 
     - name: Compress 32bit Rebol/BlurHash extension
-      run:  gzip -9 ./blurhash-linux-x86.rebx
+      run:  gzip -9 $ProjectRoot/blurhash-linux-x86.rebx
     - name: Compress 64bit Rebol/BlurHash extension
-      run:  gzip -9 ./blurhash-linux-x64.rebx
+      run:  gzip -9 $ProjectRoot/blurhash-linux-x64.rebx
 
     - uses: actions/upload-artifact@v3
       with:
         name: Rebol-BlurHash-${{github.run_id}}
-        path: ./blurhash*.gz
+        path: $ProjectRoot/blurhash*.gz
 
   macos:
     runs-on: macos-latest
