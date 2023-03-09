@@ -28,7 +28,9 @@ jobs:
       run:  MOVE ./tree/rebol/Rebol-BlurHash/build/blurhash-windows-x64.dll ./blurhash-windows-x64.rebx
 
     - name: Minimal Rebol/BlurHash extension test
-      run:  ./rebol3 ci-test.r3
+      run:  |
+        MOVE tree\rebol\Rebol-BlurHash\ci-test.r3 .\test-blurhash.r3
+        ./rebol3 test-blurhash.r3
 
     - uses: actions/upload-artifact@v3
       with:
@@ -62,7 +64,9 @@ jobs:
       run:  mv ./tree/rebol/Rebol-BlurHash/build/blurhash-linux-x64.so ./blurhash-linux-x64.rebx
 
     - name: Minimal Rebol/BlurHash extension test
-      run:  ./rebol3 ci-test.r3
+      run:  |
+        mv ./tree/rebol/Rebol-BlurHash/ci-test.r3 ./test-blurhash.r3
+        ./rebol3 test-blurhash.r3
 
     - name: Compress 32bit Rebol/BlurHash extension
       run:  gzip -9 ./blurhash-linux-x86.rebx
@@ -124,7 +128,9 @@ jobs:
       run:  mv ./tree/rebol/Rebol-BlurHash/build/blurhash-macos-x64.dylib ./blurhash-macos-x64.rebx
 
     - name: Minimal Rebol/BlurHash extension test
-      run:  ./rebol3 ci-test.r3
+      run:  |
+        mv ./tree/rebol/Rebol-BlurHash/ci-test.r3 ./test-blurhash.r3
+        ./rebol3 test-blurhash.r3
 
     - name: Compress 64bit Rebol/BlurHash extension
       run:  gzip -9 ./blurhash-macos-x64.rebx
