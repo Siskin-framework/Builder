@@ -136,3 +136,59 @@ jobs:
       with:
         name: Rebol-BlurHash-${{github.run_id}}
         path: ./tree/rebol/Rebol-BlurHash/blurhash*.gz
+
+  Haiku-x86:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
+      - name: Download Haiku Rebol-dev container
+        run: docker pull docker.io/oldes/rebol-dev:haiku-x86
+
+      - name: Build all Rebol/BlurHash for Haiku OS x86
+        run: docker run --rm -v $PWD:/siskin oldes/rebol-dev:haiku-x86 bash -c 'cd /siskin; rebol siskin.r3 rebol/blurhash blurhash-haiku-x86'
+
+      - name: Compress result before uploading
+        run: |
+          sudo mv ./tree/rebol/Rebol-BlurHash/build/blurhash-haiku-x86.so ./blurhash-haiku-x86.rebx
+          sudo gzip -9 ./blurhash-haiku-x86.rebx
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: Rebol-BlurHash-${{github.run_id}}
+          path: ./blurhash-*.gz
+
+  Haiku-x64:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
+      - name: Download Haiku Rebol-dev container
+        run: docker pull docker.io/oldes/rebol-dev:haiku-x64
+
+      - name: Build all Rebol/BlurHash for Haiku OS x64
+        run: docker run --rm -v $PWD:/siskin oldes/rebol-dev:haiku-x64 bash -c 'cd /siskin; rebol siskin.r3 rebol/blurhash blurhash-haiku-x64'
+
+      - name: Compress result before uploading
+        run: |
+          sudo mv ./tree/rebol/Rebol-BlurHash/build/blurhash-haiku-x64.so ./blurhash-haiku-x64.rebx
+          sudo gzip -9 ./blurhash-haiku-x64.rebx
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: Rebol-BlurHash-${{github.run_id}}
+          path: ./blurhash-*.gz
