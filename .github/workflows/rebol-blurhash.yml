@@ -16,13 +16,13 @@ jobs:
         product: Bulk
 
     - name: Build 32bit Rebol/BlurHash extension
-      run: ./siskin Rebol-BlurHash.nest blurhash-windows-x86
+      run: ./rebol3 siskin.r3 Rebol-BlurHash.nest blurhash-windows-x86
 
     - name: Prepare 32bit Rebol/BlurHash extension
       run:  MOVE ./build/blurhash-windows-x86.dll ./blurhash-windows-x86.rebx
 
     - name: Build 64bit Rebol/BlurHash extension
-      run: ./siskin Rebol-BlurHash.nest blurhash-windows-x64
+      run: ./rebol3 siskin.r3 Rebol-BlurHash.nest blurhash-windows-x64
 
     - name: Prepare 64bit Rebol/BlurHash extension
       run:  MOVE ./build/blurhash-windows-x64.dll ./blurhash-windows-x64.rebx
@@ -50,13 +50,13 @@ jobs:
       run: sudo apt-get install gcc-multilib
 
     - name: Build 32bit Rebol/BlurHash extension
-      run: ./siskin Rebol-BlurHash.nest blurhash-linux-x86
+      run: ./rebol3 siskin.r3 Rebol-BlurHash.nest blurhash-linux-x86
 
     - name: Prepare 32bit Rebol BlurHash extension
       run:  mv ./build/blurhash-linux-x86.so ./blurhash-linux-x86.rebx
 
     - name: Build 64bit Rebol/BlurHash extension
-      run: ./siskin Rebol-BlurHash.nest blurhash-linux-x64
+      run: ./rebol3 siskin.r3 Rebol-BlurHash.nest blurhash-linux-x64
 
     - name: Prepare 64bit Rebol BlurHash extension
       run:  mv ./build/blurhash-linux-x64.so ./blurhash-linux-x64.rebx
