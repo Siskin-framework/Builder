@@ -46,7 +46,7 @@ jobs:
           run: |
             uname -a
             echo $SHELL
-            wget https://github.com/Siskin-framework/Rebol/archive/refs/tags/3.7.2-bootstrap-alpine.tar.gz
+            curl https://github.com/Siskin-framework/Rebol/archive/refs/tags/3.7.2-bootstrap-alpine.tar.gz
             gunzip ./3.7.2-bootstrap-alpine.tar.gz
             pwd
             ls -lah
