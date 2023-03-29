@@ -1,6 +1,7 @@
-name: BSD
+name: BSD cross-compilation test
 
-on: [push]
+on:
+  workflow_dispatch:
 
 jobs:
   test:
@@ -8,21 +9,21 @@ jobs:
     strategy:
       matrix:
         os:
-          - name: freebsd
-            architecture: x86-64
-            version: '13.1'
-            host: macos-12
-
-          - name: openbsd
-            architecture: x86-64
-            version: '7.2'
-            host: macos-12
-
-          - name: openbsd
-            architecture: arm64
-            version: '7.2'
-            host: ubuntu-latest
-
+#          - name: freebsd
+#            architecture: x86-64
+#            version: '13.1'
+#            host: macos-12
+#
+#          - name: openbsd
+#            architecture: x86-64
+#            version: '7.2'
+#            host: macos-12
+#
+#          - name: openbsd
+#            architecture: arm64
+#            version: '7.2'
+#            host: ubuntu-latest
+#
           - name: netbsd
             architecture: x86-64
             version: '9.2'
@@ -42,12 +43,16 @@ jobs:
           architecture: ${{ matrix.os.architecture }}
           version: ${{ matrix.os.version }}
           shell: bash
-          memory: 5G
-          cpu_count: 4
           run: |
             uname -a
             echo $SHELL
+            wget https://github.com/Siskin-framework/Rebol/archive/refs/tags/3.7.2-bootstrap-alpine.tar.gz
+            gunzip ./3.7.2-bootstrap-alpine.tar.gz
             pwd
             ls -lah
-            whoami
-            env | sort
+            cd ./3.7.2-bootstrap-alpine/make/
+            make -f rebol-linux-bootstrap-64bit.mk
+#            whoami
+#            env | sort
+      - name: Output
+        run: ls -la ./tree/rebol/Rebol/build/  
