@@ -45,16 +45,9 @@ jobs:
           version: ${{ matrix.os.version }}
           shell: bash
           run: |
-            PATH="/usr/pkg/sbin:/usr/pkg/bin:$PATH"
-            PKG_PATH="https://cdn.NetBSD.org/pub/pkgsrc/packages"
-            PKG_PATH="$PKG_PATH/OPSYS/ARCH/VERSIONS/All/"
-            export PATH PKG_PATH
-            pkg_add pkgin
             uname -a
             echo $SHELL
-            pkgin install mozilla-rootcerts
-            mozilla-rootcerts install
-            curl https://github.com/Siskin-framework/Rebol/archive/refs/tags/3.7.2-bootstrap-alpine.tar.gz
+            curl -k https://github.com/Siskin-framework/Rebol/archive/refs/tags/3.7.2-bootstrap-alpine.tar.gz
             gunzip ./3.7.2-bootstrap-alpine.tar.gz
             pwd
             ls -lah
