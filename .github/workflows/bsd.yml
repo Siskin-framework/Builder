@@ -46,6 +46,8 @@ jobs:
           run: |
             uname -a
             echo $SHELL
+            pkgin install mozilla-rootcerts
+            mozilla-rootcerts install
             curl https://github.com/Siskin-framework/Rebol/archive/refs/tags/3.7.2-bootstrap-alpine.tar.gz
             gunzip ./3.7.2-bootstrap-alpine.tar.gz
             pwd
