@@ -34,6 +34,7 @@ jobs:
 
       - name: Test on ${{ matrix.os.name }}
         uses: cross-platform-actions/action@v0.10.0
+        timeout-minutes: 5
         env:
           MY_ENV1: MY_ENV1
           MY_ENV2: MY_ENV2
@@ -44,10 +45,15 @@ jobs:
           version: ${{ matrix.os.version }}
           shell: bash
           run: |
+            PATH="/usr/pkg/sbin:/usr/pkg/bin:$PATH"
+            PKG_PATH="https://cdn.NetBSD.org/pub/pkgsrc/packages"
+            PKG_PATH="$PKG_PATH/OPSYS/ARCH/VERSIONS/All/"
+            export PATH PKG_PATH
+            pkg_add pkgin
             uname -a
             echo $SHELL
-            sudo pkgin install mozilla-rootcerts
-            sudo mozilla-rootcerts install
+            pkgin install mozilla-rootcerts
+            mozilla-rootcerts install
             curl https://github.com/Siskin-framework/Rebol/archive/refs/tags/3.7.2-bootstrap-alpine.tar.gz
             gunzip ./3.7.2-bootstrap-alpine.tar.gz
             pwd
