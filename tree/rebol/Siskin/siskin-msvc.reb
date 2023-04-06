@@ -226,7 +226,7 @@ make-project: func[
 	/guid
 		id [string!] "Visual studio project type GUID"
 	/local
-		name tmp output dir dir-vs dir-bin defines includes rel-file dir-name
+		name tmp output dir dir-vs dir-bin defines includes rel-file
 		filters items ver lib-paths
 ][
 	unless siskin [siskin: system/modules/siskin]
@@ -336,16 +336,15 @@ make-project: func[
 		;file: siskin/get-file-with-extensions file [%.c %.cpp %.cc %.m %.S %.s %.sx]
 		rel-file: get-relative-path file dir-vs
 		dir: first split-path rel-file
-		parse dir [any %../ dir-name: to end] ; get directory name without .. (used in gui as names of folders)
-		take/last dir-name                    ; undirize
-		append filters dir-name               ; remember current name
-		repend items [rel-file dir-name]      ; and store link between file and this dir name
-
-;include all directories in the path..
-while [not find [%./ %../] dir-name: first split-path dir-name][
-	if #"/" = last dir-name [take/last dir-name]
-	append filters dir-name
-]
+		parse dir [remove any %../]    ; get directory name without .. (used in gui as names of folders)
+		take/last dir                  ; undirize
+		append filters dir             ; remember current name
+		repend items [rel-file dir]    ; and store link between file and this dir name
+		;include all directories in the path..
+		while [not find [%./ %../] dir: first split-path dir][
+			if #"/" = last dir [take/last dir]
+			append filters dir
+		]
 		
 		if file
 		append output rejoin [
