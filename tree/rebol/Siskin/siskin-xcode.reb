@@ -435,7 +435,8 @@ make-project: func[
 
 	foreach file sort headers [
 		rel-file: skip get-relative-path file dir-out 3
-		file: find/tail file spec/root
+		parse file [spec/root file: to end] ;; remove the root part of path, if possible
+
 		set [d n] split-path file
 		id_file:    make-uuid "file" file 
 		id_fileRef: make-uuid "fileRef" file
