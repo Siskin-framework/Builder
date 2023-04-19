@@ -32,6 +32,7 @@ SECTION-PBXGroup-Frameworks-Children:
 SECTION-PBXSourcesBuildPhase-Files:
 SECTION-PBXFrameworksBuildPhase-Files:
 SECTION-PBXCopyFilesBuildPhase-EmbedLib-Files:
+FRAMEWORK_SEARCH_PATHS:
 HEADER_SEARCH_PATHS:
 GCC_PREPROCESSOR_DEFINITIONS:
 GCC_OPTIMIZATION_LEVEL:
@@ -192,7 +193,7 @@ make-project: func[
 	/local
 		name tmp output dir dir-out dir-bin defines includes rel-file dir-name
 		filters items ver lib-paths d n id_fileRef id_file dirs blk headers
-		product-type
+		product-type framework-dirs
 ][
 	unless siskin [siskin: system/modules/siskin]
 	output: make string! 30000
@@ -266,6 +267,7 @@ make-project: func[
 		]
 	]
 
+	FRAMEWORK_SEARCH_PATHS: clear ""
 	HEADER_SEARCH_PATHS: clear ""
 	OTHER_LDFLAGS: clear ""
 
@@ -379,8 +381,15 @@ make-project: func[
 		
 	]
 
+	framework-dirs: clear []
 	foreach file sort spec/frameworks [
-		file: append to file! file %.framework
+		file: to file! file
+
+		set [d file] split-path file
+		if d <> %./ [ append framework-dirs d ]
+
+		siskin/add-extension file %.framework
+
 		id_file:    make-uuid "file" file 
 		id_fileRef: make-uuid "fileRef" file
 		append SECTION-PBXBuildFile rejoin [
@@ -401,6 +410,9 @@ make-project: func[
 		append SECTION-PBXGroup-Frameworks-Children rejoin [
 			TAB4 id_fileRef " /* " file " */,^/"
 		]
+	]
+	foreach dir unique framework-dirs [
+		append FRAMEWORK_SEARCH_PATHS ajoin [{^-^-^-^-^-"} dir {",^/}]
 	]
 
 
@@ -529,6 +541,7 @@ make-project: func[
 	trim/tail SECTION-PBXFrameworksBuildPhase-Files
 	trim/tail SECTION-PBXSourcesBuildPhase-Files
 	trim/tail SECTION-PBXCopyFilesBuildPhase-EmbedLib-Files
+	trim/head/tail FRAMEWORK_SEARCH_PATHS
 	trim/head/tail HEADER_SEARCH_PATHS
 	trim/head/tail GCC_PREPROCESSOR_DEFINITIONS
 	trim/head/tail OTHER_LDFLAGS
@@ -846,6 +859,9 @@ project.pbxproj: {// !$*UTF8*$!
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					#GCC_PREPROCESSOR_DEFINITIONS#
 				);
+				FRAMEWORK_SEARCH_PATHS = (
+					#FRAMEWORK_SEARCH_PATHS#
+				);
 				HEADER_SEARCH_PATHS = (
 					#HEADER_SEARCH_PATHS#
 				);
@@ -871,6 +887,9 @@ project.pbxproj: {// !$*UTF8*$!
 				GCC_OPTIMIZATION_LEVEL = #GCC_OPTIMIZATION_LEVEL#;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					#GCC_PREPROCESSOR_DEFINITIONS#
+				);
+				FRAMEWORK_SEARCH_PATHS = (
+					#FRAMEWORK_SEARCH_PATHS#
 				);
 				HEADER_SEARCH_PATHS = (
 					#HEADER_SEARCH_PATHS#

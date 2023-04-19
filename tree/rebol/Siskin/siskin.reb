@@ -2,7 +2,7 @@ Rebol [
 	Title:  "Siskin Builder - core"
 	Type:    module
 	Name:    siskin
-	Version: 0.10.6
+	Version: 0.10.7
 	Author: "Oldes"
 	
 	exports: [
@@ -20,7 +20,7 @@ Rebol [
 banner: next rejoin [{
 ^[[0;33m═╗
 ^[[0;33m ║^[[1;31m    .-.
-^[[0;33m ║^[[1;31m   /'v'\   ^[[0;33mSISKIN-Framework Builder 0.10.6 Rebol } rebol/version {
+^[[0;33m ║^[[1;31m   /'v'\   ^[[0;33mSISKIN-Framework Builder 0.10.7 Rebol } rebol/version {
 ^[[0;33m ║^[[1;31m  (/^[[0;31muOu^[[1;31m\)  ^[[0;33mhttps://github.com/Siskin-framework/Builder/
 ^[[0;33m ╚════^[[1;31m"^[[0;33m═^[[1;31m"^[[0;33m═══════════════════════════════════════════════════════════════════════^[[m}]
 
@@ -1300,8 +1300,14 @@ build: function/with [
 
 	; frameworks
 	foreach frm spec/frameworks [
-		append append lflags " -framework " frm
+		set [dir: file:] split-path to file! frm
+		if dir <> %./ [
+			append lflags ajoin [" -F'" clean-path dir #"'"]
+		]
+		clear-extension file %.framework
+		append lflags ajoin [" -framework '" file #"'"]
 	]
+
 	; includes
 	includes: make string! 1000
 	foreach inc spec/includes [
