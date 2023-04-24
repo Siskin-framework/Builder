@@ -126,6 +126,15 @@ jobs:
       - name: Build 64bit Rebol/Bulk using gcc
         run: ./rebol3 siskin.r3 rebol %rebol3-bulk-linux-x64
 
+      -name: Setup RaspberryPi cross-compilation
+        run: sudo apt-get install gcc-arm-linux-gnueabihf
+      - name: Build 64bit Rebol/Base for armhf RaspberryPi
+        run: ./rebol3 siskin.r3 rebol %rebol3-base-rpi-armhf
+      - name: Build 64bit Rebol/Core for armhf RaspberryPi
+        run: ./rebol3 siskin.r3 rebol %rebol3-core-rpi-armhf
+      - name: Build 64bit Rebol/Bulk for armhf RaspberryPi
+        run: ./rebol3 siskin.r3 rebol %rebol3-bulk-rpi-armhf
+
       - name: Create archives from each version
         run: |
           gzip -9 ./tree/rebol/Rebol/build/rebol3-base-linux-x86
@@ -134,6 +143,9 @@ jobs:
           gzip -9 ./tree/rebol/Rebol/build/rebol3-base-linux-x64
           gzip -9 ./tree/rebol/Rebol/build/rebol3-core-linux-x64
           gzip -9 ./tree/rebol/Rebol/build/rebol3-bulk-linux-x64
+          gzip -9 ./tree/rebol/Rebol/build/rebol3-base-rpi-armhf
+          gzip -9 ./tree/rebol/Rebol/build/rebol3-core-rpi-armhf
+          gzip -9 ./tree/rebol/Rebol/build/rebol3-bulk-rpi-armhf
 
       - uses: actions/upload-artifact@v2
         with:
@@ -144,6 +156,11 @@ jobs:
         with:
           name: Rebol-32bit-linux
           path: ./tree/rebol/Rebol/build/rebol3-*-x86*.gz
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: Rebol-armhf
+          path: ./tree/rebol/Rebol/build/rebol3-*-armhf.gz
 
   macos:
     runs-on: macos-12
