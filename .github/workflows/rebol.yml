@@ -16,7 +16,7 @@ jobs:
     runs-on: windows-latest
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
 
     - name: Install Rebol
       uses: oldes/install-rebol@v3.10.0
@@ -76,20 +76,20 @@ jobs:
 
     ###############################################################################
     # Collecting build artifacts...
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v3
       with:
         name: Rebol-win-vs
         path: ./rebol3-*.exe
     # and lib/host variant...
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v3
       with:
         name: Rebol-win-lib-vs
         path: ./lib-*.dll
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v3
       with:
         name: Rebol-win-lib-vs
         path: ./lib-*.lib
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v3
       with:
         name: Rebol-win-lib-vs
         path: ./host-*.exe
@@ -100,7 +100,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
 
     - name: Install Rebol
       uses: oldes/install-rebol@v3.10.0
@@ -143,17 +143,17 @@ jobs:
         gzip -9 ./tree/rebol/Rebol/build/rebol3-core-rpi-armhf
         gzip -9 ./tree/rebol/Rebol/build/rebol3-bulk-rpi-armhf
 
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v3
       with:
         name: Rebol-64bit-linux
         path: ./tree/rebol/Rebol/build/rebol3-*-x64*.gz
 
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v3
       with:
         name: Rebol-32bit-linux
         path: ./tree/rebol/Rebol/build/rebol3-*-x86*.gz
 
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v3
       with:
         name: Rebol-armhf
         path: ./tree/rebol/Rebol/build/rebol3-*-armhf.gz
@@ -162,7 +162,7 @@ jobs:
     runs-on: macos-12
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Install Rebol
         uses: oldes/install-rebol@v3.10.0
@@ -236,11 +236,11 @@ jobs:
           gzip -9 ./tree/rebol/Rebol/build/lib-rebol3-core-macos-x64.dylib
           gzip -9 ./tree/rebol/Rebol/build/host-core-macos-x64
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: Rebol-64bit-macos-intel
           path: ./tree/rebol/Rebol/build/*-x64.gz
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: Rebol-64bit-macos-arm
           path: ./tree/rebol/Rebol/build/*-arm64.gz
