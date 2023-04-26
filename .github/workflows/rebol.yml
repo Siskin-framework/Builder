@@ -122,14 +122,29 @@ jobs:
     - name: Build 64bit Rebol/Bulk using gcc
       run: ./rebol3 siskin.r3 rebol %rebol3-bulk-linux-x64
 
-    - name: Setup RaspberryPi cross-compilation
-      run: sudo apt-get install gcc-arm-linux-gnueabihf
-    - name: Build 64bit Rebol/Base for armhf RaspberryPi
-      run: ./rebol3 siskin.r3 rebol %rebol3-base-linux-armhf
-    - name: Build 64bit Rebol/Core for armhf RaspberryPi
-      run: ./rebol3 siskin.r3 rebol %rebol3-core-linux-armhf
-    - name: Build 64bit Rebol/Bulk for armhf RaspberryPi
-      run: ./rebol3 siskin.r3 rebol %rebol3-bulk-linux-armhf
+    - name: Setup arm cross-compilers 
+      run: sudo apt-get install gcc-arm-linux-gnueabi gcc-arm-linux-gnueabihf gcc-aarch64-linux-gnu
+
+    - name: Build Rebol/Base for armv6 (gnueabi)
+      run: ./rebol3 siskin.r3 rebol %rebol3-base-linux-armv6
+    - name: Build Rebol/Core for armv6 (gnueabi)
+      run: ./rebol3 siskin.r3 rebol %rebol3-core-linux-armv6
+    - name: Build Rebol/Bulk for armv6 (gnueabi)
+      run: ./rebol3 siskin.r3 rebol %rebol3-bulk-linux-armv6
+
+    - name: Build Rebol/Base for armv7 (gnueabihf)
+      run: ./rebol3 siskin.r3 rebol %rebol3-base-linux-armv7
+    - name: Build Rebol/Core for armv7 (gnueabihf)
+      run: ./rebol3 siskin.r3 rebol %rebol3-core-linux-armv7
+    - name: Build Rebol/Bulk for armv7 (gnueabihf)
+      run: ./rebol3 siskin.r3 rebol %rebol3-bulk-linux-armv7
+
+    - name: Build Rebol/Base for arm64 (aarch64)
+      run: ./rebol3 siskin.r3 rebol %rebol3-base-linux-arm64
+    - name: Build Rebol/Core for arm64 (aarch64)
+      run: ./rebol3 siskin.r3 rebol %rebol3-core-linux-arm64
+    - name: Build Rebol/Bulk for arm64 (aarch64)
+      run: ./rebol3 siskin.r3 rebol %rebol3-bulk-linux-arm64
 
     - name: Create archives from each version
       run: |
@@ -139,9 +154,15 @@ jobs:
         gzip -9 ./tree/rebol/Rebol/build/rebol3-base-linux-x64
         gzip -9 ./tree/rebol/Rebol/build/rebol3-core-linux-x64
         gzip -9 ./tree/rebol/Rebol/build/rebol3-bulk-linux-x64
-        gzip -9 ./tree/rebol/Rebol/build/rebol3-base-linux-armhf
-        gzip -9 ./tree/rebol/Rebol/build/rebol3-core-linux-armhf
-        gzip -9 ./tree/rebol/Rebol/build/rebol3-bulk-linux-armhf
+        gzip -9 ./tree/rebol/Rebol/build/rebol3-base-linux-armv6
+        gzip -9 ./tree/rebol/Rebol/build/rebol3-core-linux-armv6
+        gzip -9 ./tree/rebol/Rebol/build/rebol3-bulk-linux-armv6
+        gzip -9 ./tree/rebol/Rebol/build/rebol3-base-linux-armv7
+        gzip -9 ./tree/rebol/Rebol/build/rebol3-core-linux-armv7
+        gzip -9 ./tree/rebol/Rebol/build/rebol3-bulk-linux-armv7
+        gzip -9 ./tree/rebol/Rebol/build/rebol3-base-linux-arm64
+        gzip -9 ./tree/rebol/Rebol/build/rebol3-core-linux-arm64
+        gzip -9 ./tree/rebol/Rebol/build/rebol3-bulk-linux-arm64
 
     - uses: actions/upload-artifact@v3
       with:
@@ -155,8 +176,18 @@ jobs:
 
     - uses: actions/upload-artifact@v3
       with:
-        name: Rebol-armhf
-        path: ./tree/rebol/Rebol/build/rebol3-*-armhf.gz
+        name: Rebol-armv6
+        path: ./tree/rebol/Rebol/build/rebol3-*-armv6.gz
+
+    - uses: actions/upload-artifact@v3
+      with:
+        name: Rebol-armv7
+        path: ./tree/rebol/Rebol/build/rebol3-*-armv7.gz
+
+    - uses: actions/upload-artifact@v3
+      with:
+        name: Rebol-arm64
+        path: ./tree/rebol/Rebol/build/rebol3-*-arm64.gz
 
   macos:
     runs-on: macos-12
