@@ -2,7 +2,7 @@ Rebol [
 	Title:  "Siskin Builder - core"
 	Type:    module
 	Name:    siskin
-	Version: 0.10.7
+	Version: 0.11.0
 	Author: "Oldes"
 	
 	exports: [
@@ -20,7 +20,7 @@ Rebol [
 banner: next rejoin [{
 ^[[0;33m═╗
 ^[[0;33m ║^[[1;31m    .-.
-^[[0;33m ║^[[1;31m   /'v'\   ^[[0;33mSISKIN-Framework Builder 0.10.7 Rebol } rebol/version {
+^[[0;33m ║^[[1;31m   /'v'\   ^[[0;33mSISKIN-Framework Builder 0.11.0 Rebol } rebol/version {
 ^[[0;33m ║^[[1;31m  (/^[[0;31muOu^[[1;31m\)  ^[[0;33mhttps://github.com/Siskin-framework/Builder/
 ^[[0;33m ╚════^[[1;31m"^[[0;33m═^[[1;31m"^[[0;33m═══════════════════════════════════════════════════════════════════════^[[m}]
 
@@ -167,6 +167,8 @@ nest-context: object [
 	target-names: copy []
 	interactive?: false
 	git-ssh?:     false
+	git-update?:  false
+	git-updates:  copy [] ; keeps what gits were updated in one commands batch
 	result-code:  0     ; last returned result from eval-cmd 
 
 	force-compiler: none
@@ -267,6 +269,7 @@ do-args: closure/with [
 			find args "--version" [ print banner quit ]
 			find args "--help"    [ print banner print help-options-cli quit]
 			find args "--git-ssh" [ git-ssh?: on]
+			find args "--update"  [ git-update?: on]
 		]
 	]
 
@@ -886,6 +889,8 @@ do-nest: closure/with/extern [
 		]
 
 		try/except [
+			clear git-updates
+			git-update?: false
 			if any [none? args all [block? args empty? args not CI?]][
 				;-- Interactive mode -------------------------
 				unless none? args [print-eggs]
@@ -1020,18 +1025,25 @@ get-spec: closure/with [
 	none
 ] :nest-context
 
+
+update-git: function/with [
+	git [file!]
+][
+	git: to-real-file git
+	if find git-updates git [exit]
+	unless system/options/quiet [print [as-green "Updating GIT:" to-local-file git]]
+	append git-updates git ;; stores this git not to be updated multiple time in one command batch
+	try/except [
+		pushd git
+		eval-cmd/vv {git pull}
+		popd
+	] :on-error-throw
+] :nest-context
+
 update-gits: function/with [
 	spec [map!]
 ][
-	;@@TODO: make sure not to update gits multiple time in one command batch
-	foreach git spec/gits [
-		unless system/options/quiet [print [as-green "Updating GIT:" git]]
-		attempt [
-			pushd get-git-dir git
-			eval-cmd/vv {git pull}
-			popd
-		]
-	]
+	foreach git spec/gits [ update-git get-git-dir git ]
 ] :nest-context
 
 build-target: closure/with [
@@ -1044,7 +1056,7 @@ build-target: closure/with [
 			print-failed
 			return false
 		]
-		if update? [update-gits spec]
+		if git-update? [update-gits spec]
 
 		if force-compiler [
 			switch force-compiler [
@@ -1518,6 +1530,10 @@ build: function/with [
 				tmp: find/last copy cc "gcc"
 				exists? ccpp: head replace tmp "gcc" "g++"
 			]
+			all [
+				tmp: find/last copy cc "clang"
+				exists? ccpp: head replace tmp "clang" "clang++"
+			]
 			ccpp: cc
 		]
 	]
@@ -1795,7 +1811,7 @@ finalize-build: closure/with [spec [map!] file [file! none!] /no-fail][
 	false
 ] :nest-context
 
-clone-gits: function [
+clone-gits: function/with [
 	gits [block! url!]
 ][
 	unless block? gits [gits: reduce [gits]]
@@ -1806,11 +1822,15 @@ clone-gits: function [
 		branch: either refinement? second gits [first gits: next gits][none]
 		print-info ["Using git:" as-yellow git]
 		dir: dirize to file! first split (second split-path git) #"."
-		unless exists? dir [
-			unless found-git? [
-				locate-tool 'git none
-				found-git?: true
+		unless found-git? [
+			locate-tool 'git none
+			found-git?: true
+		]
+		either exists? dir [
+			if all [found-git? git-update?] [
+				update-git dir
 			]
+		][
 			cmd: ["git clone" git "--depth 1 --quiet"]
 			if branch [append cmd ["--branch" branch]]
 			res: either find/match git https:// [
@@ -1822,7 +1842,7 @@ clone-gits: function [
 			]
 		]
 	]
-]
+] :nest-context
 
 ;convert-scripts: func[
 ;	action-code
