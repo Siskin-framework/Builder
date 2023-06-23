@@ -254,7 +254,9 @@ jobs:
         run: ./siskin-macos-x86_64 test list-dir
 
       - name: Compress results before uploading
-        run: gzip -9 ./siskin-macos-x86_64
+        run: |
+          gzip -9 ./siskin-macos-x86_64
+          gzip -9 ./siskin-macos-aarch64
 
       - uses: actions/upload-artifact@v3
         with:
