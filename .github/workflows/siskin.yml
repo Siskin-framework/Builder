@@ -206,15 +206,15 @@ jobs:
       #    mv ./tree/rebol/Siskin/build/siskin-windows-x86-osx ./
 
       - name: Build x86_64 Siskin
-        run: ./rebol3 siskin.r3 rebol/siskin --xcode --debug siskin-macos-x86_64
+        run: ./rebol3 siskin.r3 rebol/siskin siskin-macos-x86_64
 
       - name: Build ARM64 Siskin
-        run: ./rebol3 siskin.r3 rebol/siskin --xcode --debug siskin-macos-aarch64
+        run: ./rebol3 siskin.r3 rebol/siskin siskin-macos-aarch64
 
       - name: Move results into the root for uploading
         run: |
-          mv ./tree/rebol/Rebol/make/build/Release/siskin-macos-x86_64 ./
-          mv ./tree/rebol/Rebol/make/build/Release/siskin-macos-aarch64 ./
+          mv ./tree/rebol/Siskin/build/siskin-macos-x86_64 ./
+          mv ./tree/rebol/Siskin/build/siskin-macos-aarch64 ./
 
       - name: Codesign executables
         env: 
