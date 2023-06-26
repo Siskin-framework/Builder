@@ -517,7 +517,11 @@ make-project: func[
 		]
 	]
 
-	;MACOSX_DEPLOYMENT_TARGET: "MACOSX_DEPLOYMENT_TARGET = 10.9;"
+	parse spec/lflags [
+		thru "-mmacosx-version-min=" copy tmp [to SP | to end] (
+			MACOSX_DEPLOYMENT_TARGET: ajoin ["MACOSX_DEPLOYMENT_TARGET = " tmp #";"]
+		) 
+	]
 
 
 	;-- and...
@@ -527,7 +531,8 @@ make-project: func[
 
 	PRE-BUILD: form-pre-post-build spec any [spec/pre-build []]
 	PRE-BUILD-SCRIPT: siskin/to-local-file join dir-out %pre-build.sh
-	write-file [dir-out %pre-build.sh] PRE-BUILD
+	probe write-file [dir-out %pre-build.sh] PRE-BUILD
+
 	siskin/eval-cmd/v/force [{chmod +x } PRE-BUILD-SCRIPT]
 	replace/all PRE-BUILD-SCRIPT #" " "\\ " ;@@ add proper escaping!!!
 	;@@ TODO: post actions..
