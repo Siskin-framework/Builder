@@ -11,7 +11,7 @@ jobs:
       uses: actions/checkout@v3
 
     - name: Install Rebol
-      uses: oldes/install-rebol@v3.10.2
+      uses: oldes/install-rebol@v3.11.0
 
     - name: Build 32bit Rebol/SQLite extension
       run: ./rebol3 siskin.r3 rebol/sqlite --msvc sqlite-windows-x86
@@ -42,7 +42,7 @@ jobs:
       uses: actions/checkout@v3
 
     - name: Install Rebol
-      uses: oldes/install-rebol@v3.10.2
+      uses: oldes/install-rebol@v3.11.0
 
     - name: Build 64bit Rebol/SQLite extension
       run: ./rebol3 siskin.r3 rebol/sqlite sqlite-linux-x64
@@ -70,7 +70,7 @@ jobs:
       uses: actions/checkout@v3
 
     - name: Install Rebol
-      uses: oldes/install-rebol@v3.10.2
+      uses: oldes/install-rebol@v3.11.0
 
     - name: Build 64bit Rebol/SQLite extension
       run: ./rebol3 siskin.r3 rebol/sqlite sqlite-macos-x64
