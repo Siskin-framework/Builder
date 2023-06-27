@@ -344,7 +344,7 @@ do-upx: closure/with [file [file!]][
 		try/except [
 			print-info "Downloading UPX"
 			bin: read https://github.com/upx/upx/releases/download/v4.0.2/upx-4.0.2-win32.zip
-			if #{28EE4E8C259C9A775C8BA8CB165C8CB5CC16B627C82F1E5FEF1EBA610EE9463D} <> checksum bin 'sha256 [
+			if #{3F5B59252B0B657143AB945CE10FA0E5C4A509F69588695E11757CB1FC1B7EB7} <> checksum bin 'sha256 [
 				print-error "UPX binary checksum failed!"
 				exit
 			]
