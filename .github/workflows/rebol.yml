@@ -78,20 +78,20 @@ jobs:
     # Collecting build artifacts...
     - uses: actions/upload-artifact@v3
       with:
-        name: Rebol-win-vs
+        name: Rebol-${{github.run_id}}
         path: ./rebol3-*.exe
     # and lib/host variant...
     - uses: actions/upload-artifact@v3
       with:
-        name: Rebol-win-lib-vs
+        name: Rebol-${{github.run_id}}
         path: ./lib-*.dll
     - uses: actions/upload-artifact@v3
       with:
-        name: Rebol-win-lib-vs
+        name: Rebol-${{github.run_id}}
         path: ./lib-*.lib
     - uses: actions/upload-artifact@v3
       with:
-        name: Rebol-win-lib-vs
+        name: Rebol-${{github.run_id}}
         path: ./host-*.exe
 
   linux:
@@ -180,28 +180,8 @@ jobs:
 
     - uses: actions/upload-artifact@v3
       with:
-        name: Rebol-64bit-linux
-        path: ./tree/rebol/Rebol/build/rebol3-*-x64*.gz
-
-    - uses: actions/upload-artifact@v3
-      with:
-        name: Rebol-32bit-linux
-        path: ./tree/rebol/Rebol/build/rebol3-*-x86*.gz
-
-    - uses: actions/upload-artifact@v3
-      with:
-        name: Rebol-armv6
-        path: ./tree/rebol/Rebol/build/rebol3-*-armv6.gz
-
-    - uses: actions/upload-artifact@v3
-      with:
-        name: Rebol-armv7
-        path: ./tree/rebol/Rebol/build/rebol3-*-armv7.gz
-
-    - uses: actions/upload-artifact@v3
-      with:
-        name: Rebol-arm64
-        path: ./tree/rebol/Rebol/build/rebol3-*-arm64.gz
+        name: Rebol-${{github.run_id}}
+        path: ./tree/rebol/Rebol/build/rebol3-*.gz
 
   macos:
     runs-on: macos-12
@@ -283,10 +263,6 @@ jobs:
 
       - uses: actions/upload-artifact@v3
         with:
-          name: Rebol-64bit-macos-intel
-          path: ./tree/rebol/Rebol/build/*-x64.gz
-      - uses: actions/upload-artifact@v3
-        with:
-          name: Rebol-64bit-macos-arm
-          path: ./tree/rebol/Rebol/build/*-arm64.gz
+          name: Rebol-${{github.run_id}}
+          path: ./tree/rebol/Rebol/build/*.gz
 
