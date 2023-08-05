@@ -123,7 +123,9 @@ jobs:
       run: ./rebol3 siskin.r3 rebol %rebol3-bulk-linux-x64
 
     - name: Setup arm cross-compilers 
-      run: sudo apt-get install gcc-arm-linux-gnueabi gcc-arm-linux-gnueabihf gcc-aarch64-linux-gnu
+      run: |
+        sudo apt-get update
+        sudo apt-get install gcc-arm-linux-gnueabi gcc-arm-linux-gnueabihf gcc-aarch64-linux-gnu
 
     - name: Build Rebol/Base for armv6 (gnueabi)
       run: ./rebol3 siskin.r3 rebol %rebol3-base-linux-gnueabi
