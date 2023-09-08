@@ -24,6 +24,8 @@ make-siskin: [
 	:include-prot-https
 	:common
 	:common-host
+
+	config: INCLUDE_SHA384
 	
 	mezz-lib-files: [
 		%../../Siskin/prebol.reb
