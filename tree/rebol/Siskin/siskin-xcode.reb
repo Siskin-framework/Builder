@@ -492,7 +492,7 @@ make-project: func[
 
 	foreach lib any [spec/libraries []] [
 		append OTHER_LDFLAGS rejoin [
-			{^-^-^-^-^-"-l} lib {",^/}
+			{^-^-^-^-^-"-} either dir? lib [#"L"][#"l"] lib {",^/}
 		]
 	]
 
