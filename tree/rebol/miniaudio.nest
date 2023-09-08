@@ -2,5 +2,5 @@
 ;-   /'v'\   SISKIN-Builder project file                                        
 ;-  (/uOu\)  https://github.com/Siskin-framework/Builder/                       
 ;-===="="=======================================================================
-github: @Rebol-MiniAudio
+github: Oldes/Rebol-MiniAudio
 nest:   %Rebol-MiniAudio/Rebol-MiniAudio.nest
