@@ -4,11 +4,11 @@ freebsd_instance:
 task:
   env:
     CIRRUS_CLONE_DEPTH: 1
+    IGNORE_OSVERSION: yes
 
   install_script:
     - date
     - uname -a
-    - sudo pkg update -f
     - sudo pkg install git
     - curl -L -S https://github.com/Oldes/Rebol3/releases/download/3.14.0/rebol3-bulk-freebsd-x64.gz --output rebol3-bulk-freebsd-x64.gz
     - gunzip ./rebol3-bulk-freebsd-x64.gz
