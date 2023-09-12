@@ -20,8 +20,9 @@ task:
     - name: Siskin FreeBSD x64
       script:
         - ./rebol siskin.r3 rebol/siskin siskin-freebsd-x86_64
-        - ./build/siskin-freebsd-x86_64 -v
-        - gzip -9 ./build/siskin-freebsd-x86_64
+        - mv ./tree/rebol/Siskin/build/siskin-freebsd-x86_64 ./
+        - ./siskin-freebsd-x86_64 -v
+        - gzip -9 ./siskin-freebsd-x86_64
 
   binaries_artifacts:
-   path: "build/*"
+   path: "*.gz"
