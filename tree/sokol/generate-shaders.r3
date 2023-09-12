@@ -20,11 +20,11 @@ switch system/platform [
 make-dir/deep join %tmp/ slang
 
 foreach file read dir: %sokol-samples/sapp/ [
-	attempt [
+	try/with [
 		if %.glsl = suffix? file [
 			out: rejoin [%tmp/ slang #"/" file %.h] 
 			cmd: rejoin [
-				shdc-tool
+				to-local-file shdc-tool
 				{ --input }  to-local-file dir/:file
 				{ --output } to-local-file out
 				{ --slang "} slang {"}
@@ -34,7 +34,7 @@ foreach file read dir: %sokol-samples/sapp/ [
 			print cmd
 			call/wait/console/shell cmd
 		]
-	]
+	] :print
 ]
 
 ;wait 4

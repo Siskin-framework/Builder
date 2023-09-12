@@ -480,6 +480,11 @@ eggs: [
 		name: %sapp-debugtext-context
 		file: %sokol-samples/sapp/debugtext-context-sapp.c
 	]
+	"SAPP Debugtext-layers - Demonstrates layered rendering" [
+		:common-sapp
+		name: %sapp-debugtext-layers
+		file: %sokol-samples/sapp/debugtext-layers-sapp.c
+	]
 	"SAPP Debugtext-printf - Simple text rendering with sokol_debugtext.h, formatting, tabs, etc..." [
 		:common-sapp
 		name: %sapp-debugtext-printf
@@ -489,6 +494,11 @@ eggs: [
 		:common-sapp
 		name: %sapp-debugtext
 		file: %sokol-samples/sapp/debugtext-sapp.c
+	]
+	"SAPP Debugtext-userfont - render with user-provided font data (Atari 400 ROM extract)" [
+		:common-sapp
+		name: %sapp-debugtext-userfont
+		file: %sokol-samples/sapp/debugtext-userfont-sapp.c
 	]
 	"SAPP Droptest - Test drag'n'drop file loading." [
 		:common-sapp
@@ -515,18 +525,24 @@ eggs: [
 		file: %sokol-samples/sapp/fontstash-sapp.c
 		file: %sokol-samples/libs/util/fileutil.c
 	]
+	"SAPP Fontstash layers" [
+		:common-sapp
+		name: %sapp-fontstash-layers
+		file: %sokol-samples/sapp/fontstash-layers-sapp.c
+		file: %sokol-samples/libs/util/fileutil.c
+	]
 	"SAPP Icon" [
 		:common-sapp
 		name: %sapp-icon
 		file: %sokol-samples/sapp/icon-sapp.c
 	]
-;	"SAPP imGui dock" [
-;		:common-sapp
-;		:common-imgui
-;		name: %sapp-imgui-dock
-;		file: %sokol-samples/sapp/imgui-dock-sapp.cc
-;		file: %imgui/imgui_demo.cpp
-;	]
+	"SAPP imGui dock" [
+		:common-sapp
+		:common-imgui
+		name: %sapp-imgui-dock
+		file: %sokol-samples/sapp/imgui-dock-sapp.cc
+		file: %imgui/imgui_demo.cpp
+	]
 	"SAPP imGui hiDPI" [
 		:common-sapp
 		:common-imgui
