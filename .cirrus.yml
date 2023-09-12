@@ -8,6 +8,8 @@ task:
   install_script:
     - date
     - uname -a
+    - sudo pkg update -f
+    - sudo pkg install git
     - curl -L -S https://github.com/Oldes/Rebol3/releases/download/3.14.0/rebol3-bulk-freebsd-x64.gz --output rebol3-bulk-freebsd-x64.gz
     - gunzip ./rebol3-bulk-freebsd-x64.gz
     - mv ./rebol3-bulk-freebsd-x64 ./rebol
