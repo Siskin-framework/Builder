@@ -170,4 +170,11 @@ eggs: only [
 			:make-siskin-x64
 		]
 	]
+	#if Turris? [
+		"Siskin armv7" [
+			name:     %siskin-turris-armv7
+			:target-turris
+			:make-siskin-armv7
+		]
+	]
 ]
