@@ -17,6 +17,14 @@ optimize: 2
 	libraries: [%dl %m %pthread]
 ]
 
+#if macOS? [
+	sign: on
+	entitlements: %miniaudio/Entitlements.plist
+	define: DISABLE_MANUAL_TARGET_ORDER_BUILD_WARNING
+	define: MA_NO_RUNTIME_LINKING
+	frameworks: [CoreFoundation CoreAudio AudioToolbox]
+]
+
 eggs: [
 	"Example: custom_backend.c" [
 		name: %custom_backend
