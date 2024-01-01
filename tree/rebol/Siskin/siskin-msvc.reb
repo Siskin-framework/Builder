@@ -236,6 +236,7 @@ make-project: func[
 	ver: vswhere
 	MSVC-PATH: any [
 		all [object? first ver select ver/1 'installationPath]
+		"c:\Program Files\Microsoft Visual Studio\2022\Community"
 		"c:\Program Files (x86)\Microsoft Visual Studio\2017\Community"
 	]
 
