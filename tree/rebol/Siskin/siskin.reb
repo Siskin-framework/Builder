@@ -2,7 +2,7 @@ Rebol [
 	Title:  "Siskin Builder - core"
 	Type:    module
 	Name:    siskin
-	Version: 0.13.1
+	Version: 0.13.2
 	Author: "Oldes"
 	
 	exports: [
@@ -21,7 +21,7 @@ Rebol [
 banner: next rejoin [{
 ^[[0;33m═╗
 ^[[0;33m ║^[[1;31m    .-.
-^[[0;33m ║^[[1;31m   /'v'\   ^[[0;33mSISKIN-Framework Builder 0.13.1 Rebol } rebol/version {
+^[[0;33m ║^[[1;31m   /'v'\   ^[[0;33mSISKIN-Framework Builder 0.13.2 Rebol } rebol/version {
 ^[[0;33m ║^[[1;31m  (/^[[0;31muOu^[[1;31m\)  ^[[0;33mhttps://github.com/Siskin-framework/Builder/
 ^[[0;33m ╚════^[[1;31m"^[[0;33m═^[[1;31m"^[[0;33m═══════════════════════════════════════════════════════════════════════^[[m}]
 
@@ -894,6 +894,10 @@ do-nest: closure/with/extern [
 			git-update?: false
 			if any [none? args all [block? args empty? args not CI?]][
 				;-- Interactive mode -------------------------
+				if empty? nest-spec/eggs [
+					sys/log/error 'SISKIN "No eggs in this nest!"
+					quit
+				] 
 				unless none? args [print-eggs]
 				args: ask as-green "^/Egg command: "
 				unless args [ quit ] ; CTRL+C
