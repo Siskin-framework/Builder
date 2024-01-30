@@ -125,7 +125,7 @@ jobs:
     - name: Setup arm cross-compilers 
       run: |
         sudo apt-get update
-        sudo apt-get install gcc-arm-linux-gnueabi gcc-arm-linux-gnueabihf gcc-aarch64-linux-gnu
+        sudo apt-get install gcc-arm-linux-gnueabi gcc-arm-linux-gnueabihf gcc-aarch64-linux-gnu gcc-riscv64-linux-gnu
 
     - name: Build Rebol/Base for armv6 (gnueabi)
       run: ./rebol3 siskin.r3 rebol %rebol3-base-linux-gnueabi
@@ -147,6 +147,13 @@ jobs:
       run: ./rebol3 siskin.r3 rebol %rebol3-core-linux-aarch64
     - name: Build Rebol/Bulk for arm64 (aarch64)
       run: ./rebol3 siskin.r3 rebol %rebol3-bulk-linux-aarch64
+
+    - name: Build Rebol/Base for riscv64
+      run: ./rebol3 siskin.r3 rebol %rebol3-base-linux-riscv64
+    - name: Build Rebol/Core for riscv64
+      run: ./rebol3 siskin.r3 rebol %rebol3-core-linux-riscv64
+    - name: Build Rebol/Bulk for riscv64
+      run: ./rebol3 siskin.r3 rebol %rebol3-bulk-linux-riscv64
 
     - name: Rename ARM cross-compilation target results
       run: |
@@ -177,6 +184,9 @@ jobs:
         gzip -9 ./tree/rebol/Rebol/build/rebol3-base-linux-arm64
         gzip -9 ./tree/rebol/Rebol/build/rebol3-core-linux-arm64
         gzip -9 ./tree/rebol/Rebol/build/rebol3-bulk-linux-arm64
+        gzip -9 ./tree/rebol/Rebol/build/rebol3-base-linux-riscv64
+        gzip -9 ./tree/rebol/Rebol/build/rebol3-core-linux-riscv64
+        gzip -9 ./tree/rebol/Rebol/build/rebol3-bulk-linux-riscv64
 
     - uses: actions/upload-artifact@v3
       with:
