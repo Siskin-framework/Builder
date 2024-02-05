@@ -1,0 +1,26 @@
+;-    .-.                                                                       
+;-   /'v'\   SISKIN-Builder project file                                        
+;-  (/uOu\)  https://github.com/Siskin-framework/Builder/                       
+;-===="="=======================================================================
+
+github:   %Cyan4973/xxHash
+source:   %xxHash/
+compiler: gcc
+arch:     x64
+strip:    on
+#if Windows? [upx: on]
+#if macOS?   [compiler: clang]
+
+files: %xxhash.c
+
+eggs: [
+	"xxhsum" [
+		name: %xxhsum
+		file: %cli/xxhsum.c
+		file: %cli/xsum_os_specific.c
+		file: %cli/xsum_sanity_check.c
+		file: %cli/xsum_os_specific.c
+		file: %cli/xsum_output.c
+		file: %cli/xsum_bench.c
+	]
+]
