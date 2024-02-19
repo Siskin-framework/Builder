@@ -1,20 +1,20 @@
 101 ICON "siskin.ico"
 
 1 VERSIONINFO
-FILEVERSION     0,10,3,0
-PRODUCTVERSION  0,10,3,0
+FILEVERSION     0,16,0,0
+PRODUCTVERSION  0,16,0,0
 BEGIN
   BLOCK "StringFileInfo"
   BEGIN
     BLOCK "040904E4"
     BEGIN
       VALUE "FileDescription", "Siskin Builder"
-      VALUE "FileVersion", "0.10"
+      VALUE "FileVersion", "0.16"
       VALUE "InternalName", "Siskin Builder"
       VALUE "LegalCopyright", "2021 Oldes"
       VALUE "OriginalFilename", "Siskin.exe"
       VALUE "ProductName", "Siskin"
-      VALUE "ProductVersion", "0.10"
+      VALUE "ProductVersion", "0.16"
     END
   END
   BLOCK "VarFileInfo"
