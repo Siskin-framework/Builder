@@ -185,7 +185,7 @@ nest-context: object [
 	defaults: context [
 		output:  %build/
 		temp:    %tmp/
-		debug?:  #[false]
+		debug?:  false
 		verbose: 1
 	]
 
@@ -747,7 +747,7 @@ parse-nest: closure/with [
 		)
 		|
 		'do [
-			set val: file! set args [string! | block! | #[none]] (
+			set val: file! set args [string! | block! | none!] (
 				add-pre-build dest ['do val args]
 			)
 			|
@@ -756,7 +756,7 @@ parse-nest: closure/with [
 			)
 		]
 		|
-		'preprocess set val: file! set args: [file! | none! | #[none]] (
+		'preprocess set val: file! set args: [file! | none! ] (
 			add-pre-build dest ['preprocess val args]
 		)
 		|
@@ -1897,12 +1897,12 @@ eval-code: function/with [
 			popd
 		)
 		|
-		'cmake set arg1 file! set arg2 [string! | #[none]] (
+		'cmake set arg1 file! set arg2 [string! | none!] (
 			eval-cmd/v ['cmake arg1 arg2]
 		)
 		|
 		'do [
-			set arg1 file! set arg2 [block! | string! | none! | #[none]] (
+			set arg1 file! set arg2 [block! | string! | none!] (
 				case [
 					string? arg2 [ expand-env arg2 ]
 					block?  arg2 [ forall arg2 [if string? arg2/1 [ expand-env arg2/1]] ]
@@ -1918,7 +1918,7 @@ eval-code: function/with [
 			)
 		]
 		|
-		'preprocess set arg1 file! set arg2 [file! | none! | #[none]] (
+		'preprocess set arg1 file! set arg2 [file! | none!] (
 			arg2: any [arg2 spec/name spec/target arg1]
 			unless abs-path? arg2 [
 				arg2: clean-path rejoin [spec/output arg2]

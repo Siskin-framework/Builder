@@ -26,7 +26,7 @@ CLEAN:
 ; -----------
 none
 
-valid-archs: #(
+valid-archs: make map! [
 	x86:    i386 
 	i386:   i386
 	x64:    x86_64
@@ -34,7 +34,7 @@ valid-archs: #(
 	arm64:  arm64
 	arm64e: arm64e ;used on the A12 chipset - on Mac M1's and iPhones models (XS/XS Max/XR)
 	armv8:  arm64e
-)
+]
 
 write-file: func[file [file! block!] data][
 	if block? file [file: rejoin file]

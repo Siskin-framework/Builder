@@ -47,7 +47,7 @@ none
 TAB2: "^-^-"
 TAB4: "^-^-^-^-"
 
-valid-archs: #(
+valid-archs: make map! [
 	x86:    i386 
 	i386:   i386
 	x64:    x86_64
@@ -55,7 +55,7 @@ valid-archs: #(
 	arm64:  arm64
 	arm64e: arm64e ;used on the A12 chipset - on Mac M1's and iPhones models (XS/XS Max/XR)
 	armv8:  arm64e
-)
+]
 
 make-uuid: function[type [any-string!] name [any-string!]][
 	uuid: make binary! 12
@@ -273,7 +273,7 @@ make-project: func[
 
 	filters: copy [] ; used later
 	items:   copy []
-	dirs: #()
+	dirs: make map! 10
 	foreach file join spec/files spec/assembly [
 		;file: siskin/get-file-with-extensions file [%.c %.cpp %.cc %.m %.S %.s %.sx]
 		rel-file: get-relative-path file dir-out
@@ -937,7 +937,7 @@ project.pbxproj: {// !$*UTF8*$!
 }
 
 ;- SOURCE: https://github.com/tuist/XcodeProj/blob/f54ce91a2df8ce0d565db72d21faa5de3e151cec/Sources/XcodeProj/Project/Xcode.swift#L70-L337
-filetypes: #(
+filetypes: make map! [
 	%.1 "text.man"
 	%.C "sourcecode.cpp.cpp"
 	%.H "sourcecode.cpp.h"
@@ -1193,4 +1193,4 @@ filetypes: #(
 	%.ypp "sourcecode.yacc"
 	%.yxx "sourcecode.yacc"
 	%.zip "archive.zip"
-)
+]
