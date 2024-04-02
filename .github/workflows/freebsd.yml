@@ -33,8 +33,7 @@ jobs:
           ./siskin rebol %rebol3-bulk-freebsd-x64
 
           mv ./tree/rebol/Rebol/build/rebol3-bulk-freebsd-x64 ./rebol3-bulk-freebsd-x64
-          ./siskin rebol/siskin --list
-          ./rebol3-bulk-freebsd-x64 siskin.r3 rebol/siskin --list
+          ./rebol3-bulk-freebsd-x64 siskin.r3 rebol/siskin 2
 
     - name: Prepare build results
       run:  |
