@@ -27,3 +27,9 @@ jobs:
           whoami
           env
           freebsd-version
+          curl -L -S https://github.com/Siskin-framework/Builder/releases/download/0.13.0/siskin-freebsd-x86_64.gz --output siskin.gz
+          gunzip ./siskin.gz
+          chmod u+x ./siskin
+          ./siskin --version
+          ./siskin rebol %rebol3-bulk-freebsd-x64
+          ./siskin siskin %siskin-freebsd-x86_64
