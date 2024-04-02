@@ -30,23 +30,17 @@ jobs:
           curl -L -S https://github.com/Siskin-framework/Builder/releases/download/0.13.0/siskin-freebsd-x86_64.gz --output siskin.gz
           gunzip ./siskin.gz
           chmod u+x ./siskin
-          ./siskin --version
           ./siskin rebol %rebol3-bulk-freebsd-x64
+
           mv ./tree/rebol/Rebol/build/rebol3-bulk-freebsd-x64 ./rebol3-bulk-freebsd-x64
+          ./siskin rebol/siskin --list
           ./rebol3-bulk-freebsd-x64 siskin.r3 rebol/siskin --list
 
     - name: Prepare build results
       run:  |
-#       mv ./tree/rebol/Rebol/build/rebol3-bulk-freebsd-x64 ./rebol3-bulk-freebsd-x64
-#       mv ./tree/rebol/Siskin/build/siskin-freebsd-x86_64 ./siskin-freebsd-x86_64
         gzip -9 ./rebol3-bulk-freebsd-x64
-#       gzip -9 ./siskin-freebsd-x86_64
 
     - uses: actions/upload-artifact@v3
       with:
         name: Rebol-FreeBSD-${{github.run_id}}
         path: ./rebol3*.gz
-#   - uses: actions/upload-artifact@v3
-#     with:
-#       name: Siskin-FreeBSD-${{github.run_id}}
-#       path: ./siskin*.gz
