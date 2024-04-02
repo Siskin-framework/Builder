@@ -32,7 +32,7 @@ jobs:
           chmod u+x ./siskin
           ./siskin --version
           ./siskin rebol %rebol3-bulk-freebsd-x64
-          ./siskin siskin %siskin-freebsd-x86_64
+          ./siskin rebol/siskin %siskin-freebsd-x86_64
 
     - name: Prepare build results
       run:  |
