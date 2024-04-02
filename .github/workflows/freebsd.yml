@@ -33,3 +33,19 @@ jobs:
           ./siskin --version
           ./siskin rebol %rebol3-bulk-freebsd-x64
           ./siskin siskin %siskin-freebsd-x86_64
+
+    - name: Prepare build results
+      run:  |
+        mv ./tree/rebol/Rebol/build/rebol3-bulk-freebsd-x64 ./rebol3-bulk-freebsd-x64
+        mv ./tree/rebol/Siskin/build/siskin-freebsd-x86_64 ./siskin-freebsd-x86_64
+        gzip -9 ./rebol3-bulk-freebsd-x64
+        gzip -9 ./siskin-freebsd-x86_64
+
+    - uses: actions/upload-artifact@v3
+      with:
+        name: Rebol-FreeBSD-${{github.run_id}}
+        path: ./rebol3*.gz
+    - uses: actions/upload-artifact@v3
+      with:
+        name: Siskin-FreeBSD-${{github.run_id}}
+        path: ./siskin*.gz
