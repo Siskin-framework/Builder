@@ -28,6 +28,8 @@ jobs:
           make -f rebol-linux-bootstrap-64bit.mk
           cd ../..
           mv ./Rebol/make/rebol-linux-bootstrap-64bit ./rebol
+          ./rebol -v
+          echo "Rebol [] unprotect 'system/platform system/platform: 'openbsd" > ~/user.reb
           ./rebol rebol %rebol3-bulk-openbsd-x64
 #          curl -L -S https://github.com/Siskin-framework/Builder/releases/download/0.7.2/Siskin-x64-openbsd.gz --output siskin.gz
 #          gunzip ./siskin.gz
