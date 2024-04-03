@@ -22,8 +22,6 @@ jobs:
           pkg_add curl git gcc-11.2.0p9
 
         run: |
-#          ls -la /usr/bin
-#          ls -la /usr/local/bin
           ln -s /usr/local/bin/egcc /usr/local/bin/gcc
           echo "Rebol [] unprotect 'system/platform system/platform: 'openbsd" > ~/user.reb
           cd ..
@@ -40,10 +38,10 @@ jobs:
 #          chmod u+x ./siskin
 #          ln -s /usr/lib/libc.so.97.1 /usr/lib/libc.so.96.1
 #          ./siskin rebol %rebol3-bulk-openbsd-x64
-          mv ./tree/rebol/Rebol/build/rebol3-bulk-openbsd-x64 ./rebol3-bulk-openbsd-x64
+#          mv ./tree/rebol/Rebol/build/rebol3-bulk-openbsd-x64 ./rebol3-bulk-openbsd-x64
 #          ./rebol3-bulk-openbsd-x64 siskin.r3 rebol/siskin 2
 #          mv ./tree/rebol/Siskin/build/siskin-openbsd-x86_64 ./siskin-openbsd-x86_64
-
+#
     - name: Prepare build results
       run:  |
         gzip -9 ./rebol3-bulk-openbsd-x64
