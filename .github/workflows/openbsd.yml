@@ -24,12 +24,9 @@ jobs:
         run: |
           echo "Rebol [] unprotect 'system/platform system/platform: 'openbsd" > ~/user.reb
           cd ..
-          ls -lah ./
-          ls -lah ~/
-          git clone https://github.com/Siskin-framework/Rebol.git --depth 1 --quiet
-          cd ./Rebol
-          git checkout bootstrap
-          cd ./make/
+          git clone -b bootstrap https://github.com/Siskin-framework/Rebol.git --depth 1
+          ls -la ./
+          cd ./Rebol/make/
           make -f rebol-linux-bootstrap-64bit.mk
           ls -la .
           mv ./rebol-linux-bootstrap-64bit ../../Builder/rebol
