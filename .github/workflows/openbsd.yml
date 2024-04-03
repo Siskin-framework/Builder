@@ -26,32 +26,23 @@ jobs:
           ls -la /usr/local/lib
           curl -L -S https://github.com/Siskin-framework/Builder/releases/download/0.7.2/Siskin-x64-openbsd.gz --output siskin.gz
           gunzip ./siskin.gz
-          ldd ./siskin
           chmod u+x ./siskin
           ln -s /usr/lib/libc.so.97.1 /usr/lib/libc.so.96.1
-          ./siskin --version
-#          pwd
-#          ls -lah
-#          whoami
-#          env
-#          curl -L -S https://github.com/Siskin-framework/Builder/releases/download/0.7.2/Siskin-x64-openbsd.gz --output siskin.gz
-#          gunzip ./siskin.gz
-#          chmod u+x ./siskin
-#          ./siskin rebol %rebol3-bulk-openbsd-x64
-#          mv ./tree/rebol/Rebol/build/rebol3-bulk-openbsd-x64 ./rebol3-bulk-openbsd-x64
-#          ./rebol3-bulk-openbsd-x64 siskin.r3 rebol/siskin 2
-#          mv ./tree/rebol/Siskin/build/siskin-openbsd-x86_64 ./siskin-openbsd-x86_64
-#
-#    - name: Prepare build results
-#      run:  |
-#        gzip -9 ./rebol3-bulk-openbsd-x64
-#        gzip -9 ./siskin-openbsd-x86_64
-#
-#    - uses: actions/upload-artifact@v3
-#      with:
-#        name: Rebol-OpenBSD-${{github.run_id}}
-#        path: ./rebol3*.gz
-#    - uses: actions/upload-artifact@v3
-#      with:
-#        name: Siskin-OpenBSD-${{github.run_id}}
-#        path: ./siskin*.gz
+          ./siskin rebol %rebol3-bulk-openbsd-x64
+          mv ./tree/rebol/Rebol/build/rebol3-bulk-openbsd-x64 ./rebol3-bulk-openbsd-x64
+          ./rebol3-bulk-openbsd-x64 siskin.r3 rebol/siskin 2
+          mv ./tree/rebol/Siskin/build/siskin-openbsd-x86_64 ./siskin-openbsd-x86_64
+
+    - name: Prepare build results
+      run:  |
+        gzip -9 ./rebol3-bulk-openbsd-x64
+        gzip -9 ./siskin-openbsd-x86_64
+
+    - uses: actions/upload-artifact@v3
+      with:
+        name: Rebol-OpenBSD-${{github.run_id}}
+        path: ./rebol3*.gz
+    - uses: actions/upload-artifact@v3
+      with:
+        name: Siskin-OpenBSD-${{github.run_id}}
+        path: ./siskin*.gz
