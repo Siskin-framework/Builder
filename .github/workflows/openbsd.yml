@@ -22,15 +22,16 @@ jobs:
           pkg_add curl git
 
         run: |
+          echo "Rebol [] unprotect 'system/platform system/platform: 'openbsd" > ~/user.reb
+          cd ..
+          ls -lah
           git clone https://github.com/Siskin-framework/Rebol.git --depth 1 --quiet
           git checkout bootstrap
           cd ./Rebol/make/
           make -f rebol-linux-bootstrap-64bit.mk
-          cd ../..
-          mv ./Rebol/make/rebol-linux-bootstrap-64bit ./rebol
-          ./rebol -v
-          echo "Rebol [] unprotect 'system/platform system/platform: 'openbsd" > ~/user.reb
-          ls -lah
+          ls -la
+          mv ./rebol-linux-bootstrap-64bit ../../Builder/rebol
+          cd ../../Builder
           ./rebol siskin.r3 rebol %rebol3-bulk-openbsd-x64
 #          curl -L -S https://github.com/Siskin-framework/Builder/releases/download/0.7.2/Siskin-x64-openbsd.gz --output siskin.gz
 #          gunzip ./siskin.gz
