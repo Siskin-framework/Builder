@@ -27,6 +27,9 @@ jobs:
           curl -L -S https://github.com/Siskin-framework/Builder/releases/download/0.7.2/Siskin-x64-openbsd.gz --output siskin.gz
           gunzip ./siskin.gz
           ldd ./siskin
+          chmod u+x ./siskin
+          ln -s /usr/lib/libc.so.97.1 /usr/lib/libc.so.96.1
+          ./siskin --version
 #          pwd
 #          ls -lah
 #          whoami
