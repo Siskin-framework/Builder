@@ -314,8 +314,7 @@ make-project: func[
 	write-file file output
 
 	siskin/print-info ajoin [{Make project generated: } as-yellow mold file]
-
-	probe file
+	file
 ]
 
 makefile: next {

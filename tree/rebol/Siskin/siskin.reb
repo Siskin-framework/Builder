@@ -16,6 +16,7 @@ Rebol [
 		posix?
 		haiku?
 		turris?
+		bsd?
 	]
 ]
 ;? system
