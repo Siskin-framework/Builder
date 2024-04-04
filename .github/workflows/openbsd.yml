@@ -22,8 +22,8 @@ jobs:
           pkg_add curl git iconv libiconv
 
         run: |
-          pkg info -l libiconv
-          pkg info -l iconv
+          pkg_info -L libiconv
+          pkg_info -L iconv
           ln -s /usr/local/include/iconv.h /usr/include/iconv.h
           ln -s /usr/bin/clang /usr/local/bin/gcc
           ls -la /usr/local/bin/
@@ -36,9 +36,9 @@ jobs:
           git clone -b bootstrap https://github.com/Siskin-framework/Rebol.git --depth 1
           ls -la ./
           cd ./Rebol/make/
-          make -f rebol-linux-bootstrap-64bit.mk
+          make -f rebol-bsd-bootstrap-64bit.mk
           ls -la .
-          mv ./rebol-linux-bootstrap-64bit ../../Builder/rebol
+          mv ./rebol-bsd-bootstrap-64bit ../../Builder/rebol
           cd ../../Builder
           ./rebol siskin.r3 rebol %rebol3-bulk-openbsd-x64
 #          curl -L -S https://github.com/Siskin-framework/Builder/releases/download/0.7.2/Siskin-x64-openbsd.gz --output siskin.gz
