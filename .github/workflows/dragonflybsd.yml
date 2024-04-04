@@ -22,15 +22,13 @@ jobs:
           pkg install -y llvm16 libnghttp2 git libiconv
 
         run: |
-          pkg info libiconv
+          tree /
           echo "Rebol [] unprotect 'system/platform system/platform: 'DragonFlyBSD" > ~/user.reb
           cat ~/user.reb
           cd ..
           git clone -b bootstrap https://github.com/Siskin-framework/Rebol.git --depth 1
-          ls -la ./
           cd ./Rebol/make/
           make -f rebol-bsd-bootstrap-64bit.mk
-          ls -la .
           mv ./rebol-bsd-bootstrap-64bit ../../Builder/r3
           cd ../../Builder
           ./r3 siskin.r3 rebol rebol3-bulk-dragonflybsd-x64
