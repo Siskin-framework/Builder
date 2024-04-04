@@ -19,9 +19,11 @@ jobs:
         envs: 'MYTOKEN2'
         usesh: true
         prepare: |
-          pkg_add curl git
+          pkg_add curl git libiconv
 
         run: |
+          pkg info -l libiconv
+          ln -s /usr/local/include/iconv.h /usr/include/iconv.h
           ln -s /usr/local/bin/clang /usr/local/bin/gcc
           echo "Rebol [] unprotect 'system/platform system/platform: 'openbsd" > ~/user.reb
           cd ..
