@@ -19,10 +19,10 @@ jobs:
         envs: 'MYTOKEN2'
         usesh: true
         prepare: |
-          pkg_add curl git gcc-11.2.0p9
+          pkg_add curl git
 
         run: |
-          ln -s /usr/local/bin/egcc /usr/local/bin/gcc
+          ln -s /usr/local/bin/clang /usr/local/bin/gcc
           echo "Rebol [] unprotect 'system/platform system/platform: 'openbsd" > ~/user.reb
           cd ..
           git clone -b bootstrap https://github.com/Siskin-framework/Rebol.git --depth 1
