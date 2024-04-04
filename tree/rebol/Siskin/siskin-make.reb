@@ -313,7 +313,7 @@ make-project: func[
 	reword/escape/into makefile self [#"<" #">"] output
 	write-file file output
 
-	siskin/print-info {^[[1;Make project generated.^[[m}
+	siskin/print-info ajoin [{Make project generated: } as-yellow mold file]
 
 	probe file
 ]
