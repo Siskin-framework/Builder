@@ -19,10 +19,10 @@ jobs:
         envs: 'MYTOKEN2'
         usesh: true
         prepare: |
-          pkg_add curl git iconv libiconv
+          pkg install -y  git libiconv
 
         run: |
-          pkg_info -L libiconv
+          pkg info -L libiconv
           echo "Rebol [] unprotect 'system/platform system/platform: 'DragonFlyBSD" > ~/user.reb
           cat ~/user.reb
           cd ..
