@@ -19,12 +19,18 @@ jobs:
         envs: 'MYTOKEN2'
         usesh: true
         prepare: |
-          pkg_add curl git libiconv
+          pkg_add curl git iconv libiconv
 
         run: |
           pkg info -l libiconv
+          pkg info -l iconv
           ln -s /usr/local/include/iconv.h /usr/include/iconv.h
-          ln -s /usr/local/bin/clang /usr/local/bin/gcc
+          ln -s /usr/bin/clang /usr/local/bin/gcc
+          ls -la /usr/local/bin/
+          ls -la /usr/bin/
+          ls -la /usr/local/include/
+          la -ls /usr/include/
+
           echo "Rebol [] unprotect 'system/platform system/platform: 'openbsd" > ~/user.reb
           cd ..
           git clone -b bootstrap https://github.com/Siskin-framework/Rebol.git --depth 1
