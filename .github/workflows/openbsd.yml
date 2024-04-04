@@ -31,10 +31,10 @@ jobs:
           cd ./Rebol/make/
           make -f rebol-bsd-bootstrap-64bit.mk
           ls -la .
-          mv ./rebol-bsd-bootstrap-64bit ../../Builder/rebol
+          mv ./rebol-bsd-bootstrap-64bit ../../Builder/r3
           cd ../../Builder
-          ./rebol siskin.r3 rebol --list
-          ./rebol siskin.r3 rebol rebol3-bulk-openbsd-x64
+          ./r3 siskin.r3 rebol --list
+          ./r3 siskin.r3 rebol rebol3-bulk-openbsd-x64
 #          curl -L -S https://github.com/Siskin-framework/Builder/releases/download/0.7.2/Siskin-x64-openbsd.gz --output siskin.gz
 #          gunzip ./siskin.gz
 #          chmod u+x ./siskin
