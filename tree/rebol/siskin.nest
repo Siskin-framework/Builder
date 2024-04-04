@@ -16,6 +16,7 @@ make-siskin: [
 	#if Posix?   [upx: off]
 	#if macOS?   [compiler: clang]
 	#if FreeBSD? [compiler: clang]
+	#if OpenBSD? [compiler: clang]
 	
 	output:   %../Siskin/build/
 
