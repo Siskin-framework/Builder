@@ -23,15 +23,8 @@ jobs:
 
         run: |
           pkg_info -L libiconv
-          pkg_info -L iconv
-          ln -s /usr/local/include/iconv.h /usr/include/iconv.h
-          ln -s /usr/bin/clang /usr/local/bin/gcc
-          ls -la /usr/local/bin/
-          ls -la /usr/bin/
-          ls -la /usr/local/include/
-          la -ls /usr/include/
-
           echo "Rebol [] unprotect 'system/platform system/platform: 'openbsd" > ~/user.reb
+          cat ~/user.reb
           cd ..
           git clone -b bootstrap https://github.com/Siskin-framework/Rebol.git --depth 1
           ls -la ./
@@ -40,7 +33,8 @@ jobs:
           ls -la .
           mv ./rebol-bsd-bootstrap-64bit ../../Builder/rebol
           cd ../../Builder
-          ./rebol siskin.r3 rebol %rebol3-bulk-openbsd-x64
+          ./rebol siskin.r3 rebol --list
+          ./rebol siskin.r3 rebol rebol3-bulk-openbsd-x64
 #          curl -L -S https://github.com/Siskin-framework/Builder/releases/download/0.7.2/Siskin-x64-openbsd.gz --output siskin.gz
 #          gunzip ./siskin.gz
 #          chmod u+x ./siskin
