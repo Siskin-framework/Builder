@@ -14,10 +14,8 @@ make-siskin: [
 
 	#if Windows? [upx: on ]
 	#if Posix?   [upx: off]
-	#if macOS?   [compiler: clang]
-	#if FreeBSD? [compiler: clang]
-	#if OpenBSD? [compiler: clang]
-	
+	#if BSD?     [compiler: clang]
+
 	output:   %../Siskin/build/
 
 	:include-mezz-ansi
@@ -156,6 +154,20 @@ eggs: only [
 		"Siskin x86_64" [
 			name:     %siskin-freebsd-x86_64
 			:target-freebsd
+			:make-siskin-x64
+		]
+	]
+	#if NetBSD? [
+		"Siskin x86_64" [
+			name:     %siskin-netbsd-x86_64
+			:target-netbsd
+			:make-siskin-x64
+		]
+	]
+	#if DragonFlyBSD? [
+		"Siskin x86_64" [
+			name:     %siskin-dragonflybsd-x86_64
+			:target-dragonflybsd
 			:make-siskin-x64
 		]
 	]

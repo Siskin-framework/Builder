@@ -11,6 +11,7 @@ Rebol [
 		linux?
 		openbsd?
 		freebsd?
+		dragonflybsd?
 		netbsd?
 		posix?
 		haiku?
@@ -1978,9 +1979,11 @@ linux?:   does [system/platform = 'Linux]
 openbsd?: does [system/platform = 'OpenBSD]
 freebsd?: does [system/platform = 'FreeBSD]
 netbsd?:  does [system/platform = 'NetBSD]
+dragonflybsd?: does [system/platform = 'DragonFlyBSD]
 haiku?:   does [system/platform = 'Haiku]
-turris?:   does [system/platform = 'Turris]
+turris?:  does [system/platform = 'Turris]
 posix?:   does [to logic! find [linux macos openbsd freebsd netbsd macintosh haiku turris] system/platform]
+BSD?:     does [to logic! find [macos openbsd freebsd netbsd dragonflybsd] system/platform]
 
 
 print-error: func[err][ sys/log/error 'SISKIN any [err system/state/last-error] ]

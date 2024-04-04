@@ -1,0 +1,53 @@
+name: Test DragonFlyBSD Action
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    name: A job to run test in DragonFlyBSD
+    env:
+#      MYTOKEN : ${{ secrets.MYTOKEN }}
+      MYTOKEN2: "value2"
+    steps:
+    - uses: actions/checkout@v4
+    - name: Test in DragonFlyBSD
+      id: test
+      uses: vmactions/dragonflybsd-vm@v1
+      with:
+        envs: 'MYTOKEN2'
+        usesh: true
+        prepare: |
+          pkg_add curl git iconv libiconv
+
+        run: |
+          pkg_info -L libiconv
+          echo "Rebol [] unprotect 'system/platform system/platform: 'DragonFlyBSD" > ~/user.reb
+          cat ~/user.reb
+          cd ..
+          git clone -b bootstrap https://github.com/Siskin-framework/Rebol.git --depth 1
+          ls -la ./
+          cd ./Rebol/make/
+          make -f rebol-bsd-bootstrap-64bit.mk
+          ls -la .
+          mv ./rebol-bsd-bootstrap-64bit ../../Builder/r3
+          cd ../../Builder
+          ./r3 siskin.r3 rebol rebol3-bulk-dragonflybsd-x64
+          mv ./tree/rebol/Rebol/build/rebol3-bulk-dragonflybsd-x64 ./rebol3-bulk-dragonflybsd-x64
+          ./rebol3-bulk-dragonflybsd-x64 siskin.r3 rebol/siskin 2
+          mv ./tree/rebol/Siskin/build/siskin-dragonflybsd-x86_64 ./siskin-dragonflybsd-x86_64
+
+    - name: Prepare build results
+      run:  |
+        gzip -9 ./rebol3-bulk-dragonflybsd-x64
+        gzip -9 ./siskin-dragonflybsd-x86_64
+
+    - uses: actions/upload-artifact@v3
+      with:
+        name: Rebol-DragonFlyBSD-${{github.run_id}}
+        path: ./rebol3*.gz
+    - uses: actions/upload-artifact@v3
+      with:
+        name: Siskin-DragonFlyBSD-${{github.run_id}}
+        path: ./siskin*.gz
