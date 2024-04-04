@@ -21,7 +21,7 @@ jobs:
         prepare: |
           pkg update -fq
           pkg upgrade
-          pkg install -y curl git libiconv
+          pkg install -y curl libnghttp2 git libiconv
 
         run: |
           pkg info libiconv
