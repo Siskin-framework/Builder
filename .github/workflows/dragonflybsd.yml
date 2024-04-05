@@ -23,7 +23,7 @@ jobs:
 
         run: |
           pkg info llvm16
-          ln -s /usr/local/bin/clang16 /usr/local/bin/clang
+          ln -s /usr/local/bin/gcc /usr/local/bin/clang
           echo "Rebol [] unprotect 'system/platform system/platform: 'DragonFlyBSD" > ~/user.reb
           cat ~/user.reb
           cd ..
@@ -32,9 +32,9 @@ jobs:
           make -f rebol-bsd-bootstrap-64bit.mk
           mv ./rebol-bsd-bootstrap-64bit ../../Builder/r3
           cd ../../Builder
-          ./r3 siskin.r3 rebol rebol3-bulk-dragonflybsd-x64
+          ./r3 siskin.r3 rebol -d rebol3-bulk-dragonflybsd-x64
           mv ./tree/rebol/Rebol/build/rebol3-bulk-dragonflybsd-x64 ./rebol3-bulk-dragonflybsd-x64
-          ./rebol3-bulk-dragonflybsd-x64 siskin.r3 rebol/siskin 2
+          ./rebol3-bulk-dragonflybsd-x64 siskin.r3 -d rebol/siskin 2
           mv ./tree/rebol/Siskin/build/siskin-dragonflybsd-x86_64 ./siskin-dragonflybsd-x86_64
 
     - name: Prepare build results
