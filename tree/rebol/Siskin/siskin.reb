@@ -1983,7 +1983,7 @@ netbsd?:  does [system/platform = 'NetBSD]
 dragonflybsd?: does [system/platform = 'DragonFlyBSD]
 haiku?:   does [system/platform = 'Haiku]
 turris?:  does [system/platform = 'Turris]
-posix?:   does [to logic! find [linux macos openbsd freebsd netbsd macintosh haiku turris] system/platform]
+posix?:   does [to logic! find [linux macos openbsd freebsd netbsd dragonflybsd macintosh haiku turris] system/platform]
 BSD?:     does [to logic! find [macos openbsd freebsd netbsd dragonflybsd] system/platform]
 
 

@@ -22,8 +22,8 @@ jobs:
           pkg install -y llvm16 libnghttp2 git libiconv
 
         run: |
-          pkg info llvm16
-          ln -s /usr/local/bin/gcc /usr/local/bin/clang
+          ln -s /usr/local/bin/clang16 /usr/local/bin/clang
+          clang --version
           echo "Rebol [] unprotect 'system/platform system/platform: 'DragonFlyBSD" > ~/user.reb
           cat ~/user.reb
           cd ..
