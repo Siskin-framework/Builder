@@ -356,7 +356,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Build Rebol in FreeBSD
-      uses: vmactions/openbsd-vm@v1
+      uses: vmactions/freebsd-vm@v1
       with:
         usesh: true
         prepare: |
