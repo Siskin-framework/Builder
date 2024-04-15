@@ -133,6 +133,96 @@ common-emsc: [
 	strip: off
 ]
 
+common-spine: [
+	files:   [
+		%sokol-samples/libs/spine-c/src/spine/Animation.c
+		%sokol-samples/libs/spine-c/src/spine/AnimationState.c
+		%sokol-samples/libs/spine-c/src/spine/AnimationStateData.c
+		%sokol-samples/libs/spine-c/src/spine/Array.c
+		%sokol-samples/libs/spine-c/src/spine/Atlas.c
+		%sokol-samples/libs/spine-c/src/spine/AtlasAttachmentLoader.c
+		%sokol-samples/libs/spine-c/src/spine/Attachment.c
+		%sokol-samples/libs/spine-c/src/spine/AttachmentLoader.c
+		%sokol-samples/libs/spine-c/src/spine/Bone.c
+		%sokol-samples/libs/spine-c/src/spine/BoneData.c
+		%sokol-samples/libs/spine-c/src/spine/BoundingBoxAttachment.c
+		%sokol-samples/libs/spine-c/src/spine/ClippingAttachment.c
+		%sokol-samples/libs/spine-c/src/spine/Color.c
+		%sokol-samples/libs/spine-c/src/spine/Debug.c
+		%sokol-samples/libs/spine-c/src/spine/Event.c
+		%sokol-samples/libs/spine-c/src/spine/EventData.c
+		%sokol-samples/libs/spine-c/src/spine/extension.c
+		%sokol-samples/libs/spine-c/src/spine/IkConstraint.c
+		%sokol-samples/libs/spine-c/src/spine/IkConstraintData.c
+		%sokol-samples/libs/spine-c/src/spine/Json.c
+		%sokol-samples/libs/spine-c/src/spine/MeshAttachment.c
+		%sokol-samples/libs/spine-c/src/spine/PathAttachment.c
+		%sokol-samples/libs/spine-c/src/spine/PathConstraint.c
+		%sokol-samples/libs/spine-c/src/spine/PathConstraintData.c
+		%sokol-samples/libs/spine-c/src/spine/PointAttachment.c
+		%sokol-samples/libs/spine-c/src/spine/RegionAttachment.c
+		%sokol-samples/libs/spine-c/src/spine/Sequence.c
+		%sokol-samples/libs/spine-c/src/spine/Skeleton.c
+		%sokol-samples/libs/spine-c/src/spine/SkeletonBinary.c
+		%sokol-samples/libs/spine-c/src/spine/SkeletonBounds.c
+		%sokol-samples/libs/spine-c/src/spine/SkeletonClipping.c
+		%sokol-samples/libs/spine-c/src/spine/SkeletonData.c
+		%sokol-samples/libs/spine-c/src/spine/SkeletonJson.c
+		%sokol-samples/libs/spine-c/src/spine/Skin.c
+		%sokol-samples/libs/spine-c/src/spine/Slot.c
+		%sokol-samples/libs/spine-c/src/spine/SlotData.c
+		%sokol-samples/libs/spine-c/src/spine/TransformConstraint.c
+		%sokol-samples/libs/spine-c/src/spine/TransformConstraintData.c
+		%sokol-samples/libs/spine-c/src/spine/Triangulator.c
+		%sokol-samples/libs/spine-c/src/spine/VertexAttachment.c
+	]
+	include: %sokol-samples/libs/spine-c/include/
+	file: %sokol-samples/libs/stb/stb_image.c
+	file: %sokol-samples/libs/util/fileutil.c
+]
+
+common-modplug: [
+	files: [
+        %libmodplug/src/sndmix.cpp
+        %libmodplug/src/sndfile.cpp
+        %libmodplug/src/snd_fx.cpp
+        %libmodplug/src/snd_flt.cpp
+        %libmodplug/src/snd_dsp.cpp
+        %libmodplug/src/fastmix.cpp
+        %libmodplug/src/mmcmp.cpp
+        %libmodplug/src/load_xm.cpp
+        %libmodplug/src/load_wav.cpp
+        %libmodplug/src/load_umx.cpp
+        %libmodplug/src/load_ult.cpp
+        %libmodplug/src/load_stm.cpp
+        %libmodplug/src/load_s3m.cpp
+        %libmodplug/src/load_ptm.cpp
+        %libmodplug/src/load_okt.cpp
+        %libmodplug/src/load_mtm.cpp
+        %libmodplug/src/load_mod.cpp
+        %libmodplug/src/load_med.cpp
+        %libmodplug/src/load_mdl.cpp
+        %libmodplug/src/load_it.cpp
+        %libmodplug/src/load_far.cpp
+        %libmodplug/src/load_dsm.cpp
+        %libmodplug/src/load_dmf.cpp
+        %libmodplug/src/load_dbm.cpp
+        %libmodplug/src/load_ams.cpp
+        %libmodplug/src/load_amf.cpp
+        %libmodplug/src/load_669.cpp
+        %libmodplug/src/load_j2b.cpp
+        %libmodplug/src/load_mt2.cpp
+        %libmodplug/src/load_psm.cpp
+        %libmodplug/src/load_abc.cpp
+        %libmodplug/src/load_mid.cpp
+        %libmodplug/src/load_pat.cpp
+        %libmodplug/src/modplug.cpp
+	]
+	include: %libmodplug/src/
+	include: %libmodplug/src/libmodplug/
+	;define: MODPLUG_BUILD=1
+]
+
 target-arm64: [
 	arch: arm64
 	;flags: ["-arch arm64"]
@@ -465,6 +555,13 @@ eggs: [
 		name: %sapp-clear
 		file: %sokol-samples/sapp/clear-sapp.c
 	]
+	"SAPP Cubemaprt JPEG" [
+		:common-sapp
+		name: %sapp-cubemaprt-jpeg
+		file: %sokol-samples/libs/util/fileutil.c
+		file: %sokol-samples/libs/stb/stb_image.c
+		file: %sokol-samples/sapp/cubemap-jpeg-sapp.c
+	]
 	"SAPP Cubemaprt" [
 		:common-sapp
 		name: %sapp-cubemaprt
@@ -499,6 +596,12 @@ eggs: [
 		:common-sapp
 		name: %sapp-debugtext-userfont
 		file: %sokol-samples/sapp/debugtext-userfont-sapp.c
+	]
+	"SAPP DrawCall Performance" [
+		:common-sapp
+		:common-cimgui
+		name: %sapp-drawcallperf
+		file: %sokol-samples/sapp/drawcallperf-sapp.c
 	]
 	"SAPP Droptest - Test drag'n'drop file loading." [
 		:common-sapp
@@ -550,6 +653,12 @@ eggs: [
 		file: %sokol-samples/sapp/imgui-highdpi-sapp.cc
 		file: %imgui/imgui_demo.cpp
 	]
+	"SAPP imGui images - How to use sokol-gfx images and sampler with Dear ImGui" [
+		:common-sapp
+		:common-cimgui
+		name: %sapp-imgui-images
+		file: %sokol-samples/sapp/imgui-images-sapp.c
+	]
 	"SAPP imGui" [
 		:common-sapp
 		:common-imgui
@@ -557,10 +666,21 @@ eggs: [
 		file: %sokol-samples/sapp/imgui-sapp.cc
 		file: %imgui/imgui_demo.cpp
 	]
+	"SAPP imGui UserCallback" [
+		:common-sapp
+		:common-cimgui
+		name: %sapp-imgui-usercallback
+		file: %sokol-samples/sapp/imgui-usercallback-sapp.c
+	]
 	"SAPP Instancing" [
 		:common-sapp
 		name: %sapp-instancing
 		file: %sokol-samples/sapp/instancing-sapp.c
+	]
+	"SAPP LayerRender" [
+		:common-sapp
+		name: %sapp-layerrender
+		file: %sokol-samples/sapp/layerrender-sapp.c
 	]
 	"SAPP Load PNG" [
 		:common-sapp
@@ -574,10 +694,20 @@ eggs: [
 		name: %sapp-mipmap
 		file: %sokol-samples/sapp/mipmap-sapp.c
 	]
+	"SAPP MipRender" [
+		:common-sapp
+		name: %sapp-miprender
+		file: %sokol-samples/sapp/miprender-sapp.c
+	]
 	"SAPP Multi render targets" [
 		:common-sapp
 		name: %sapp-mrt
 		file: %sokol-samples/sapp/mrt-sapp.c
+	]
+	"SAPP Multi render targets pixelformats" [
+		:common-sapp
+		name: %sapp-mrt-pixelformats
+		file: %sokol-samples/sapp/mrt-pixelformats-sapp.c
 	]
 	"SAPP noentry" [
 		:common-sapp
@@ -591,10 +721,17 @@ eggs: [
 		name: %sapp-noninterleaved
 		file: %sokol-samples/sapp/noninterleaved-sapp.c
 	]
+	;nuklear-images
+	;nuklear
 	"SAPP offscreen" [
 		:common-sapp
 		name: %sapp-offscreen
 		file: %sokol-samples/sapp/offscreen-sapp.c
+	]
+	"SAPP offscreen msaa" [
+		:common-sapp
+		name: %sapp-offscreen-msaa
+		file: %sokol-samples/sapp/offscreen-msaa-sapp.c
 	]
 	"SAPP ozz-anim" [
 		:common-sapp
@@ -634,11 +771,15 @@ eggs: [
 		name: %sapp-quad
 		file: %sokol-samples/sapp/quad-sapp.c
 	]
-;	"SAPP Restart" [
-;		:common-sapp
-;		name: %sapp-restart
-;		file: %sokol-samples/sapp/restart-sapp.c
-;	]
+	"SAPP Restart" [
+		:common-sapp
+		:common-modplug
+		define: MODPLUG_STATIC
+		name: %sapp-restart
+		file: %sokol-samples/libs/util/fileutil.c
+		file: %sokol-samples/libs/stb/stb_image.c
+		file: %sokol-samples/sapp/restart-sapp.c
+	]
 	"SAPP sAudio" [
 		:common-sapp
 		name: %sapp-saudio
@@ -648,6 +789,11 @@ eggs: [
 		:common-sapp
 		name: %sapp-sdf
 		file: %sokol-samples/sapp/sdf-sapp.c
+	]
+	"SAPP sgl-context" [
+		:common-sapp
+		name: %sapp-sgl-context
+		file: %sokol-samples/sapp/sgl-context-sapp.c
 	]
 	"SAPP sgl-lines" [
 		:common-sapp
@@ -675,6 +821,11 @@ eggs: [
 		name: %sapp-shadows
 		file: %sokol-samples/sapp/shadows-sapp.c
 	]
+	"SAPP Shadows DepthTex" [
+		:common-sapp
+		name: %sapp-shadows-depthtex
+		file: %sokol-samples/sapp/shadows-depthtex-sapp.c
+	]
 	"SAPP Shapes" [
 		:common-sapp
 		name: %sapp-shapes
@@ -691,6 +842,45 @@ eggs: [
 ;		name: %sapp-shdfeatures
 ;		file: %sokol-samples/sapp/shdfeatures-sapp.c
 ;	]
+	;spine....
+	"SAPP Spine context" [
+		:common-sapp
+		:common-spine
+		name: %sapp-spine-contexts
+		file: %sokol-samples/sapp/spine-contexts-sapp.c
+	]
+	"SAPP Spine inspector" [
+		:common-sapp
+		:common-spine
+		:common-cimgui
+		name: %sapp-spine-inspector
+		file: %sokol-samples/sapp/spine-inspector-sapp.c
+	]
+	"SAPP Spine layers" [
+		:common-sapp
+		:common-spine
+		name: %sapp-spine-layers
+		file: %sokol-samples/sapp/spine-layers-sapp.c
+	]
+	"SAPP Spine simple" [
+		:common-sapp
+		:common-spine
+		name: %sapp-spine-simple
+		file: %sokol-samples/sapp/spine-simple-sapp.c
+	]
+	"SAPP Spine skinsets" [
+		:common-sapp
+		:common-spine
+		name: %sapp-spine-skinsets
+		file: %sokol-samples/sapp/spine-skinsets-sapp.c
+	]
+	"SAPP Spine switch skinsets" [
+		:common-sapp
+		:common-spine
+		name: %sapp-spine-switch-skinsets
+		file: %sokol-samples/sapp/spine-switch-skinsets-sapp.c
+	]
+
 	"SAPP tex3d" [
 		:common-sapp
 		name: %sapp-tex3d
