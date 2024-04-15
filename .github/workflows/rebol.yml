@@ -276,3 +276,109 @@ jobs:
           name: Rebol-${{github.run_id}}
           path: ./tree/rebol/Rebol/build/*.gz
 
+  DragonFlyBSD:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Build Rebol in DragonFlyBSD
+      uses: vmactions/dragonflybsd-vm@v1
+      with:
+        usesh: true
+        prepare: |
+          pkg install -y llvm16 libnghttp2 git libiconv
+        run: |
+          ln -s /usr/local/bin/clang16 /usr/local/bin/clang
+          clang --version
+          echo "Rebol [] unprotect 'system/platform system/platform: 'DragonFlyBSD" > ~/user.reb
+          cat ~/user.reb
+          cd ..
+          git clone -b bootstrap https://github.com/Siskin-framework/Rebol.git --depth 1
+          cd ./Rebol/make/
+          make -f rebol-bsd-bootstrap-64bit.mk
+          mv ./rebol-bsd-bootstrap-64bit ../../Builder/r3
+          cd ../../Builder
+          ./r3 siskin.r3 rebol rebol3-base-dragonflybsd-x64
+          mv ./tree/rebol/Rebol/build/rebol3-base-dragonflybsd-x64 ./rebol3-base-dragonflybsd-x64
+          ./r3 siskin.r3 rebol rebol3-core-dragonflybsd-x64
+          mv ./tree/rebol/Rebol/build/rebol3-core-dragonflybsd-x64 ./rebol3-core-dragonflybsd-x64
+          ./r3 siskin.r3 rebol rebol3-bulk-dragonflybsd-x64
+          mv ./tree/rebol/Rebol/build/rebol3-bulk-dragonflybsd-x64 ./rebol3-bulk-dragonflybsd-x64
+
+    - name: Prepare build results
+      run:  |
+        gzip -9 ./rebol3-base-dragonflybsd-x64
+        gzip -9 ./rebol3-core-dragonflybsd-x64
+        gzip -9 ./rebol3-bulk-dragonflybsd-x64
+
+    - uses: actions/upload-artifact@v3
+      with:
+        name: Rebol-DragonFlyBSD-${{github.run_id}}
+        path: ./rebol3*.gz
+
+  OpenBSD:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Build Rebol in OpenBSD
+      uses: vmactions/openbsd-vm@v1
+      with:
+        usesh: true
+        prepare: |
+          pkg_add curl git iconv libiconv
+        run: |
+          echo "Rebol [] unprotect 'system/platform system/platform: 'openbsd" > ~/user.reb
+          cd ..
+          git clone -b bootstrap https://github.com/Siskin-framework/Rebol.git --depth 1
+          cd ./Rebol/make/
+          make -f rebol-bsd-bootstrap-64bit.mk
+          mv ./rebol-bsd-bootstrap-64bit ../../Builder/r3
+          cd ../../Builder
+          ./r3 siskin.r3 rebol rebol3-base-openbsd-x64
+          mv ./tree/rebol/Rebol/build/rebol3-base-openbsd-x64 ./rebol3-base-openbsd-x64
+          ./r3 siskin.r3 rebol rebol3-core-openbsd-x64
+          mv ./tree/rebol/Rebol/build/rebol3-core-openbsd-x64 ./rebol3-core-openbsd-x64
+          ./r3 siskin.r3 rebol rebol3-bulk-openbsd-x64
+          mv ./tree/rebol/Rebol/build/rebol3-bulk-openbsd-x64 ./rebol3-bulk-openbsd-x64
+
+    - name: Prepare build results
+      run:  |
+        gzip -9 ./rebol3-base-openbsd-x64
+        gzip -9 ./rebol3-core-openbsd-x64
+        gzip -9 ./rebol3-bulk-openbsd-x64
+
+    - uses: actions/upload-artifact@v3
+      with:
+        name: Rebol-OpenBSD-${{github.run_id}}
+        path: ./rebol3*.gz
+
+  FreeBSD:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Build Rebol in FreeBSD
+      uses: vmactions/openbsd-vm@v1
+      with:
+        usesh: true
+        prepare: |
+          pkg install -y curl git
+        run: |
+          curl -L -S https://github.com/Siskin-framework/Builder/releases/download/0.13.0/siskin-freebsd-x86_64.gz --output siskin.gz
+          gunzip ./siskin.gz
+          chmod u+x ./siskin
+          ./siskin rebol %rebol3-base-freebsd-x64
+          mv ./tree/rebol/Rebol/build/rebol3-base-freebsd-x64 ./rebol3-base-freebsd-x64
+          ./siskin rebol %rebol3-core-freebsd-x64
+          mv ./tree/rebol/Rebol/build/rebol3-core-freebsd-x64 ./rebol3-core-freebsd-x64
+          ./siskin rebol %rebol3-bulk-freebsd-x64
+          mv ./tree/rebol/Rebol/build/rebol3-bulk-freebsd-x64 ./rebol3-bulk-freebsd-x64
+
+    - name: Prepare build results
+      run:  |
+        gzip -9 ./rebol3-base-freebsd-x64
+        gzip -9 ./rebol3-core-freebsd-x64
+        gzip -9 ./rebol3-bulk-freebsd-x64
+
+    - uses: actions/upload-artifact@v3
+      with:
+        name: Rebol-FreeBSD-${{github.run_id}}
+        path: ./rebol3*.gz
