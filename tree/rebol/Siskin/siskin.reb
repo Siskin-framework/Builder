@@ -2,7 +2,7 @@ Rebol [
 	Title:  "Siskin Builder - core"
 	Type:    module
 	Name:    siskin
-	Version: 0.16.0
+	Version: 0.17.0
 	Author: "Oldes"
 	
 	exports: [
@@ -23,7 +23,7 @@ Rebol [
 banner: next rejoin [{
 ^[[0;33m═╗
 ^[[0;33m ║^[[1;31m    .-.
-^[[0;33m ║^[[1;31m   /'v'\   ^[[0;33mSISKIN-Framework Builder 0.16.0 Rebol } rebol/version {
+^[[0;33m ║^[[1;31m   /'v'\   ^[[0;33mSISKIN-Framework Builder 0.17.0 Rebol } rebol/version {
 ^[[0;33m ║^[[1;31m  (/^[[0;31muOu^[[1;31m\)  ^[[0;33mhttps://github.com/Siskin-framework/Builder/
 ^[[0;33m ╚════^[[1;31m"^[[0;33m═^[[1;31m"^[[0;33m═══════════════════════════════════════════════════════════════════════^[[m}]
 
@@ -40,20 +40,22 @@ debug?: off
 append system/options/log [siskin: 1]
 
 all-options: [
-    #"c" "--clean"   "Remove cached results before build"
-    #"d" "--debug"   "Maximum verbosity and debug messages"
-    #"h" "--help"    "Display available options"
-    #"q" "--quiet"   "Minimum output"
-    #"l" "--list"    "List all possible targets (eggs) in the nest"
-    #"r" "--run"     "Execute build product immediately"
-    #"t" "--test"    "Soft run without real evaluation"
-    #"u" "--update"  "Update all linked source repositories before build"
-    #"v" "--verbose" "Make the operation more talkative"
-    #"V" "--version" "Show version number and quit"
-	  -  "--msvc"    "Create Visual Studio project and use it for a build"
-	  -  "--xcode"   "Create XCode project and use it for a build"
-	  -  "--make"    "Create makefile and use it for a build"
-	  -  "--git-ssh" "Clone gits using password-protected SSH key"
+    #"c" "--clean"   -      "Remove cached results before build"
+    #"d" "--debug"   -      "Maximum verbosity and debug messages"
+    #"h" "--help"    -      "Display available options"
+    #"o" "--output"  "path" "Destination path to use instead of the default one"
+    #"q" "--quiet"   -      "Minimum output"
+    #"l" "--list"    -      "List all possible targets (eggs) in the nest"
+    #"r" "--run"     -      "Execute build product immediately"
+    #"t" "--test"    -      "Soft run without real evaluation"
+    #"u" "--update"  -      "Update all linked source repositories before build"
+    #"v" "--verbose" -      "Make the operation more talkative"
+    #"V" "--version" -      "Show version number and quit"
+	  -  "--msvc"    -      "Create Visual Studio project and use it for a build"
+	  -  "--xcode"   -      "Create XCode project and use it for a build"
+	  -  "--make"    -      "Create makefile and use it for a build"
+	  -  "--git-ssh" -      "Clone gits using password-protected SSH key"
+	  -  "--no-upx"  -      "Ignore default project's UPX compression setting"
 ]
 
 ; mapping of commands used in the interactive input into command line arguments
@@ -80,7 +82,7 @@ init-options: func[/local long short hlp1 hlp2][
 		"^/ Possible options:^/"
 	]
 
-	foreach [short long doc] all-options [
+	foreach [short long arg doc] all-options [
 		long:  to word! skip long 2
 		short: to word! short
 		either short = '- [
@@ -92,9 +94,11 @@ init-options: func[/local long short hlp1 hlp2][
 			repend supported-commands [short long]
 		]
 		repend supported-commands [long long]
-		append hlp1 pad form long 10
+		long: form long
+		if arg <> '- [append append long SP arg]
+		append hlp1 pad long 13
 		append hlp1 as-green doc
-		append hlp2 pad form long 10
+		append hlp2 pad long 13
 		append hlp2 as-green doc
 	]
 	supported-commands: to map! supported-commands
@@ -163,6 +167,7 @@ nest-context: object [
 	nest-time:    none
 	rebuild?:     false ; if force compilation of all files (even if not modified)
 	no-eval?:     false
+	no-upx?:      false
 	clang?:       false
 	run-result?:  false
 	update?:      false
@@ -337,6 +342,10 @@ do-strip: closure/with [spec [map!] file [file!]][
 ] :nest-context
 
 do-upx: closure/with [file [file!]][
+	if no-upx? [
+		print-info "UPX compression skipped!"
+		exit
+	]
 	upx: locate-tool 'upx none
 	unless any [
 		exists? upx
@@ -834,6 +843,7 @@ do-nest: closure/with/extern [
 
 	nest-file: any [to-real-file nest nest]
 	forever [
+		debug?: defaults/debug?
 		if any [
 			none? nest-time
 			none? nest-file
@@ -937,7 +947,6 @@ do-nest: closure/with/extern [
 			run-result?: false
 			set-env "NEST_SPEC" none
 
-			debug?: defaults/debug?
 			system/options/log/siskin: defaults/verbose
 
 			options: [
@@ -956,6 +965,8 @@ do-nest: closure/with/extern [
 				| 'make    (force-compiler: @make)
 				| 'update  (update?: on)
 				| 'git-ssh (git-ssh?: on)
+				| 'no-upx  (no-upx?: on)
+				| 'output  set out-file: skip
 			]
 			;? args
 			parse args [
@@ -1147,10 +1158,20 @@ build: function/with [
 			spec/:k: v
 		]
 	]
-
-	out-file: any [spec/exe-file spec/name spec/target]
-	if out-file [out-file: to file! out-file]
-
+	out-file: any [out-file spec/exe-file spec/name spec/target]
+	if out-file [
+		out-file: to-rebol-file out-file
+		if abs-path? out-file [
+			either dir? out-file [
+				spec/output: out-file
+				out-file: any [spec/exe-file spec/name spec/target]
+			][
+				parts: split-path out-file 
+				spec/output: parts/1
+				out-file:    parts/2
+			]
+		]
+	]
 	spec/defines: copy new-line/all sort unique spec/defines true
 	foreach def spec/defines [
 		;?? def
