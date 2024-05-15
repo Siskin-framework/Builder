@@ -187,6 +187,7 @@ nest-context: object [
 	timestamp:    none
 	result:       none
 	out-file:     none
+	out-file-override: none
 	app-file:     none ;; bundle output
 
 	defaults: context [
@@ -966,7 +967,12 @@ do-nest: closure/with/extern [
 				| 'update  (update?: on)
 				| 'git-ssh (git-ssh?: on)
 				| 'no-upx  (no-upx?: on)
-				| 'output  set out-file: skip
+				| 'output  set out-file-override: skip (
+					out-file-override: to-rebol-file out-file-override
+					unless abs-path? out-file-override [
+						insert out-file-override root-dir
+					]
+				)
 			]
 			;? args
 			parse args [
@@ -980,13 +986,23 @@ do-nest: closure/with/extern [
 						update?:     false
 						git-ssh?:    false
 						force-compiler: none
+						out-file-override: none
 						result-code: 0
 					)
 
 					any options
 					copy ids: some [integer! | file! | string!]
 					(
+						if all [
+							out-file-override
+							1 < length? ids
+							not dir? to-rebol-file out-file-override
+						][
+							print-error "Using output override for multiple targets!"
+							break
+						]
 						forall ids [
+							out-file: none
 							unless build-target ids/1 [break]
 							if all [
 								run-result?
@@ -1158,7 +1174,7 @@ build: function/with [
 			spec/:k: v
 		]
 	]
-	out-file: any [out-file spec/exe-file spec/name spec/target]
+	out-file: any [spec/exe-file spec/name spec/target]
 	if out-file [
 		out-file: to-rebol-file out-file
 		if abs-path? out-file [
@@ -1831,6 +1847,9 @@ finalize-build: closure/with [spec [map!] file [file! none!] /no-fail][
 				eval-cmd/v ["file" out-file]
 				eval-cmd/v ["otool -L" out-file]
 			]
+		]
+		if out-file-override [
+			out-file: move-file out-file out-file-override
 		]
 		print-ready
 		return true
@@ -2626,4 +2645,17 @@ prepare-macos-bundle: function/with [
 
 	write contents-dir/Info.plist probe Info.plist
 
+] :nest-context
+
+move-file: function/with [src [file!] dst [file!]][
+	if all [dir?/check dst not dir?/check src][
+		;; moving a file to another directory keeping its name
+		dst: join dirize dst second split-path src
+	]
+	unless no-eval? [
+		delete dst
+		print-info ["Moving" as-green src 'to as-green dst]
+		rename src dst
+	]
+	dst
 ] :nest-context
