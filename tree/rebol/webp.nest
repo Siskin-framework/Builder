@@ -2,4 +2,5 @@
 ;-   /'v'\   SISKIN-Builder project file                                        
 ;-  (/uOu\)  https://github.com/Siskin-framework/Builder/                       
 ;-===="="=======================================================================
+github: Oldes/Rebol-WebP
 nest:   %Rebol-WebP/Rebol-WebP.nest
