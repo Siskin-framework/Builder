@@ -5,13 +5,13 @@ on:
     branches: [ master ]
     paths:
       - .github/workflows/test.yml
-      
+
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
 env:
   OUT: ${{github.WORKSPACE}}/Release/
-  REBOL_MODULES_DIR: ${{env.OUT}}
+  REBOL_MODULES_DIR: $OUT
 
 jobs:
   windows:
@@ -21,7 +21,7 @@ jobs:
     - name: Info
       shell: bash
       run: |
-        echo "Temp: $RUNNER_TEMP Test: $REBOL_MODULES_DIR"
+        echo "Temp: $RUNNER_TEMP Test: $REBOL_MODULES_DIR $OUT"
 
   linux:
     runs-on: ubuntu-20.04
@@ -31,7 +31,7 @@ jobs:
     steps:
     - name: Info
       run: |
-        echo "Temp: $RUNNER_TEMP Test: $REBOL_MODULES_DIR"
+        echo "Temp: $RUNNER_TEMP Test: $REBOL_MODULES_DIR $OUT"
 
   macos:
     runs-on: macos-latest
@@ -41,4 +41,4 @@ jobs:
     steps:
     - name: Info
       run: |
-        echo "Temp: $RUNNER_TEMP Test: $REBOL_MODULES_DIR"
+        echo "Temp: $RUNNER_TEMP Test: $REBOL_MODULES_DIR $OUT"
