@@ -82,7 +82,7 @@ jobs:
     - uses: actions/upload-artifact@v3
       with:
         name: Rebol-Triangulate-${{github.run_id}}
-        path: ${{env.OUT}}/triangulate*.gz
+        path: ${{env.OUT}}/triangulate-linux-*.gz
 
   macos:
     runs-on: macos-latest
@@ -143,7 +143,7 @@ jobs:
     - uses: actions/upload-artifact@v3
       with:
         name: Rebol-Triangulate-${{github.run_id}}
-        path: ${{env.OUT}}/triangulate*.gz
+        path: ${{env.OUT}}/triangulate-macos-*.gz
 
   openbsd:
     runs-on: ubuntu-latest
@@ -155,7 +155,7 @@ jobs:
       with:
         usesh: true
         prepare: |
-          pkg_add curl git iconv libiconv
+          pkg_add curl git
 
         run: |
           pkg_info -L libiconv
@@ -166,7 +166,16 @@ jobs:
           chmod +x ./rebol3
           ./rebol3 -V
           ls -la .
+          ./rebol3 siskin.r3 rebol/triangulate -o ./Release/triangulate-openbsd-x64.rebx triangulate-x64
+          file ./Release/triangulate-openbsd-x64.rebx
 
+    - name: Compress 64bit Rebol/Triangulate extension
+      run:  gzip -9 $OUT/triangulate-openbsd-x64.rebx
+
+    - uses: actions/upload-artifact@v3
+      with:
+        name: Rebol-Triangulate-${{github.run_id}}
+        path: ${{env.OUT}}/triangulate-openbsd-*.gz
 #  Haiku-x86:
 #    runs-on: ubuntu-latest
 #    steps:
