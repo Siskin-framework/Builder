@@ -161,7 +161,7 @@ jobs:
           pkg_info -L libiconv
           echo "Rebol [] unprotect 'system/platform system/platform: 'openbsd" > ~/user.reb
           cat ~/user.reb
-          curl https://github.com/Oldes/Rebol3/releases/download/3.17.0/rebol3-bulk-openbsd-x64.gz --output ./rebol3.gz --silent
+          curl https://github.com/Oldes/Rebol3/releases/download/3.17.0/rebol3-bulk-openbsd-x64.gz --output ./rebol3.gz --silent -L
           gunzip ./rebol3.gz
           chmod +x ./rebol3
           ./rebol3 -V
