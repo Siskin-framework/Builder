@@ -268,8 +268,8 @@ jobs:
       - name: Compress result before uploading
         run: |
           mkdir $OUT
-          mv ./tree/rebol/Rebol-Triangulate/build/triangulate-x86.so $OUT/triangulate-haiku-x86.rebx
-          gzip -9 $OUT/triangulate-haiku-x86.rebx
+          sudo mv ./tree/rebol/Rebol-Triangulate/build/triangulate-x86.so $OUT/triangulate-haiku-x86.rebx
+          sudo gzip -9 $OUT/triangulate-haiku-x86.rebx
 
       - uses: actions/upload-artifact@v3
         with:
@@ -298,8 +298,8 @@ jobs:
       - name: Compress result before uploading
         run: |
           mkdir $OUT
-          mv ./tree/rebol/Rebol-Triangulate/build/triangulate-x64.so $OUT/triangulate-haiku-x64.rebx
-          gzip -9 $OUT/triangulate-haiku-x64.rebx
+          sudo mv ./tree/rebol/Rebol-Triangulate/build/triangulate-x64.so $OUT/triangulate-haiku-x64.rebx
+          sudo gzip -9 $OUT/triangulate-haiku-x64.rebx
 
       - uses: actions/upload-artifact@v3
         with:
