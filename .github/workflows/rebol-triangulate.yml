@@ -40,7 +40,7 @@ jobs:
 
     - name: Minimal Rebol/Triangulate extension test
       shell: bash
-      run:  ./rebol3 .\tree\rebol\Rebol-Triangulate\ci-test.r3
+      run:  ./rebol3 ./tree/rebol/Rebol-Triangulate/ci-test.r3
 
     - uses: actions/upload-artifact@v3
       with:
