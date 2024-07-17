@@ -31,12 +31,15 @@ jobs:
         product: Bulk
 
     - name: Build 32bit Rebol/Triangulate extension
+      shell: bash
       run: ./rebol3 siskin.r3 rebol/triangulate --msvc -o $OUT/triangulate-windows-x86.rebx triangulate-x86
 
     - name: Build 64bit Rebol/Triangulate extension
+      shell: bash
       run: ./rebol3 siskin.r3 rebol/triangulate --msvc -o $OUT/triangulate-windows-x64.rebx triangulate-x64
 
     - name: Minimal Rebol/Triangulate extension test
+      shell: bash
       run:  ./rebol3 .\tree\rebol\Rebol-Triangulate\ci-test.r3
 
     - uses: actions/upload-artifact@v3
