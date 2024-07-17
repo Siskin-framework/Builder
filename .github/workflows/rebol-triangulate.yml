@@ -99,8 +99,11 @@ jobs:
       with:
         product: Bulk
 
-    - name: Build 64bit Rebol/Triangulate extension
+    - name: Build Rebol/Triangulate extension (x64)
       run: ./rebol3 siskin.r3 rebol/triangulate -o $OUT/triangulate-macos-x64.rebx triangulate-x64
+
+    - name: Build Rebol/Triangulate extension (arm64)
+      run: ./rebol3 siskin.r3 rebol/triangulate -o $OUT/triangulate-macos-arm64.rebx triangulate-arm64
 
     - name: Install the Apple certificate
     # https://docs.github.com/en/actions/guides/installing-an-apple-certificate-on-macos-runners-for-xcode-development
@@ -133,12 +136,15 @@ jobs:
         MACOS_IDENTITY_ID: ${{ secrets.MACOS_IDENTITY_ID }}
       run: |
         /usr/bin/codesign --force -s $MACOS_IDENTITY_ID $OUT/triangulate-macos-x64.rebx -v
+        /usr/bin/codesign --force -s $MACOS_IDENTITY_ID $OUT/triangulate-macos-arm64.rebx -v
 
     - name: Minimal Rebol/Triangulate extension test
       run:  ./rebol3 ./tree/rebol/Rebol-Triangulate/ci-test.r3
 
-    - name: Compress 64bit Rebol/Triangulate extension
-      run:  gzip -9 $OUT/triangulate-macos-x64.rebx
+    - name: Compress Rebol/Triangulate extensions
+      run:  |
+        gzip -9 $OUT/triangulate-macos-x64.rebx
+        gzip -9 $OUT/triangulate-macos-arm64.rebx
 
     - uses: actions/upload-artifact@v3
       with:
