@@ -1,14 +1,21 @@
 name: 'Just a test of Github actions'
 on:
+  # Triggers the workflow on push or pull request events but only for the master branch
+  push:
+    branches: [ master ]
+    paths:
+      - .github/workflows/test.yml
+      
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
+
+env:
+  OUT: ${{github.WORKSPACE}}/Release/
+  REBOL_MODULES_DIR: ${{env.OUT}}
 
 jobs:
   windows:
     runs-on: windows-latest
-
-    env:
-      REBOL_MODULES_DIR: ${{github.WORKSPACE}}/modules/
 
     steps:
     - name: Info
