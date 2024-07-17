@@ -45,7 +45,7 @@ jobs:
     - uses: actions/upload-artifact@v3
       with:
         name: Rebol-Triangulate-CI-${{github.run_id}}
-        path: $OUT\triangulate*.rebx
+        path: ${{env.OUT}}/triangulate*.rebx
 
   linux:
     runs-on: ubuntu-20.04
@@ -82,7 +82,7 @@ jobs:
     - uses: actions/upload-artifact@v3
       with:
         name: Rebol-Triangulate-${{github.run_id}}
-        path: $OUT/triangulate*.gz
+        path: ${{env.OUT}}/triangulate*.gz
 
   macos:
     runs-on: macos-latest
@@ -143,7 +143,7 @@ jobs:
     - uses: actions/upload-artifact@v3
       with:
         name: Rebol-Triangulate-${{github.run_id}}
-        path: $OUT/triangulate*.gz
+        path: ${{env.OUT}}/triangulate*.gz
 
 #  Haiku-x86:
 #    runs-on: ubuntu-latest
