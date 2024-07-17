@@ -16,7 +16,7 @@ env:
 jobs:
   windows:
     runs-on: windows-latest
-
+    if: false
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
@@ -44,12 +44,12 @@ jobs:
 
     - uses: actions/upload-artifact@v3
       with:
-        name: Rebol-Triangulate-CI-${{github.run_id}}
+        name: Rebol-Triangulate-${{github.run_id}}
         path: ${{env.OUT}}/triangulate*.rebx
 
   linux:
     runs-on: ubuntu-20.04
-
+    if: false
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
@@ -86,7 +86,7 @@ jobs:
 
   macos:
     runs-on: macos-latest
-
+    if: false
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
@@ -144,6 +144,28 @@ jobs:
       with:
         name: Rebol-Triangulate-${{github.run_id}}
         path: ${{env.OUT}}/triangulate*.gz
+
+  openbsd:
+    runs-on: ubuntu-latest
+    if: true
+    steps:
+    - uses: actions/checkout@v4
+    - name: Crosscompilation for OpenBSD
+      uses: vmactions/openbsd-vm@v1
+      with:
+        usesh: true
+        prepare: |
+          pkg_add curl git iconv libiconv
+
+        run: |
+          pkg_info -L libiconv
+          echo "Rebol [] unprotect 'system/platform system/platform: 'openbsd" > ~/user.reb
+          cat ~/user.reb
+          curl https://github.com/Oldes/Rebol3/releases/download/3.17.0/rebol3-bulk-openbsd-x64.gz --output ./rebol3.gz --silent
+          gunzip ./rebol3.gz
+          chmod +x ./rebol3
+          ./rebol3 -V
+          ls -la .
 
 #  Haiku-x86:
 #    runs-on: ubuntu-latest
