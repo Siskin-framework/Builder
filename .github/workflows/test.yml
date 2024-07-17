@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 env:
-  REBOL_MODULES_DIR: ${{ github.runner_temp }}/modules/
+  REBOL_MODULES_DIR: ${{ github.RUNNER_TEMP }}/modules/
 
 jobs:
   windows:
