@@ -19,7 +19,10 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
+
+    - name: Prepare output directory
+      run: mkdir $OUT
 
     - name: Install Rebol
       uses: oldes/install-rebol@v3.17.0
@@ -45,7 +48,10 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
+
+    - name: Prepare output directory
+      run: mkdir $OUT
 
     - name: Install Rebol
       uses: oldes/install-rebol@v3.17.0
@@ -79,7 +85,10 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
+
+    - name: Prepare output directory
+      run: mkdir $OUT
 
     - name: Install Rebol
       uses: oldes/install-rebol@v3.17.0
