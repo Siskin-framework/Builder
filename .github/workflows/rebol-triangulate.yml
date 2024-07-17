@@ -16,7 +16,7 @@ env:
 jobs:
   windows:
     runs-on: windows-latest
-    if: false
+    if: true
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
@@ -49,7 +49,7 @@ jobs:
 
   linux:
     runs-on: ubuntu-20.04
-    if: false
+    if: true
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
@@ -86,7 +86,7 @@ jobs:
 
   macos:
     runs-on: macos-latest
-    if: false
+    if: true
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
@@ -147,7 +147,7 @@ jobs:
 
   openbsd:
     runs-on: ubuntu-latest
-    if: false
+    if: true
     steps:
     - uses: actions/checkout@v4
     - name: Crosscompilation for OpenBSD
@@ -179,7 +179,7 @@ jobs:
 
   freebsd:
     runs-on: ubuntu-latest
-    if: false
+    if: true
     steps:
     - uses: actions/checkout@v4
     - name: Crosscompilation for FreeBSD
@@ -213,7 +213,7 @@ jobs:
 
   dragonflybsd:
     runs-on: ubuntu-latest
-    if: false
+    if: true
     steps:
     - uses: actions/checkout@v4
     - name: Crosscompilation for DragonFlyBSD
@@ -248,7 +248,7 @@ jobs:
 
   Haiku-x86:
     runs-on: ubuntu-latest
-    if: false
+    if: true
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -296,7 +296,7 @@ jobs:
 
       - name: Compress result before uploading
         run: |
-          sudo mv ./tree/rebol/Rebol-Triangulate/build/triangulate-haiku-x64.so $OUT/triangulate-haiku-x64.rebx
+          sudo mv ./tree/rebol/Rebol-Triangulate/build/triangulate-x64.so $OUT/triangulate-haiku-x64.rebx
           sudo gzip -9 $OUT/triangulate-haiku-x64.rebx
 
       - uses: actions/upload-artifact@v3
