@@ -8,7 +8,7 @@ jobs:
     runs-on: windows-latest
 
     env:
-      REBOL_MODULES_DIR: ${{env.TEMP}}/modules/
+      REBOL_MODULES_DIR: ${{github.WORKSPACE}}/modules/
 
     steps:
     - name: Info
