@@ -153,21 +153,20 @@ jobs:
     - name: Crosscompilation for OpenBSD
       uses: vmactions/openbsd-vm@v1
       with:
+        envs: 'OUT REBOL_MODULES_DIR'
         usesh: true
         prepare: |
           pkg_add curl git
 
         run: |
-          pkg_info -L libiconv
-          echo "Rebol [] unprotect 'system/platform system/platform: 'openbsd" > ~/user.reb
-          cat ~/user.reb
+          mkdir $OUT
           curl https://github.com/Oldes/Rebol3/releases/download/3.17.0/rebol3-bulk-openbsd-x64.gz --output ./rebol3.gz --silent -L
           gunzip ./rebol3.gz
           chmod +x ./rebol3
           ./rebol3 -V
           ls -la .
-          ./rebol3 siskin.r3 rebol/triangulate -o ./Release/triangulate-openbsd-x64.rebx triangulate-x64
-          file ./Release/triangulate-openbsd-x64.rebx
+          ./rebol3 siskin.r3 rebol/triangulate -o $OUT/triangulate-openbsd-x64.rebx triangulate-x64
+          file $OUT/triangulate-openbsd-x64.rebx
 
     - name: Compress 64bit Rebol/Triangulate extension
       run:  gzip -9 $OUT/triangulate-openbsd-x64.rebx
