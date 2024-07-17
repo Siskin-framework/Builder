@@ -27,10 +27,10 @@ jobs:
         product: Bulk
 
     - name: Build 32bit Rebol/Triangulate extension
-      run: ./rebol3 siskin.r3 rebol/triangulate --msvc -o $OUT/triangulate-windows-x86.rebx triangulate-windows-x86
+      run: ./rebol3 siskin.r3 rebol/triangulate --msvc -o $OUT/triangulate-windows-x86.rebx triangulate-x86
 
     - name: Build 64bit Rebol/Triangulate extension
-      run: ./rebol3 siskin.r3 rebol/triangulate --msvc -o $OUT/triangulate-windows-x64.rebx triangulate-windows-x64
+      run: ./rebol3 siskin.r3 rebol/triangulate --msvc -o $OUT/triangulate-windows-x64.rebx triangulate-x64
 
     - name: Minimal Rebol/Triangulate extension test
       run:  ./rebol3 .\tree\rebol\Rebol-Triangulate\ci-test.r3
@@ -56,10 +56,10 @@ jobs:
       run: sudo apt-get install gcc-multilib
 
     - name: Build 32bit Rebol/Triangulate extension
-      run: ./rebol3 siskin.r3 rebol/triangulate -o $OUT/triangulate-linux-x86.rebx triangulate-linux-x86
+      run: ./rebol3 siskin.r3 rebol/triangulate -o $OUT/triangulate-linux-x86.rebx triangulate-x86
 
     - name: Build 64bit Rebol/Triangulate extension
-      run: ./rebol3 siskin.r3 rebol/triangulate -o $OUT/triangulate-linux-x64.rebx triangulate-linux-x64
+      run: ./rebol3 siskin.r3 rebol/triangulate -o $OUT/triangulate-linux-x64.rebx triangulate-x64
 
     - name: Minimal Rebol/Triangulate extension test
       run:  ./rebol3 ./tree/rebol/Rebol-Triangulate/ci-test.r3
@@ -87,7 +87,7 @@ jobs:
         product: Bulk
 
     - name: Build 64bit Rebol/Triangulate extension
-      run: ./rebol3 siskin.r3 rebol/triangulate -o $OUT/triangulate-macos-x64.rebx triangulate-macos-x64
+      run: ./rebol3 siskin.r3 rebol/triangulate -o $OUT/triangulate-macos-x64.rebx triangulate-x64
 
     - name: Install the Apple certificate
     # https://docs.github.com/en/actions/guides/installing-an-apple-certificate-on-macos-runners-for-xcode-development
@@ -132,58 +132,58 @@ jobs:
         name: Rebol-Triangulate-${{github.run_id}}
         path: $OUT/triangulate*.gz
 
-  Haiku-x86:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-
-      - name: Download Haiku Rebol-dev container
-        run: docker pull docker.io/oldes/rebol-dev:haiku-x86
-
-      - name: Build all Rebol/Triangulate for Haiku OS x86
-        run: docker run --rm -v $PWD:/siskin oldes/rebol-dev:haiku-x86 bash -c 'cd /siskin; rebol siskin.r3 rebol/triangulate triangulate-haiku-x86'
-
-      - name: Compress result before uploading
-        run: |
-          sudo mv ./tree/rebol/Rebol-Triangulate/build/triangulate-haiku-x86.so ./triangulate-haiku-x86.rebx
-          sudo gzip -9 ./triangulate-haiku-x86.rebx
-
-      - uses: actions/upload-artifact@v3
-        with:
-          name: Rebol-Triangulate-${{github.run_id}}
-          path: ./triangulate-*.gz
-
-  Haiku-x64:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-
-      - name: Download Haiku Rebol-dev container
-        run: docker pull docker.io/oldes/rebol-dev:haiku-x64
-
-      - name: Build all Rebol/Triangulate for Haiku OS x64
-        run: docker run --rm -v $PWD:/siskin oldes/rebol-dev:haiku-x64 bash -c 'cd /siskin; rebol siskin.r3 rebol/triangulate triangulate-haiku-x64'
-
-      - name: Compress result before uploading
-        run: |
-          sudo mv ./tree/rebol/Rebol-Triangulate/build/triangulate-haiku-x64.so ./triangulate-haiku-x64.rebx
-          sudo gzip -9 ./triangulate-haiku-x64.rebx
-
-      - uses: actions/upload-artifact@v3
-        with:
-          name: Rebol-Triangulate-${{github.run_id}}
-          path: ./triangulate-*.gz
+#  Haiku-x86:
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Checkout repository
+#        uses: actions/checkout@v3
+#
+#      - name: Login to Docker Hub
+#        uses: docker/login-action@v2
+#        with:
+#          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+#          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+#
+#      - name: Download Haiku Rebol-dev container
+#        run: docker pull docker.io/oldes/rebol-dev:haiku-x86
+#
+#      - name: Build all Rebol/Triangulate for Haiku OS x86
+#        run: docker run --rm -v $PWD:/siskin oldes/rebol-dev:haiku-x86 bash -c 'cd /siskin; rebol siskin.r3 rebol/triangulate triangulate-haiku-x86'
+#
+#      - name: Compress result before uploading
+#        run: |
+#          sudo mv ./tree/rebol/Rebol-Triangulate/build/triangulate-haiku-x86.so ./triangulate-haiku-x86.rebx
+#          sudo gzip -9 ./triangulate-haiku-x86.rebx
+#
+#      - uses: actions/upload-artifact@v3
+#        with:
+#          name: Rebol-Triangulate-${{github.run_id}}
+#          path: ./triangulate-*.gz
+#
+#  Haiku-x64:
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Checkout repository
+#        uses: actions/checkout@v3
+#
+#      - name: Login to Docker Hub
+#        uses: docker/login-action@v2
+#        with:
+#          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+#          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+#
+#      - name: Download Haiku Rebol-dev container
+#        run: docker pull docker.io/oldes/rebol-dev:haiku-x64
+#
+#      - name: Build all Rebol/Triangulate for Haiku OS x64
+#        run: docker run --rm -v $PWD:/siskin oldes/rebol-dev:haiku-x64 bash -c 'cd /siskin; rebol siskin.r3 rebol/triangulate triangulate-haiku-x64'
+#
+#      - name: Compress result before uploading
+#        run: |
+#          sudo mv ./tree/rebol/Rebol-Triangulate/build/triangulate-haiku-x64.so ./triangulate-haiku-x64.rebx
+#          sudo gzip -9 ./triangulate-haiku-x64.rebx
+#
+#      - uses: actions/upload-artifact@v3
+#        with:
+#          name: Rebol-Triangulate-${{github.run_id}}
+#          path: ./triangulate-*.gz
