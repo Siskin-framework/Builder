@@ -1,81 +1,109 @@
 name: 'Rebol/SQLite'
 on:
+  # Triggers the workflow on push or pull request events but only for the master branch
+  push:
+    branches: [ master ]
+    paths:
+      - .github/workflows/rebol-sqlite.yml
+
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
+
+env:
+  OUT: ${{github.WORKSPACE}}/Release
+  REBOL_MODULES_DIR: ${{github.WORKSPACE}}/Release
 
 jobs:
   windows:
     runs-on: windows-latest
+    if: true
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
+
+    - name: Prepare output directory
+      shell: bash
+      run: mkdir $OUT
 
     - name: Install Rebol
-      uses: oldes/install-rebol@v3.14.0
+      uses: oldes/install-rebol@v3.17.0
+      with:
+        product: Bulk
 
     - name: Build 32bit Rebol/SQLite extension
-      run: ./rebol3 siskin.r3 rebol/sqlite --msvc sqlite-windows-x86
-
-    - name: Prepare 32bit Rebol/SQLite extension
-      run:  MOVE ./tree/rebol/Rebol-SQLite/msvc/Release-Win32/sqlite-windows-x86.dll ./sqlite-windows-x86.rebx
+      shell: bash
+      run: ./rebol3 siskin.r3 rebol/sqlite --msvc -o $OUT/sqlite-windows-x86.rebx sqlite-x86
 
     - name: Build 64bit Rebol/SQLite extension
-      run: ./rebol3 siskin.r3 rebol/sqlite --msvc sqlite-windows-x64
-
-    - name: Prepare 64bit Rebol/SQLite extension
-      run:  MOVE ./tree/rebol/Rebol-SQLite/msvc/Release-x64/sqlite-windows-x64.dll ./sqlite-windows-x64.rebx
+      shell: bash
+      run: ./rebol3 siskin.r3 rebol/sqlite --msvc -o $OUT/sqlite-windows-x64.rebx sqlite-x64
 
     - name: Minimal Rebol/SQLite extension test
-      run:  |
-        MOVE tree\rebol\Rebol-SQLite\ci-test.r3 .\test-sqlite.r3
-        MOVE tree\rebol\Rebol-SQLite\sqlite-scheme.reb .\
-        ./rebol3 test-sqlite.r3
+      shell: bash
+      run:  ./rebol3 ./tree/rebol/Rebol-SQLite/ci-test.r3
 
     - uses: actions/upload-artifact@v3
       with:
         name: Rebol-SQLite-${{github.run_id}}
-        path: ./sqlite*.rebx
+        path: ${{env.OUT}}/sqlite*.rebx
 
   linux:
     runs-on: ubuntu-20.04
+    if: true
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
+
+    - name: Prepare output directory
+      run: mkdir $OUT
 
     - name: Install Rebol
-      uses: oldes/install-rebol@v3.14.0
+      uses: oldes/install-rebol@v3.17.0
+      with:
+        product: Bulk
+
+    - name: Install GCC multilib
+      run: sudo apt-get install gcc-multilib
+
+    - name: Build 32bit Rebol/SQLite extension
+      run: ./rebol3 siskin.r3 rebol/sqlite -o $OUT/sqlite-linux-x86.rebx sqlite-x86
 
     - name: Build 64bit Rebol/SQLite extension
-      run: ./rebol3 siskin.r3 rebol/sqlite sqlite-linux-x64
+      run: ./rebol3 siskin.r3 rebol/sqlite -o $OUT/sqlite-linux-x64.rebx sqlite-x64
 
-    - name: Prepare 64bit Rebol SQLite extension
-      run:  mv ./tree/rebol/Rebol-SQLite/build/sqlite-linux-x64.so ./sqlite-linux-x64.rebx
+    - name: Minimal Rebol/SQLite extension test
+      run:  ./rebol3 ./tree/rebol/Rebol-SQLite/ci-test.r3
 
-    - name: Test Rebol/SQLite extension
-      run:  |
-        mv ./tree/rebol/Rebol-SQLite/ci-test.r3 ./test-sqlite.r3
-        mv ./tree/rebol/Rebol-SQLite/sqlite-scheme.reb ./
-        ./rebol3 test-sqlite.r3
-
+    - name: Compress 32bit Rebol/SQLite extension
+      run:  gzip -9 $OUT/sqlite-linux-x86.rebx
     - name: Compress 64bit Rebol/SQLite extension
-      run:  gzip -9 ./sqlite-linux-x64.rebx
+      run:  gzip -9 $OUT/sqlite-linux-x64.rebx
 
     - uses: actions/upload-artifact@v3
       with:
         name: Rebol-SQLite-${{github.run_id}}
-        path: ./sqlite*.gz
+        path: ${{env.OUT}}/sqlite-linux-*.gz
 
   macos:
     runs-on: macos-latest
+    if: true
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
+
+    - name: Prepare output directory
+      run: mkdir $OUT
 
     - name: Install Rebol
-      uses: oldes/install-rebol@v3.14.0
+      uses: oldes/install-rebol@v3.17.0
+      with:
+        product: Bulk
 
-    - name: Build 64bit Rebol/SQLite extension
-      run: ./rebol3 siskin.r3 rebol/sqlite sqlite-macos-x64
+    - name: Build Rebol/SQLite extension (x64)
+      run: ./rebol3 siskin.r3 rebol/sqlite -o $OUT/sqlite-macos-x64.rebx sqlite-x64
+
+    - name: Build Rebol/SQLite extension (arm64)
+      run: ./rebol3 siskin.r3 rebol/sqlite -o $OUT/sqlite-macos-arm64.rebx sqlite-arm64
 
     - name: Install the Apple certificate
     # https://docs.github.com/en/actions/guides/installing-an-apple-certificate-on-macos-runners-for-xcode-development
@@ -107,21 +135,179 @@ jobs:
       env: 
         MACOS_IDENTITY_ID: ${{ secrets.MACOS_IDENTITY_ID }}
       run: |
-        /usr/bin/codesign --force -s $MACOS_IDENTITY_ID ./tree/rebol/Rebol-SQLite/build/sqlite-macos-x64.dylib -v
+        /usr/bin/codesign --force -s $MACOS_IDENTITY_ID $OUT/sqlite-macos-x64.rebx -v
+        /usr/bin/codesign --force -s $MACOS_IDENTITY_ID $OUT/sqlite-macos-arm64.rebx -v
 
-    - name: Prepare 64bit Rebol SQLite extension
-      run:  mv ./tree/rebol/Rebol-SQLite/build/sqlite-macos-x64.dylib ./sqlite-macos-x64.rebx
+    - name: Minimal Rebol/SQLite extension test
+      run:  ./rebol3 ./tree/rebol/Rebol-SQLite/ci-test.r3
 
-    - name: Test Rebol/SQLite extension
+    - name: Compress Rebol/SQLite extensions
       run:  |
-        mv ./tree/rebol/Rebol-SQLite/ci-test.r3 ./test-sqlite.r3
-        mv ./tree/rebol/Rebol-SQLite/sqlite-scheme.reb ./
-        ./rebol3 test-sqlite.r3
-
-    - name: Compress 64bit Rebol/SQLite extension
-      run:  gzip -9 ./sqlite-macos-x64.rebx
+        gzip -9 $OUT/sqlite-macos-x64.rebx
+        gzip -9 $OUT/sqlite-macos-arm64.rebx
 
     - uses: actions/upload-artifact@v3
       with:
         name: Rebol-SQLite-${{github.run_id}}
-        path: ./sqlite*.gz
+        path: ${{env.OUT}}/sqlite-macos-*.gz
+
+  openbsd:
+    runs-on: ubuntu-latest
+    if: true
+    steps:
+    - uses: actions/checkout@v4
+    - name: Crosscompilation for OpenBSD
+      uses: vmactions/openbsd-vm@v1
+      with:
+        envs: 'OUT REBOL_MODULES_DIR'
+        usesh: true
+        prepare: |
+          pkg_add curl git
+
+        run: |
+          mkdir $OUT
+          curl https://github.com/Oldes/Rebol3/releases/download/3.17.0/rebol3-bulk-openbsd-x64.gz --output ./rebol3.gz --silent -L
+          gunzip ./rebol3.gz
+          chmod +x ./rebol3
+          ./rebol3 -V
+          ls -la .
+          ./rebol3 siskin.r3 rebol/sqlite -o $OUT/sqlite-openbsd-x64.rebx sqlite-x64
+          file $OUT/sqlite-openbsd-x64.rebx
+          ./rebol3 ./tree/rebol/Rebol-SQLite/ci-test.r3
+
+    - name: Compress 64bit Rebol/SQLite extension
+      run:  gzip -9 $OUT/sqlite-openbsd-x64.rebx
+
+    - uses: actions/upload-artifact@v3
+      with:
+        name: Rebol-SQLite-${{github.run_id}}
+        path: ${{env.OUT}}/sqlite-openbsd-*.gz
+
+  freebsd:
+    runs-on: ubuntu-latest
+    if: true
+    steps:
+    - uses: actions/checkout@v4
+    - name: Crosscompilation for FreeBSD
+      uses: vmactions/freebsd-vm@v1
+      with:
+        envs: 'OUT REBOL_MODULES_DIR'
+        usesh: true
+        prepare: |
+          pkg install -y curl git
+
+        run: |
+          env
+          freebsd-version
+          mkdir $OUT
+          curl https://github.com/Oldes/Rebol3/releases/download/3.17.0/rebol3-bulk-freebsd-x64.gz --output ./rebol3.gz --silent -L
+          gunzip ./rebol3.gz
+          chmod +x ./rebol3
+          ./rebol3 -V
+          ls -la .
+          ./rebol3 siskin.r3 rebol/sqlite -o $OUT/sqlite-freebsd-x64.rebx sqlite-x64
+          file $OUT/sqlite-freebsd-x64.rebx
+          ./rebol3 ./tree/rebol/Rebol-SQLite/ci-test.r3
+
+    - name: Compress 64bit Rebol/SQLite extension
+      run:  gzip -9 $OUT/sqlite-freebsd-x64.rebx
+
+    - uses: actions/upload-artifact@v3
+      with:
+        name: Rebol-SQLite-${{github.run_id}}
+        path: ${{env.OUT}}/sqlite-freebsd-*.gz
+
+  dragonflybsd:
+    runs-on: ubuntu-latest
+    if: true
+    steps:
+    - uses: actions/checkout@v4
+    - name: Crosscompilation for DragonFlyBSD
+      uses: vmactions/dragonflybsd-vm@v1
+      with:
+        envs: 'OUT REBOL_MODULES_DIR'
+        usesh: true
+        prepare: |
+          pkg install -y llvm16 libnghttp2 git
+
+        run: |
+          env
+          ln -s /usr/local/bin/clang16 /usr/local/bin/clang
+          clang --version
+          mkdir $OUT
+          curl https://github.com/Oldes/Rebol3/releases/download/3.17.0/rebol3-bulk-dragonflybsd-x64.gz --output ./rebol3.gz --silent -L
+          gunzip ./rebol3.gz
+          chmod +x ./rebol3
+          ./rebol3 -V
+          ls -la .
+          ./rebol3 siskin.r3 rebol/sqlite -o $OUT/sqlite-dragonflybsd-x64.rebx sqlite-x64
+          file $OUT/sqlite-dragonflybsd-x64.rebx
+          ./rebol3 ./tree/rebol/Rebol-SQLite/ci-test.r3
+
+    - name: Compress 64bit Rebol/SQLite extension
+      run:  gzip -9 $OUT/sqlite-dragonflybsd-x64.rebx
+
+    - uses: actions/upload-artifact@v3
+      with:
+        name: Rebol-SQLite-${{github.run_id}}
+        path: ${{env.OUT}}/sqlite-dragonflybsd-*.gz
+
+  Haiku-x86:
+    runs-on: ubuntu-latest
+    if: true
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
+      - name: Download Haiku Rebol-dev container
+        run: docker pull docker.io/oldes/rebol-dev:haiku-x86
+
+      - name: Build all Rebol/SQLite for Haiku OS x86
+        run: docker run --rm -v $PWD:/siskin oldes/rebol-dev:haiku-x86 bash -c 'cd /siskin; rebol siskin.r3 rebol/sqlite sqlite-x86'
+
+      - name: Compress result before uploading
+        run: |
+          mkdir $OUT
+          sudo mv ./tree/rebol/Rebol-SQLite/build/sqlite-x86.so $OUT/sqlite-haiku-x86.rebx
+          sudo gzip -9 $OUT/sqlite-haiku-x86.rebx
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: Rebol-SQLite-${{github.run_id}}
+          path: ${{env.OUT}}/sqlite-*.gz
+
+  Haiku-x64:
+    runs-on: ubuntu-latest
+    if: true
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
+      - name: Download Haiku Rebol-dev container
+        run: docker pull docker.io/oldes/rebol-dev:haiku-x64
+
+      - name: Build all Rebol/SQLite for Haiku OS x64
+        run: docker run --rm -v $PWD:/siskin oldes/rebol-dev:haiku-x64 bash -c 'cd /siskin; rebol siskin.r3 rebol/sqlite sqlite-x64'
+
+      - name: Compress result before uploading
+        run: |
+          mkdir $OUT
+          sudo mv ./tree/rebol/Rebol-SQLite/build/sqlite-x64.so $OUT/sqlite-haiku-x64.rebx
+          sudo gzip -9 $OUT/sqlite-haiku-x64.rebx
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: Rebol-SQLite-${{github.run_id}}
+          path: ${{env.OUT}}/sqlite-*.gz
