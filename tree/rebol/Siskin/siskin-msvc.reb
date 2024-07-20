@@ -314,6 +314,7 @@ make-project: func[
 	ADDITIONAL-DEPENDENCIES: copy output
 	LIBRARY-PATH: copy ""
 	foreach path unique lib-paths [
+		path: siskin/expand-env copy path
 		if #"/" <> first path [insert path %../] 
 		append append LIBRARY-PATH to-local-file path #";"
 	]
@@ -335,6 +336,7 @@ make-project: func[
 	items:   copy []
 	foreach file join spec/files spec/assembly [
 		;file: siskin/get-file-with-extensions file [%.c %.cpp %.cc %.m %.S %.s %.sx]
+		file: siskin/expand-env copy file
 		rel-file: get-relative-path file dir-vs
 		dir: first split-path rel-file
 		parse dir [remove any %../]    ; get directory name without .. (used in gui as names of folders)
@@ -347,10 +349,9 @@ make-project: func[
 			append filters dir
 		]
 		
-		if file
 		append output rejoin [
 			{    <ClCompile Include="} to-windows-file rel-file {" />^/}
-		] 
+		]
 	]
 	PROJECT-FILES: copy output
 
@@ -365,6 +366,7 @@ make-project: func[
 	;-- collect INCLUDE-PATH                                                    
 	clear output
 	foreach inc spec/includes [
+		inc: siskin/expand-env copy inc
 		inc: clean-path/only inc
 		if #"/" <> first inc [ insert inc %../ ]
 		append append output to-local-file inc #";"

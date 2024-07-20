@@ -2,7 +2,7 @@ Rebol [
 	Title:  "Siskin Builder - core"
 	Type:    module
 	Name:    siskin
-	Version: 0.17.0
+	Version: 0.18.0
 	Author: "Oldes"
 	
 	exports: [
@@ -23,7 +23,7 @@ Rebol [
 banner: next rejoin [{
 ^[[0;33m═╗
 ^[[0;33m ║^[[1;31m    .-.
-^[[0;33m ║^[[1;31m   /'v'\   ^[[0;33mSISKIN-Framework Builder 0.17.0 Rebol } rebol/version {
+^[[0;33m ║^[[1;31m   /'v'\   ^[[0;33mSISKIN-Framework Builder 0.18.0 Rebol } rebol/version {
 ^[[0;33m ║^[[1;31m  (/^[[0;31muOu^[[1;31m\)  ^[[0;33mhttps://github.com/Siskin-framework/Builder/
 ^[[0;33m ╚════^[[1;31m"^[[0;33m═^[[1;31m"^[[0;33m═══════════════════════════════════════════════════════════════════════^[[m}]
 
@@ -36,6 +36,33 @@ xcode/siskin:
 mmake/siskin:  self
 
 debug?: off
+
+;--- backwards compatibility ---
+if system/version < 3.17.2 [
+	;; The code is using the new QUERY, so let's make it backward compatible, when needed...
+	lib/query: query: function/with [
+		"Forward compatibitity version!"
+		target [port! file! url! block! vector! date! handle! word!]
+    	field [word! block! none! datatype!] ;;"NONE will return valid modes for target type"
+    	/mode ;; deprecated
+	][
+		mode: true
+		case [
+			datatype? field [mode: none]
+			block? field [
+				parse field [any [change set w: word! (
+					all [field = 'modified file? target w: 'date]
+					to set-word! :w
+				) | skip]]
+			]
+			all [field = 'modified file? target] [field: 'date]
+		]
+		query*/:mode target field
+	][
+		query*: :lib/query
+	]
+]
+;-------------------------------
 
 append system/options/log [siskin: 1]
 
@@ -850,7 +877,7 @@ do-nest: closure/with/extern [
 			none? nest-file
 			parent
 			all [
-				date? tmp: query/mode nest-file 'date
+				date? tmp: query nest-file 'modified
 				nest-time < tmp
 			]
 		][
@@ -1606,8 +1633,8 @@ build: function/with [
 		i: i + 1
 		;file: expand-env copy file
 		;?? file
-		source-info: query source: file
-		unless source-info [
+		source-modified: query source: file 'modified
+		unless source-modified [
 			print-error ["Source file not found: " to-local-file file]
 			print-failed
 			exit
@@ -1637,8 +1664,8 @@ build: function/with [
 
 		either any [
 			rebuild?
-			none? target-info: query target
-			target-info/date < source-info/date
+			none? target-modified: query target 'modified
+			target-modified < source-modified
 		][
 			make-dir/deep first split-path target
 
@@ -1665,7 +1692,10 @@ build: function/with [
 
 	foreach file spec/assembly [
 		either any [
-			all [source: query file source/type = 'file source: file]
+			all [
+				'file == query file 'type
+				source: file
+			]
 			source: get-file-with-extensions    file [%.S %.s %.sx]
 		][
 			store-object spec/objects/objects.txt to-local-file source
@@ -2041,7 +2071,7 @@ print-bird: does [
 ^[[1;31m         (/^[[0;31muOu^[[1;31m\)}
 ]
 print-ready: closure/with [][
-	result: query out-file
+	result: query out-file [name size date]
 	print-bird
 	prin {^/^[[0;32m═[^[[1mSISKIN^[[0;32m]══^[[1;31m"^[[0;32m═^[[1;31m"^[[0;32m═>  ^[[1mBuild READY}
 	prin {^/^[[0;32m │}

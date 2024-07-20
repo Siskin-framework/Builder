@@ -5,6 +5,8 @@
 github: @Rebol
 nest:   %Rebol/make/rebol3.nest
 
+version: 0.18.0
+
 make-siskin: [
 	product:  Siskin
 	;version:  0.10.4 ;!! Don't use this setting! Because it would be reported like internal Rebol version!
