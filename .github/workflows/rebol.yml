@@ -16,7 +16,7 @@ jobs:
     runs-on: windows-latest
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Install Rebol
       uses: oldes/install-rebol@v3.16.0
@@ -100,7 +100,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Install Rebol
       uses: oldes/install-rebol@v3.16.0
@@ -197,7 +197,7 @@ jobs:
     runs-on: macos-12
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install Rebol
         uses: oldes/install-rebol@v3.16.0
@@ -312,7 +312,7 @@ jobs:
 
     - uses: actions/upload-artifact@v3
       with:
-        name: Rebol-DragonFlyBSD-${{github.run_id}}
+        name: Rebol-${{github.run_id}}
         path: ./rebol3*.gz
 
   OpenBSD:
@@ -348,7 +348,7 @@ jobs:
 
     - uses: actions/upload-artifact@v3
       with:
-        name: Rebol-OpenBSD-${{github.run_id}}
+        name: Rebol-${{github.run_id}}
         path: ./rebol3*.gz
 
   FreeBSD:
@@ -380,5 +380,71 @@ jobs:
 
     - uses: actions/upload-artifact@v3
       with:
-        name: Rebol-FreeBSD-${{github.run_id}}
+        name: Rebol-${{github.run_id}}
         path: ./rebol3*.gz
+
+  Haiku-x86:
+    runs-on: ubuntu-latest
+    if: true
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
+      - name: Download Haiku Rebol-dev container
+        run: docker pull docker.io/oldes/rebol-dev:haiku-x86
+
+      - name: Build all Rebol for Haiku OS x86
+        run: docker run --rm -v $PWD:/siskin oldes/rebol-dev:haiku-x86 bash -c 'cd /siskin; rebol siskin.r3 rebol rebol3-base-haiku-x86 rebol3-core-haiku-x86 rebol3-bulk-haiku-x86'
+
+      - name: Compress result before uploading
+        run: |
+          sudo mv ./tree/rebol/Rebol/build/rebol3-base-haiku-x86 ./
+          sudo mv ./tree/rebol/Rebol/build/rebol3-core-haiku-x86 ./
+          sudo mv ./tree/rebol/Rebol/build/rebol3-bulk-haiku-x86 ./
+          sudo gzip -9 ./rebol3-base-haiku-x86
+          sudo gzip -9 ./rebol3-core-haiku-x86
+          sudo gzip -9 ./rebol3-bulk-haiku-x86
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: Rebol-${{github.run_id}}
+          path: ./rebol3-*.gz
+
+  Haiku-x64:
+    runs-on: ubuntu-latest
+    if: true
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
+      - name: Download Haiku Rebol-dev container
+        run: docker pull docker.io/oldes/rebol-dev:haiku-x64
+
+      - name: Build all Rebol for Haiku OS x64
+        run: docker run --rm -v $PWD:/siskin oldes/rebol-dev:haiku-x64 bash -c 'cd /siskin; rebol siskin.r3 rebol rebol3-base-haiku-x64 rebol3-core-haiku-x64 rebol3-bulk-haiku-x64'
+
+      - name: Compress result before uploading
+        run: |
+          sudo mv ./tree/rebol/Rebol/build/rebol3-base-haiku-x64 ./
+          sudo mv ./tree/rebol/Rebol/build/rebol3-core-haiku-x64 ./
+          sudo mv ./tree/rebol/Rebol/build/rebol3-bulk-haiku-x64 ./
+          sudo gzip -9 ./rebol3-base-haiku-x64
+          sudo gzip -9 ./rebol3-core-haiku-x64
+          sudo gzip -9 ./rebol3-bulk-haiku-x64
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: Rebol-${{github.run_id}}
+          path: ./rebol3-*.gz
