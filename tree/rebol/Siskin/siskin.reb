@@ -1054,6 +1054,7 @@ do-nest: closure/with/extern [
 					| 'version (print banner)           break
 					| 'help    (print help-options-int) break
 					| some options ; these options are for building, but they should not be listed as unknown
+					  opt [end (if rebuild? [print-error "The clean option requires some target!"])]
 					| ['q | 'quit] (interactive?: false)
 					| p: 1 skip (print-error ["Unknown command:" as-red mold first p])
 				]
