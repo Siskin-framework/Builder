@@ -1034,7 +1034,7 @@ do-nest: closure/with/extern [
 							if all [
 								run-result?
 								not no-eval?
-								object? result
+								block? result
 								file? result/name
 							][
 								print [as-green "^/Executing:" to-local-file result/name]
@@ -1464,7 +1464,7 @@ build: function/with [
 	unless spec/compiler [
 		if have-files? [
 			;; if there are any files to be compiled, warn that the compiler is unknown
-			print-warning "No compiler to use."
+			print-info "No compiler to use."
 		]
 		unless out-file [
 			out-file: spec/script ;; if Rebol preprocessor was used 
