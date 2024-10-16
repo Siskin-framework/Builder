@@ -32,11 +32,11 @@ jobs:
 
     - name: Build 32bit Rebol/Speak extension
       shell: bash
-      run: ./rebol3 siskin.r3 rebol/speak --msvc -o $OUT/speak-windows-x86.rebx speak-windows-x86
+      run: ./rebol3 siskin.r3 rebol/speak --msvc -o $OUT/speak-windows-x86.rebx speak-x86
 
     - name: Build 64bit Rebol/Speak extension
       shell: bash
-      run: ./rebol3 siskin.r3 rebol/speak --msvc -o $OUT/speak-windows-x64.rebx speak-windows-x64
+      run: ./rebol3 siskin.r3 rebol/speak --msvc -o $OUT/speak-windows-x64.rebx speak-x64
 
     - name: Minimal Rebol/Speak extension test
       shell: bash
