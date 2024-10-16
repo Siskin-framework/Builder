@@ -1,0 +1,115 @@
+name: 'Rebol/Speak'
+on:
+  # Triggers the workflow on push or pull request events but only for the master branch
+  push:
+    branches: [ master ]
+    paths:
+      - .github/workflows/rebol-speak.yml
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+env:
+  OUT: ${{github.WORKSPACE}}/Release
+  REBOL_MODULES_DIR: ${{github.WORKSPACE}}/Release
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    if: true
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Prepare output directory
+      shell: bash
+      run: mkdir $OUT
+
+    - name: Install Rebol
+      uses: oldes/install-rebol@v3.17.0
+      with:
+        product: Bulk
+
+    - name: Build 32bit Rebol/Speak extension
+      shell: bash
+      run: ./rebol3 siskin.r3 rebol/speak --msvc -o $OUT/speak-windows-x86.rebx speak-windows-x86
+
+    - name: Build 64bit Rebol/Speak extension
+      shell: bash
+      run: ./rebol3 siskin.r3 rebol/speak --msvc -o $OUT/speak-windows-x64.rebx speak-windows-x64
+
+    - name: Minimal Rebol/Speak extension test
+      shell: bash
+      run:  ./rebol3 ./tree/rebol/Rebol-Speak/ci-test.r3
+
+    - uses: actions/upload-artifact@v3
+      with:
+        name: Rebol-Speak-${{github.run_id}}
+        path: ${{env.OUT}}/speak*.rebx
+
+  macos:
+    runs-on: macos-latest
+    if: true
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Prepare output directory
+      run: mkdir $OUT
+
+    - name: Install Rebol
+      uses: oldes/install-rebol@v3.17.0
+      with:
+        product: Bulk
+
+    - name: Build Rebol/Speak extension (x64)
+      run: ./rebol3 siskin.r3 rebol/speak -o $OUT/speak-macos-x64.rebx speak-x64
+
+    - name: Build Rebol/Speak extension (arm64)
+      run: ./rebol3 siskin.r3 rebol/speak -o $OUT/speak-macos-arm64.rebx speak-arm64
+
+    - name: Install the Apple certificate
+    # https://docs.github.com/en/actions/guides/installing-an-apple-certificate-on-macos-runners-for-xcode-development
+      env:
+        BUILD_CERTIFICATE_BASE64: ${{ secrets.MACOS_CERTIFICATE }}
+        P12_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PWD }}
+        KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+      run: |
+        # create variables
+        CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
+        KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+
+        # import certificate from secrets
+        echo -n "$BUILD_CERTIFICATE_BASE64" | base64 --decode --output $CERTIFICATE_PATH
+
+        # create temporary keychain
+        security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+        security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
+        security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+
+        # import certificate to keychain
+        security import $CERTIFICATE_PATH -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
+        security list-keychain -d user -s $KEYCHAIN_PATH
+
+        # list available codesigning identities
+        security find-identity -v -p codesigning
+  
+    - name: Codesign executables
+      env: 
+        MACOS_IDENTITY_ID: ${{ secrets.MACOS_IDENTITY_ID }}
+      run: |
+        /usr/bin/codesign --force -s $MACOS_IDENTITY_ID $OUT/speak-macos-x64.rebx -v
+        /usr/bin/codesign --force -s $MACOS_IDENTITY_ID $OUT/speak-macos-arm64.rebx -v
+
+    - name: Minimal Rebol/Speak extension test
+      run:  ./rebol3 ./tree/rebol/Rebol-Speak/ci-test.r3
+
+    - name: Compress Rebol/Speak extensions
+      run:  |
+        gzip -9 $OUT/speak-macos-x64.rebx
+        gzip -9 $OUT/speak-macos-arm64.rebx
+
+    - uses: actions/upload-artifact@v3
+      with:
+        name: Rebol-Speak-${{github.run_id}}
+        path: ${{env.OUT}}/speak-macos-*.gz
