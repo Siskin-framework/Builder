@@ -2,7 +2,7 @@ Rebol [
 	Title:  "Siskin Builder - core"
 	Type:    module
 	Name:    siskin
-	Version: 0.18.0
+	Version: 0.18.1
 	Author: "Oldes"
 	
 	exports: [
@@ -23,7 +23,7 @@ Rebol [
 banner: next rejoin [{
 ^[[0;33m═╗
 ^[[0;33m ║^[[1;31m    .-.
-^[[0;33m ║^[[1;31m   /'v'\   ^[[0;33mSISKIN-Framework Builder 0.18.0 Rebol } rebol/version {
+^[[0;33m ║^[[1;31m   /'v'\   ^[[0;33mSISKIN-Framework Builder 0.18.1 Rebol } rebol/version {
 ^[[0;33m ║^[[1;31m  (/^[[0;31muOu^[[1;31m\)  ^[[0;33mhttps://github.com/Siskin-framework/Builder/
 ^[[0;33m ╚════^[[1;31m"^[[0;33m═^[[1;31m"^[[0;33m═══════════════════════════════════════════════════════════════════════^[[m}]
 
@@ -820,13 +820,15 @@ parse-nest: closure/with [
 	dest/files: unique dest/files
 	new-line/all dest/files true
 
-	;add these flag even when not specified by user as these are needed
-	unless dest/arch [
-		dest/arch: any [
-			select system/build 'target
-			either find form system/build/os "-x64" ['x64]['x86] ;@@ deprecated!
-		]
-	]
+;	;add these flag even when not specified by user as these are needed
+;	unless dest/arch [
+;		?? dest/arch
+;		dest/arch: any [
+;			select system/build 'arch
+;			select system/build 'target
+;			either find form system/build/os "-x64" ['x64]['x86] ;@@ deprecated!
+;		]
+;	]
 ;	switch dest/arch [
 ;		x86 [ add-flag dest 'm32 ]
 ;		x64 [ add-flag dest 'm64 ]  
@@ -1336,7 +1338,7 @@ build: function/with [
 	shared: copy ""
 	if block? spec/shared [
 		; include output directory for shared libraries lookup
-		append shared ajoin ["-L" to-local-file clean-path spec/output #" "]
+		insert shared ajoin ["-L" to-local-file clean-path spec/output #" "]
 		foreach file spec/shared [
 			;file: preprocess-dirs file
 			set [dir: file:] split-path file
@@ -1750,12 +1752,9 @@ build: function/with [
 			print as-green "^/Making archive:^/"
 
 			tmp: split-path out-file
-			either windows? [
-				replace-extension tmp/2 %.lib
-			][
-				replace-extension tmp/2 %.a
-				unless find/part tmp/2 %lib 3 [insert tmp/2 %lib]
-			]
+			replace-extension tmp/2 %.a
+			unless find/part tmp/2 %lib 3 [insert tmp/2 %lib]
+
 			archive: join tmp/1 tmp/2
 
 			delete archive

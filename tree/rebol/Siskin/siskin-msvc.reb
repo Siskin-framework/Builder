@@ -232,6 +232,8 @@ make-project: func[
 	unless siskin [siskin: system/modules/siskin]
 	output: make string! 30000
 
+	unless spec/arch [spec/arch: system/build/arch]
+
 	; check for available VS versions
 	ver: vswhere
 	MSVC-PATH: any [
