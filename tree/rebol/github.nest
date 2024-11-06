@@ -2,5 +2,5 @@
 ;-   /'v'\   SISKIN-Builder project file                                        
 ;-  (/uOu\)  https://github.com/Siskin-framework/Builder/                       
 ;-===="="=======================================================================
-github: @Rebol-GitHub
+github: Oldes/Rebol-GitHub
 nest:   %Rebol-GitHub/Rebol-GitHub.nest
