@@ -9,7 +9,8 @@ switch system/platform [
 		shdc-tool: %sokol-tools-bin\bin\linux\sokol-shdc
 		slang: %glsl330
 	]
-	macintosh [
+	macintosh
+	macOS [
 		shdc-tool: either system/build/arch = 'arm64 [
 			%sokol-tools-bin\bin\osx_arm64\sokol-shdc
 		][	%sokol-tools-bin\bin\osx\sokol-shdc]

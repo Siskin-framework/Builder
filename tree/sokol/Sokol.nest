@@ -8,9 +8,10 @@ name: "Sokol"
 github: floooh/sokol
 github: floooh/sokol-samples
 github: floooh/sokol-tools-bin
-github: floooh/cimgui-sokol-starterkit
+;github: floooh/cimgui-sokol-starterkit
 ;github: floooh/libmodplug
-github: ocornut/imgui
+;github: ocornut/imgui
+github: floooh/dcimgui
 
 strip:    true
 arch:     x64
@@ -20,6 +21,9 @@ output:   %bin/
 compiler: clang
 
 #if Windows? [define:  _CRT_SECURE_NO_WARNINGS]
+#if Posix? [
+	cppflag: "-std=c++14"
+]
 
 include: %sokol/
 
@@ -54,37 +58,42 @@ common-glfw: [
 ]
 
 common-imgui: [
-	include: [
-		%imgui/
-	]
+	include: %dcimgui/src/
 	;#if Windows? [
 	;	compiler: x86_64-w64-mingw32-g++
 	;]
 	files: [
-		%imgui/imgui.cpp
-		%imgui/imgui_draw.cpp
-		%imgui/imgui_tables.cpp
-		%imgui/imgui_widgets.cpp
+		%dcimgui/src/imgui.cpp
+		%dcimgui/src/imgui_draw.cpp
+		%dcimgui/src/imgui_tables.cpp
+		%dcimgui/src/imgui_widgets.cpp
 	]
+	lflag:   "-lstdc++"
 	;cflags: [-fno-threadsafe-statics]
 	;cflags: [-fpermissive]
 ]
 common-cimgui: [
-	include: %cimgui-sokol-starterkit/
-	include: %cimgui-sokol-starterkit/cimgui/
-	;include: %cimgui-sokol-starterkit/sokol/
-	;include: %/x/MingW/mingw-w64-headers/direct-x/include/ 
+	:common-imgui
 	files: [
-		%cimgui-sokol-starterkit/cimgui/imgui/imgui.cpp
-		%cimgui-sokol-starterkit/cimgui/imgui/imgui_draw.cpp
-		%cimgui-sokol-starterkit/cimgui/imgui/imgui_demo.cpp
-		%cimgui-sokol-starterkit/cimgui/imgui/imgui_tables.cpp
-		%cimgui-sokol-starterkit/cimgui/imgui/imgui_widgets.cpp
-		%cimgui-sokol-starterkit/cimgui/cimgui.cpp
+		%dcimgui/src/imgui_demo.cpp
+		%dcimgui/src/cimgui.cpp
 	]
+]
+common-imgui-dock: [
+	include: %dcimgui/src-docking/
 	;#if Windows? [
 	;	compiler: x86_64-w64-mingw32-g++
 	;]
+	files: [
+		%dcimgui/src-docking/imgui.cpp
+		%dcimgui/src-docking/imgui_draw.cpp
+		%dcimgui/src-docking/imgui_tables.cpp
+		%dcimgui/src-docking/imgui_widgets.cpp
+		;%dcimgui/src-docking/cimgui.cpp
+	]
+	lflag:   "-lstdc++"
+	;cflags: [-fno-threadsafe-statics]
+	;cflags: [-fpermissive]
 ]
 common-dbgui: [
 	:common-imgui
@@ -238,7 +247,7 @@ common-sapp: [
 		%sokol-samples/libs/sokol/
 		%sokol-samples/libs/
 		%sokol/util/
-		%tmp/glsl/
+		;%tmp/glsl/
 	]
 	#if Windows? [
 		file: %sokol-samples/libs/sokol/sokol.c
@@ -260,6 +269,9 @@ common-sapp: [
 		defines: [
 			SOKOL_METAL
 		]
+		includes: [
+			%tmp/metal_macos/
+		]
 		:target-arm64
 		frameworks: [
 			AudioToolbox
@@ -278,6 +290,18 @@ ozz-anim: [
 	file:    %sokol-samples/libs/ozzanim/src/ozz_base.cc
 	file:    %sokol-samples/libs/ozzanim/src/mesh.cc
 	include: %sokol-samples/libs/ozzanim/include/
+
+	file:    %sokol-samples/libs/ozzutil/ozzutil.cc
+	include: %sokol-samples/libs/ozzutil/
+]
+
+file-util: [
+	include: %sokol-samples/libs/util/
+	#either macOS? [
+		file: %sokol-samples/libs/util/fileutil_osx.m
+	][
+		file: %sokol-samples/libs/util/fileutil.c
+	]
 ]
 
 eggs: [
@@ -555,6 +579,11 @@ eggs: [
 		name: %sapp-clear
 		file: %sokol-samples/sapp/clear-sapp.c
 	]
+	"SAPP Cube" [
+		:common-sapp
+		name: %sapp-cube
+		file: %sokol-samples/sapp/cube-sapp.c
+	]
 	"SAPP Cubemaprt JPEG" [
 		:common-sapp
 		name: %sapp-cubemaprt-jpeg
@@ -567,10 +596,11 @@ eggs: [
 		name: %sapp-cubemaprt
 		file: %sokol-samples/sapp/cubemaprt-sapp.c
 	]
-	"SAPP Cube" [
+	"SAPP Custom resolve" [
 		:common-sapp
-		name: %sapp-cube
-		file: %sokol-samples/sapp/cube-sapp.c
+		:common-cimgui
+		name: %sapp-customresolve
+		file: %sokol-samples/sapp/customresolve-sapp.c
 	]
 	"SAPP Debugtext-context - Demonstrate rendering to offscreen render targets with contexts." [
 		:common-sapp
@@ -614,6 +644,12 @@ eggs: [
 		name: %sapp-dyntex
 		file: %sokol-samples/sapp/dyntex-sapp.c
 	]
+	"SAPP Dyntex3D - Update dynamic 3D texture with CPU-generated data each frame" [
+		:common-sapp
+		:common-cimgui
+		name: %sapp-dyntex3d
+		file: %sokol-samples/sapp/dyntex3d-sapp.c
+	]
 	"SAPP Events" [
 		:common-sapp
 		:common-imgui
@@ -641,17 +677,17 @@ eggs: [
 	]
 	"SAPP imGui dock" [
 		:common-sapp
-		:common-imgui
+		:common-imgui-dock
 		name: %sapp-imgui-dock
 		file: %sokol-samples/sapp/imgui-dock-sapp.cc
-		file: %imgui/imgui_demo.cpp
+		file: %dcimgui/src-docking/imgui_demo.cpp
 	]
 	"SAPP imGui hiDPI" [
 		:common-sapp
 		:common-imgui
 		name: %sapp-imgui-highdpi
 		file: %sokol-samples/sapp/imgui-highdpi-sapp.cc
-		file: %imgui/imgui_demo.cpp
+		file: %dcimgui/src/imgui_demo.cpp
 	]
 	"SAPP imGui images - How to use sokol-gfx images and sampler with Dear ImGui" [
 		:common-sapp
@@ -664,7 +700,7 @@ eggs: [
 		:common-imgui
 		name: %sapp-imgui
 		file: %sokol-samples/sapp/imgui-sapp.cc
-		file: %imgui/imgui_demo.cpp
+		file: %dcimgui/src/imgui_demo.cpp
 	]
 	"SAPP imGui UserCallback" [
 		:common-sapp
@@ -737,6 +773,7 @@ eggs: [
 		:common-sapp
 		:common-imgui
 		:ozz-anim
+		:file-util
 		name: %sapp-ozz-anim
 		file: %sokol-samples/sapp/ozz-anim-sapp.cc
 	]
@@ -744,6 +781,7 @@ eggs: [
 		:common-sapp
 		:common-imgui
 		:ozz-anim
+		:file-util
 		name: %sapp-ozz-skin
 		file: %sokol-samples/sapp/ozz-skin-sapp.cc
 	]
@@ -784,6 +822,11 @@ eggs: [
 		:common-sapp
 		name: %sapp-saudio
 		file: %sokol-samples/sapp/saudio-sapp.c
+	]
+	"SAPP sbuftex" [
+		:common-sapp
+		name: %sapp-sbuftex
+		file: %sokol-samples/sapp/sbuftex-sapp.c
 	]
 	"SAPP sdf" [
 		:common-sapp
@@ -835,6 +878,11 @@ eggs: [
 		:common-sapp
 		name: %sapp-shapes-transform
 		file: %sokol-samples/sapp/shapes-transform-sapp.c
+	]
+	"SAPP Shared Bindings" [
+		:common-sapp
+		name: %sapp-shared-bindings
+		file: %sokol-samples/sapp/shared-bindings-sapp.c
 	]
 ;	"SAPP shdfeatures" [
 ;		:common-sapp
@@ -896,6 +944,11 @@ eggs: [
 		name: %sapp-triangle
 		file: %sokol-samples/sapp/triangle-sapp.c
 	]
+	"SAPP Triangle bufferless" [
+		:common-sapp
+		name: %sapp-triangle-bufferless
+		file: %sokol-samples/sapp/triangle-bufferless-sapp.c
+	]
 	"SAPP uniformtypes" [
 		:common-sapp
 		name: %sapp-uniformtypes
@@ -905,6 +958,11 @@ eggs: [
 		:common-sapp
 		name: %sapp-uvwrap
 		file: %sokol-samples/sapp/uvwrap-sapp.c
+	]
+	"SAPP vertexpull" [
+		:common-sapp
+		name: %sapp-vertexpull
+		file: %sokol-samples/sapp/vertexpull-sapp.c
 	]
 ;
 ;		"SAPP Cube experiments" [
