@@ -2,7 +2,7 @@ Rebol [
 	Title:  "Siskin Builder - core"
 	Type:    module
 	Name:    siskin
-	Version: 0.18.1
+	Version: 0.18.2
 	Author: "Oldes"
 	
 	exports: [
@@ -23,7 +23,7 @@ Rebol [
 banner: next rejoin [{
 ^[[0;33m═╗
 ^[[0;33m ║^[[1;31m    .-.
-^[[0;33m ║^[[1;31m   /'v'\   ^[[0;33mSISKIN-Framework Builder 0.18.1 Rebol } rebol/version {
+^[[0;33m ║^[[1;31m   /'v'\   ^[[0;33mSISKIN-Framework Builder 0.18.2 Rebol } rebol/version {
 ^[[0;33m ║^[[1;31m  (/^[[0;31muOu^[[1;31m\)  ^[[0;33mhttps://github.com/Siskin-framework/Builder/
 ^[[0;33m ╚════^[[1;31m"^[[0;33m═^[[1;31m"^[[0;33m═══════════════════════════════════════════════════════════════════════^[[m}]
 
@@ -1681,7 +1681,7 @@ build: function/with [
 				;source-type
 				to-local-file source
 				"-c" cflags
-				either suffix == %.cpp [cppflags][""]
+				either cpp? [cppflags][""]
 				"$DEFINES $INCLUDES"
 				"-o" to-local-file target-short ;-- using environment variable to hold temp location
 			]
