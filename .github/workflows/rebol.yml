@@ -194,7 +194,7 @@ jobs:
         path: ./tree/rebol/Rebol/build/rebol3-*.gz
 
   macos:
-    runs-on: macos-12
+    runs-on: macos-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
