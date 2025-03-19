@@ -79,20 +79,11 @@ jobs:
     - uses: actions/upload-artifact@v4
       with:
         name: Rebol-${{github.run_id}}-windows
-        path: ./rebol3-*.exe
-    # and lib/host variant...
-    - uses: actions/upload-artifact@v4
-      with:
-        name: Rebol-${{github.run_id}}-windows
-        path: ./lib-*.dll
-    - uses: actions/upload-artifact@v4
-      with:
-        name: Rebol-${{github.run_id}}-windows
-        path: ./lib-*.lib
-    - uses: actions/upload-artifact@v4
-      with:
-        name: Rebol-${{github.run_id}}-windows
-        path: ./host-*.exe
+        path: |
+          ./rebol3-*.exe
+          ./lib-*.dll
+          ./lib-*.lib
+          ./host-*.exe
 
   linux:
     strategy:
