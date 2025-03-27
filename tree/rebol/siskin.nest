@@ -5,7 +5,7 @@
 github: @Rebol
 nest:   %Rebol/make/rebol3.nest
 
-version: 0.18.5
+;version: 3.18.5 ;; use Rebol version!!!
 
 make-siskin: [
 	product:  Siskin
