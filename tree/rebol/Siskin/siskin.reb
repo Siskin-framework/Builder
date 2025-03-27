@@ -786,7 +786,7 @@ parse-nest: closure/with [
 		)
 		|
 		'do [
-			set val: file! set args [string! | block! | none! | none] (
+			set val: file! set args: opt [string! | block! | none! | none] (
 				add-pre-build dest ['do val args]
 			)
 			|
@@ -795,7 +795,7 @@ parse-nest: closure/with [
 			)
 		]
 		|
-		'preprocess set val: file! set args: [file! | none! | none] (
+		'preprocess set val: file! set args: opt [file! | none! | none] (
 			add-pre-build dest ['preprocess val args]
 		)
 		|
