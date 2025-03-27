@@ -18,10 +18,10 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install Rebol
-        uses: oldes/install-rebol@v3.16.0
+        uses: oldes/install-rebol@v3.18.0
 
       # 32bit gcc version would fail for now (requires 32bit mingw)
       #    - name: Build 32bit Siskin using gcc
@@ -95,7 +95,7 @@ jobs:
       - name: Test only single command
         run: ./siskin-windows-x86_64.exe test list-dir
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: Siskin-windows
           path: |
@@ -115,10 +115,10 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install Rebol
-        uses: oldes/install-rebol@v3.16.0
+        uses: oldes/install-rebol@v3.18.0
 
       - name: Install GCC multilib
         run: sudo apt-get install gcc-multilib
@@ -173,7 +173,7 @@ jobs:
           gzip -9 ./siskin-linux-x86_64
           gzip -9 ./siskin-linux-x86
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: Siskin-linux
           path: ./siskin-linux*
@@ -182,10 +182,10 @@ jobs:
     runs-on: macos-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install Rebol
-        uses: oldes/install-rebol@v3.16.0
+        uses: oldes/install-rebol@v3.18.0
 
       - name: Install the Apple certificate
       # https://docs.github.com/en/actions/guides/installing-an-apple-certificate-on-macos-runners-for-xcode-development
@@ -278,7 +278,7 @@ jobs:
           gzip -9 ./siskin-macos-x86_64
           gzip -9 ./siskin-macos-aarch64
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: Siskin-macos
           path: ./siskin-macos-*
@@ -287,10 +287,10 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install Rebol
-        uses: oldes/install-rebol@v3.16.0
+        uses: oldes/install-rebol@v3.18.0
 
 
       - name: Preprocess Siskin script
@@ -333,7 +333,7 @@ jobs:
       - name: Compress results before uploading
         run: gzip -9 ./build.r3
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: Siskin-script
           path: ./build.r3.gz
@@ -344,7 +344,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Login to Docker Hub
         uses: docker/login-action@v2
@@ -363,7 +363,7 @@ jobs:
           sudo mv ./tree/rebol/Siskin/build/siskin-haiku-x86 ./
           sudo gzip -9 ./siskin-haiku-x86
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: Siskin-Haiku
           path: ./siskin-haiku-x86.gz
@@ -374,7 +374,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Login to Docker Hub
         uses: docker/login-action@v2
@@ -393,7 +393,7 @@ jobs:
           sudo mv ./tree/rebol/Siskin/build/siskin-haiku-x86_64 ./
           sudo gzip -9 ./siskin-haiku-x86_64
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: Siskin-Haiku
           path: ./siskin-haiku-x86_64.gz
