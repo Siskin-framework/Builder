@@ -2,7 +2,7 @@ Rebol [
 	Title:  "Siskin Builder - core"
 	Type:    module
 	Name:    siskin
-	Version: 0.18.2
+	Version: 0.18.5
 	Author: "Oldes"
 	
 	exports: [
@@ -23,7 +23,7 @@ Rebol [
 banner: next rejoin [{
 ^[[0;33m═╗
 ^[[0;33m ║^[[1;31m    .-.
-^[[0;33m ║^[[1;31m   /'v'\   ^[[0;33mSISKIN-Framework Builder 0.18.2 Rebol } rebol/version {
+^[[0;33m ║^[[1;31m   /'v'\   ^[[0;33mSISKIN-Framework Builder 0.18.5 Rebol } rebol/version {
 ^[[0;33m ║^[[1;31m  (/^[[0;31muOu^[[1;31m\)  ^[[0;33mhttps://github.com/Siskin-framework/Builder/
 ^[[0;33m ╚════^[[1;31m"^[[0;33m═^[[1;31m"^[[0;33m═══════════════════════════════════════════════════════════════════════^[[m}]
 
@@ -383,12 +383,12 @@ do-upx: closure/with [file [file!]][
 		unless windows? [exit]
 		try/except [
 			print-info "Downloading UPX"
-			bin: read https://github.com/upx/upx/releases/download/v4.1.0/upx-4.1.0-win32.zip
-			if #{066C62993CE904F9F377CE849E85B77D1E2CF477D554C36C5FF89F6D3F0FA072} <> checksum bin 'sha256 [
+			bin: read https://github.com/upx/upx/releases/download/v5.0.0/upx-5.0.0-win32.zip
+			if #{8C34B9CEC2C225BF71F43CF2B788043D0D203D23EDB54F649FBEC16F34938D80} <> checksum bin 'sha256 [
 				print-error "UPX binary checksum failed!"
 				exit
 			]
-			exe: codecs/zip/decode/only bin [%upx-4.1.0-win32/upx.exe]
+			exe: codecs/zip/decode/only bin [%upx-5.0.0-win32/upx.exe]
 			upx: write root-dir/upx.exe exe/2/2
 			add-env-path root-dir
 		] [	print-error system/state/last-error exit ]
@@ -1150,7 +1150,8 @@ build-msvc: function/with [
 		;? spec
 		file: rejoin [
 			any [spec/root what-dir]
-			either spec/arch = 'x64 [%msvc/Release-x64/][%msvc/Release-Win32/]
+			%msvc/Release-
+			any [select [x64 "x64/" arm64 "ARM/"] spec/arch "Win32/"]
 			spec/name
 		]
 		finalize-build spec file

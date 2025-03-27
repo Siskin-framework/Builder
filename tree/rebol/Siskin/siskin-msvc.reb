@@ -7,6 +7,7 @@ Rebol [
 siskin: none
 
 ;-- variables:
+ARCH:
 PLATFORM:   
 PLATFORM-X:
 PROJECT-TYPE-GUID:
@@ -249,6 +250,7 @@ make-project: func[
 	siskin/print-info ["MSVC path:" as-green MSVC-PATH]
 
 	TOOLSET-VERSION: any [
+		all [find MSVC-PATH "\2022\" "v143"]
 		all [find MSVC-PATH "\2019\" "v142"]
 		all [find MSVC-PATH "\2017\" "v141"]
 		all [find MSVC-PATH "\2015\" "v140"]
@@ -288,8 +290,11 @@ make-project: func[
 	PROJECT-GUID: make-guid/from name
 	PROJECT-NAME: name
 	PROJECT-TYPE-GUID: any [id make-guid/from "Siskin Visual Studio Project"]
-	PLATFORM:   either spec/arch = 'x64 ["x64"]["Win32"]
-	PLATFORM-X: either spec/arch = 'x64 ["x64"]["x86"]
+	PLATFORM:   any [select [x64 "x64" arm64 "ARM"] spec/arch "Win32"]
+	PLATFORM-X: any [select [x64 "x64" arm64 "ARM"] spec/arch "x86"]
+	ARCH: either all [spec/arch = 'arm64 system/build/arch <> 'arm64][
+		"x64_arm64"
+	][ PLATFORM-X ]
 	SUBSYSTEM:  either find spec/lflags "-mwindows" ["Windows"]["Console"]
 
 	reword/escape/into sln self [#"#" #"#"] output
@@ -592,7 +597,7 @@ vcxproj.filters: {<?xml version="1.0" encoding="utf-8"?>
 </Project>}
 
 build-vs-release: {@echo off
-call "#MSVC-PATH#\VC\Auxiliary\Build\vcvarsall.bat" #PLATFORM-X#
+call "#MSVC-PATH#\VC\Auxiliary\Build\vcvarsall.bat" #ARCH#
 cd %~dp0
 msbuild "#PROJECT-NAME#.sln" /p:Configuration=Release /p:Platform="#PLATFORM-X#"
 cd %~dp0
