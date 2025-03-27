@@ -365,7 +365,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: Siskin-Haiku
+          name: Siskin-Haiku-x86
           path: ./siskin-haiku-x86.gz
 
   Haiku-x86_64:
@@ -395,5 +395,5 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: Siskin-Haiku
+          name: Siskin-Haiku-x64
           path: ./siskin-haiku-x86_64.gz
