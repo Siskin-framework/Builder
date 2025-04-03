@@ -1,3 +1,5 @@
+[![siskin-builder](https://github.com/user-attachments/assets/56ca61c1-0ed5-4f0d-b9df-7ea916b2a9c9)](https://github.com/Siskin-framework/Builder)
+
 [![Gitter](https://badges.gitter.im/rebol3/community.svg)](https://app.element.io/#/room/#siskin-builder:gitter.im)
 [![Zulip](https://img.shields.io/badge/zulip-join_chat-brightgreen.svg)](https://rebol.zulipchat.com/)
 
