@@ -8,10 +8,10 @@ jobs:
     runs-on: windows-latest
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Install Rebol
-      uses: oldes/install-rebol@v3.14.0
+      uses: oldes/install-rebol@v3.18.0
     
     - name: Build 32bit static Blend2D library
       run: ./rebol3 siskin.r3 rebol/blend2d static-lib-x86
@@ -36,19 +36,19 @@ jobs:
         MOVE tree\rebol\Rebol-Blend2D\.github/ci-test.r3 .\test-blend2d.r3
         ./rebol3 test-blend2d.r3
 
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
-        name: Rebol-Blend2D-${{github.run_id}}
+        name: Rebol-Blend2D-windows-${{github.run_id}}
         path: ./blend2d*.rebx
 
   linux:
     runs-on: ubuntu-20.04
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Install Rebol
-      uses: oldes/install-rebol@v3.14.0
+      uses: oldes/install-rebol@v3.18.0
     
     - name: Build 64bit static Blend2D library
       run: ./rebol3 siskin.r3 rebol/blend2d static-lib-x64
@@ -67,19 +67,19 @@ jobs:
     - name: Compress 64bit Rebol/Blend2D extension
       run:  gzip -9 ./blend2d-linux-x64.rebx
 
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
-        name: Rebol-Blend2D-${{github.run_id}}
+        name: Rebol-Blend2D-linux-${{github.run_id}}
         path: ./blend2d*.gz
 
   macos:
     runs-on: macos-latest
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Install Rebol
-      uses: oldes/install-rebol@v3.14.0
+      uses: oldes/install-rebol@v3.18.0
     
     - name: Build 64bit static Blend2D library
       run: ./rebol3 siskin.r3 rebol/blend2d static-lib-x64
@@ -130,7 +130,7 @@ jobs:
     - name: Compress 64bit Rebol/Blend2D extension
       run:  gzip -9 ./blend2d-macos-x64.rebx
 
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
-        name: Rebol-Blend2D-${{github.run_id}}
+        name: Rebol-Blend2D-macos-${{github.run_id}}
         path: ./blend2d*.gz
