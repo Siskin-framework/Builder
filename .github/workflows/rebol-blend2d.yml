@@ -81,11 +81,17 @@ jobs:
     - name: Install Rebol
       uses: oldes/install-rebol@v3.18.0
     
-    - name: Build 64bit static Blend2D library
+    - name: Build 64bit static Blend2D library (x64)
       run: ./rebol3 siskin.r3 rebol/blend2d static-lib-x64
+
+    - name: Build 64bit static Blend2D library (arm64)
+      run: ./rebol3 siskin.r3 rebol/blend2d static-lib-arm64
 
     - name: Build 64bit Rebol/Blend2D extension
       run: ./rebol3 siskin.r3 rebol/blend2d blend2d-macos-x64
+
+     - name: Build 64bit Rebol/Blend2D extension
+      run: ./rebol3 siskin.r3 rebol/blend2d blend2d-macos-arm64
 
     - name: Install the Apple certificate
     # https://docs.github.com/en/actions/guides/installing-an-apple-certificate-on-macos-runners-for-xcode-development
@@ -118,9 +124,12 @@ jobs:
         MACOS_IDENTITY_ID: ${{ secrets.MACOS_IDENTITY_ID }}
       run: |
         /usr/bin/codesign --force -s $MACOS_IDENTITY_ID ./tree/rebol/Rebol-Blend2D/build/blend2d-macos-x64.dylib -v
+        /usr/bin/codesign --force -s $MACOS_IDENTITY_ID ./tree/rebol/Rebol-Blend2D/build/blend2d-macos-arm64.dylib -v
 
     - name: Prepare 64bit Rebol Blend2D extension
-      run:  mv ./tree/rebol/Rebol-Blend2D/build/blend2d-macos-x64.dylib ./blend2d-macos-x64.rebx
+      run: |
+        mv ./tree/rebol/Rebol-Blend2D/build/blend2d-macos-x64.dylib ./blend2d-macos-x64.rebx
+        mv ./tree/rebol/Rebol-Blend2D/build/blend2d-macos-arm64.dylib ./blend2d-macos-arm64.rebx
 
     - name: Test Rebol/Blend2D extension
       run:  |
@@ -128,7 +137,9 @@ jobs:
         ./rebol3 test-blend2d.r3
 
     - name: Compress 64bit Rebol/Blend2D extension
-      run:  gzip -9 ./blend2d-macos-x64.rebx
+      run:  |
+        gzip -9 ./blend2d-macos-x64.rebx
+        gzip -9 ./blend2d-macos-arm64.rebx
 
     - uses: actions/upload-artifact@v4
       with:
