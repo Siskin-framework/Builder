@@ -90,7 +90,7 @@ jobs:
     - name: Build 64bit Rebol/Blend2D extension
       run: ./rebol3 siskin.r3 rebol/blend2d blend2d-macos-x64
 
-     - name: Build 64bit Rebol/Blend2D extension
+    - name: Build 64bit Rebol/Blend2D extension
       run: ./rebol3 siskin.r3 rebol/blend2d blend2d-macos-arm64
 
     - name: Install the Apple certificate
