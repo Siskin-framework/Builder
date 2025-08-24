@@ -1,0 +1,3 @@
+;~ Siskin project nest file ~;
+;github: @Rebol
+nest:   %Rebol-C-Extension-Template/Rebol-Template.nest
