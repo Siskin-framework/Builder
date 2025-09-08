@@ -12,6 +12,7 @@ github: floooh/sokol-tools-bin
 ;github: floooh/libmodplug
 ;github: ocornut/imgui
 github: floooh/dcimgui
+;github: guillaumeblanc/ozz-animation
 
 strip:    true
 arch:     x64
@@ -168,6 +169,8 @@ common-spine: [
 		%sokol-samples/libs/spine-c/src/spine/PathAttachment.c
 		%sokol-samples/libs/spine-c/src/spine/PathConstraint.c
 		%sokol-samples/libs/spine-c/src/spine/PathConstraintData.c
+		%sokol-samples/libs/spine-c/src/spine/PhysicsConstraint.c
+		%sokol-samples/libs/spine-c/src/spine/PhysicsConstraintData.c
 		%sokol-samples/libs/spine-c/src/spine/PointAttachment.c
 		%sokol-samples/libs/spine-c/src/spine/RegionAttachment.c
 		%sokol-samples/libs/spine-c/src/spine/Sequence.c
@@ -561,6 +564,11 @@ eggs: [
 		name: %sapp-blend
 		file: %sokol-samples/sapp/blend-sapp.c
 	]
+	"SAPP Blend-op" [
+		:common-sapp
+		name: %sapp-blend-op
+		file: %sokol-samples/sapp/blend-op-sapp.c
+	]
 	"SAPP Bufferoffsets" [
 		:common-sapp
 		name: %sapp-bufferoffsets
@@ -579,6 +587,12 @@ eggs: [
 		name: %sapp-clear
 		file: %sokol-samples/sapp/clear-sapp.c
 	]
+	"SAPP ComputeBoits" [
+		:common-sapp
+		:common-cimgui
+		name: %sapp-computeboids
+		file: %sokol-samples/sapp/computeboids-sapp.c
+	]
 	"SAPP Cube" [
 		:common-sapp
 		name: %sapp-cube
@@ -595,6 +609,12 @@ eggs: [
 		:common-sapp
 		name: %sapp-cubemaprt
 		file: %sokol-samples/sapp/cubemaprt-sapp.c
+	]
+	"SAPP Cursor" [
+		:common-sapp
+		:common-cimgui
+		name: %sapp-cursor
+		file: %sokol-samples/sapp/cursor-sapp.cc
 	]
 	"SAPP Custom resolve" [
 		:common-sapp
@@ -675,6 +695,14 @@ eggs: [
 		name: %sapp-icon
 		file: %sokol-samples/sapp/icon-sapp.c
 	]
+	"SAPP ImageBlur" [
+		:common-sapp
+		:common-cimgui
+		name: %sapp-imageblur
+		file: %sokol-samples/sapp/imageblur-sapp.c
+		file: %sokol-samples/libs/util/fileutil.c
+		file: %sokol-samples/libs/stb/stb_image.c
+	]
 	"SAPP imGui dock" [
 		:common-sapp
 		:common-imgui-dock
@@ -712,6 +740,16 @@ eggs: [
 		:common-sapp
 		name: %sapp-instancing
 		file: %sokol-samples/sapp/instancing-sapp.c
+	]
+	"SAPP Instancing compute" [
+		:common-sapp
+		name: %sapp-instancing-compute
+		file: %sokol-samples/sapp/instancing-compute-sapp.c
+	]
+	"SAPP Instancing pull" [
+		:common-sapp
+		name: %sapp-instancing-pull
+		file: %sokol-samples/sapp/instancing-pull-sapp.c
 	]
 	"SAPP LayerRender" [
 		:common-sapp
@@ -784,6 +822,14 @@ eggs: [
 		:file-util
 		name: %sapp-ozz-skin
 		file: %sokol-samples/sapp/ozz-skin-sapp.cc
+	]
+	"SAPP ozz-storagebuffer" [
+		:common-sapp
+		:common-imgui
+		:ozz-anim
+		:file-util
+		name: %sapp-ozz-storagebuffer
+		file: %sokol-samples/sapp/ozz-storagebuffer-sapp.cc
 	]
 	"SAPP pixelformats" [
 		:common-sapp
@@ -939,6 +985,14 @@ eggs: [
 		name: %sapp-texcube
 		file: %sokol-samples/sapp/texcube-sapp.c
 	]
+	"SAPP Texture view" [
+		:common-sapp
+		:common-cimgui
+		:file-util
+		file: %sokol-samples/libs/basisu/sokol_basisu.cpp
+		name: %sapp-texview
+		file: %sokol-samples/sapp/texview-sapp.c
+	]
 	"SAPP Triangle" [
 		:common-sapp
 		name: %sapp-triangle
@@ -958,6 +1012,11 @@ eggs: [
 		:common-sapp
 		name: %sapp-uvwrap
 		file: %sokol-samples/sapp/uvwrap-sapp.c
+	]
+	"SAPP vertexindexbuffer" [
+		:common-sapp
+		name: %sapp-vertexindexbuffer
+		file: %sokol-samples/sapp/vertexindexbuffer-sapp.c
 	]
 	"SAPP vertexpull" [
 		:common-sapp
