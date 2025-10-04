@@ -87,6 +87,12 @@ eggs: only [
 			:target-windows
 			:make-siskin-x64
 		]
+		"Siskin arm64" [
+			name:     %siskin-windows-arm64
+			:target-windows
+			:make-siskin-arm64
+			upx: off
+		]
 	]
 	#if Linux? [
 		"Siskin x86" [
