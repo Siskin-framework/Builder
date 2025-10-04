@@ -2,7 +2,7 @@ REBOL [
 	Name:    prebol
 	Type:    module
 	Exports: [process-source]
-	Version: 1.1.5
+	Version: 1.1.6
 	Title:   "Prebol - Official REBOL Preprocessor"
 	File:    https://raw.githubusercontent.com/Oldes/Rebol3/master/src/modules/prebol.reb
 	Author: ["Carl Sassenrath" "Holger Kruse" "Oldes"]
@@ -88,29 +88,22 @@ process-source: func [
 
 	include-cmds: [
 		#include [ ; REBOL code or data or loaded images or sounds.
-			data: load/all file
-			if data/1 = 'rebol [
-				header: construct [
-					title:  
-					author:
-				]
-				header: make header data/2
-				remove/part data 2
+			data: load/header file
+			if header: take data [
 				if include-source-comment? [
-					if header/author [
+					if :header/author [
 						insert data compose [
-							comment (join {## Author:  } mold header/author)
+							comment (join {## Author:  } mold :header/author)
 						]
 					]
-					if header/title [
+					if :header/title [
 						insert data compose [
-							comment (join {## Title:   } mold header/title)
+							comment (join {## Title:   } mold :header/title)
 						]
 					]
 					insert insert data compose [
 						comment (join {## Include: } mold file)
 					]
-
 					insert tail data compose [
 						comment (join {-- End of:  } mold file)
 					]
@@ -122,7 +115,7 @@ process-source: func [
 			read/string file
 		]
 		#include-binary [ ; Raw binary data (unloaded images, sounds).
-			read file
+			read/binary file
 		]
 		#include-block  [ ; Includes enclosed rebol block
 			data: load/all file
