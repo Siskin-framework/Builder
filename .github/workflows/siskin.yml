@@ -44,6 +44,12 @@ jobs:
           ./rebol3 siskin.r3 rebol/siskin --msvc siskin-windows-x86_64
           MOVE ./tree/rebol/Rebol/msvc/Release-x64/siskin-windows-x86_64.exe ./
 
+      - name: Build Arm64bit Siskin using msvc
+        run: |
+          ./rebol3 siskin.r3 rebol/siskin --msvc siskin-windows-arm64
+          MOVE ./tree/rebol/Rebol/msvc/Release-Win32/siskin-windows-arm64.exe ./
+
+
       #- name: Test 32bit Siskin project (gcc)
       #  run: ./siskin-windows-x86-gcc.exe
       #- name: Test 64bit Siskin project (gcc)
@@ -108,7 +114,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        os: [ubuntu-20.04]
+        os: [ubuntu-22.04]
         #os: [ubuntu-latest]
         #os: [ubuntu-20.04, ubuntu-18.04]
 
@@ -284,7 +290,7 @@ jobs:
           path: ./siskin-macos-*
 
   script:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
