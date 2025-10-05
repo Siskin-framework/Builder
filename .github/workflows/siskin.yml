@@ -47,7 +47,7 @@ jobs:
       - name: Build Arm64bit Siskin using msvc
         run: |
           ./rebol3 siskin.r3 rebol/siskin --msvc siskin-windows-arm64
-          MOVE ./tree/rebol/Rebol/msvc/Release-Win32/siskin-windows-arm64.exe ./
+          MOVE ./tree/rebol/Rebol/msvc/Release-ARM64/siskin-windows-arm64.exe ./
 
 
       #- name: Test 32bit Siskin project (gcc)
