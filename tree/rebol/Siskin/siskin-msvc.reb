@@ -290,8 +290,8 @@ make-project: func[
 	PROJECT-GUID: make-guid/from name
 	PROJECT-NAME: name
 	PROJECT-TYPE-GUID: any [id make-guid/from "Siskin Visual Studio Project"]
-	PLATFORM:   any [select [x64 "x64" arm64 "ARM"] spec/arch "Win32"]
-	PLATFORM-X: any [select [x64 "x64" arm64 "ARM"] spec/arch "x86"]
+	PLATFORM:   any [select [x64 "x64" arm64 "ARM64"] spec/arch "Win32"]
+	PLATFORM-X: any [select [x64 "x64" arm64 "ARM64"] spec/arch "x86"]
 	ARCH: either all [spec/arch = 'arm64 system/build/arch <> 'arm64][
 		"x64_arm64"
 	][ PLATFORM-X ]
@@ -406,7 +406,7 @@ make-project: func[
 	new-line/all filters true
 	;probe sort filters
 
-	vcxproj.filters: {<?xml version="1.0" encoding="utf-8"?>
+	vcxproj.filters: copy {<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>}
 
