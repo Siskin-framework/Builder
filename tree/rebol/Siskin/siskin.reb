@@ -2,7 +2,7 @@ Rebol [
 	Title:  "Siskin Builder - core"
 	Type:    module
 	Name:    siskin
-	Version: 0.18.6
+	Version: 0.20.5
 	Author: "Oldes"
 	
 	exports: [
@@ -23,7 +23,7 @@ Rebol [
 banner: next rejoin [{
 ^[[0;33m═╗
 ^[[0;33m ║^[[1;31m    .-.
-^[[0;33m ║^[[1;31m   /'v'\   ^[[0;33mSISKIN-Framework Builder 0.18.6 Rebol } rebol/version {
+^[[0;33m ║^[[1;31m   /'v'\   ^[[0;33mSISKIN-Framework Builder 0.20.5 Rebol } rebol/version {
 ^[[0;33m ║^[[1;31m  (/^[[0;31muOu^[[1;31m\)  ^[[0;33mhttps://github.com/Siskin-framework/Builder/
 ^[[0;33m ╚════^[[1;31m"^[[0;33m═^[[1;31m"^[[0;33m═══════════════════════════════════════════════════════════════════════^[[m}]
 
@@ -83,6 +83,7 @@ all-options: [
 	  -  "--make"    -      "Create makefile and use it for a build"
 	  -  "--git-ssh" -      "Clone gits using password-protected SSH key"
 	  -  "--no-upx"  -      "Ignore default project's UPX compression setting"
+	  -  "--script"  "path" "Evaluate Rebol script"
 ]
 
 ; mapping of commands used in the interactive input into command line arguments

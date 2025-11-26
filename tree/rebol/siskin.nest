@@ -46,6 +46,7 @@ make-siskin: [
 	define: RAW_MAIN_ARGS
 	define: CUSTOM_STARTUP
 	do %make/pre-make.r3 "$NEST_SPEC"
+	file: %os/host-main.c ;; application entry point
 ]
 make-siskin-x86:   [:make-siskin :arch-x86 #if windows? [target: x86-win32]]
 make-siskin-x64:   [:make-siskin :arch-x64 #if windows? [target: x64-win32]]
