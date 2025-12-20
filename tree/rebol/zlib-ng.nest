@@ -1,0 +1,6 @@
+;-    .-.                                                                       
+;-   /'v'\   SISKIN-Builder project file                                        
+;-  (/uOu\)  https://github.com/Siskin-framework/Builder/                       
+;-===="="=======================================================================
+github: Oldes/Rebol-Zlib-ng
+nest:   %Rebol-Zlib-ng/Rebol-Zlib-ng.nest
