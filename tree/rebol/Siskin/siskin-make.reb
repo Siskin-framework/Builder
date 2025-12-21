@@ -38,7 +38,7 @@ valid-archs: make map! [
 
 write-file: func[file [file! block!] data][
 	if block? file [file: rejoin file]
-	try/except [
+	try/with [
 		write file data
 		sys/log/more 'SISKIN ["Make Generated:^[[33m" to-local-file file]
 	][	sys/log/error 'SISKIN system/state/last-error ]

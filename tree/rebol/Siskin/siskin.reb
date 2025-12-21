@@ -137,7 +137,7 @@ init-options: func[/local long short hlp1 hlp2][
 
 prepare-interactive: func[args [string!]][
 	; preprocess user input when runing as a Rebol script or from `ask` input
-	try/except [args: load args][
+	try/with [args: load args][
 		print-error ["Invalid command:" as-red args]
 		return none
 	]
@@ -269,7 +269,7 @@ do-args: closure/with [
 		print-debug ["Executing script:" as-red to-local-file script]
 		print-debug ["..with arguments:" as-red form args]
 		system/options/quiet: true
-		try/except [ do/args script args ][
+		try/with [ do/args script args ][
 			print-error system/state/last-error
 			quit/return 1 ;@@ TODO: choose which error number to use
 		]
@@ -349,7 +349,7 @@ do-args: closure/with [
 		]
 
 		;?? nest
-		try/except [ do-nest nest args ][ print-error none ]
+		try/with [ do-nest nest args ][ print-error none ]
 	][
 		; Script may be evaluated from inside Siskin utility or as a Rebol script! 
 		print help-options-cli
@@ -384,7 +384,7 @@ do-upx: closure/with [file [file!]][
 	][
 		print-error "UPX command not found!"
 		unless windows? [exit]
-		try/except [
+		try/with [
 			print-info "Downloading UPX"
 			bin: read https://github.com/upx/upx/releases/download/v5.0.0/upx-5.0.0-win32.zip
 			if #{8C34B9CEC2C225BF71F43CF2B788043D0D203D23EDB54F649FBEC16F34938D80} <> checksum bin 'sha256 [
@@ -442,7 +442,7 @@ do-rebol2: closure/with [code [string! file!]][
 			print-error ["REBOL2 not available for" system/platform "platform!"]
 			exit
 		]
-		try/except [
+		try/with [
 			print-info "Downloading REBOL2"
 			bin: read/binary url
 			if crc <> checksum bin 'sha1 [
@@ -929,7 +929,7 @@ do-nest: closure/with/extern [
 			eggs: nest-spec/eggs
 			if file? nest: nest-spec/nest [
 				; nest has a link to another nest
-				try/except [
+				try/with [
 					nest-spec/gits: none
 					nest-spec/nest: none
 					do-nest/with nest args nest-spec
@@ -941,7 +941,7 @@ do-nest: closure/with/extern [
 			if debug? [??  eggs]
 		]
 
-		try/except [
+		try/with [
 			clear git-updates
 			git-update?: false
 			if any [none? args all [block? args empty? args not CI?]][
@@ -1108,7 +1108,7 @@ update-git: function/with [
 	if find git-updates git [exit]
 	unless system/options/quiet [print [as-green "Updating GIT:" to-local-file git]]
 	append git-updates git ;; stores this git not to be updated multiple time in one command batch
-	try/except [
+	try/with [
 		pushd git
 		eval-cmd/vv {git pull}
 		popd
@@ -1125,7 +1125,7 @@ build-target: closure/with [
 	command [block! integer! file! string!]
 ][
 	timestamp: now/time/precise
-	try/except [
+	try/with [
 		unless spec: get-spec command [
 			print-error ["Command not handled:" as-red mold command]
 			print-failed
@@ -1141,7 +1141,7 @@ build-target: closure/with [
 			]
 		]
 
-		try/except [build spec][
+		try/with [build spec][
 			print-error system/state/last-error
 			print-failed
 			return false
@@ -1154,7 +1154,7 @@ build-msvc: function/with [
 	"Build using Microsoft's Visual Studio project"
 	spec [map!]
 ][
-	try/except [
+	try/with [
 		spec/eggs: none
 		bat: msvc/make-project spec
 		eval-cmd/v [bat]
@@ -1173,7 +1173,7 @@ build-xcode: function/with [
 	"Build using Apple's XCode project"
 	spec [map!]
 ][
-	try/except [
+	try/with [
 		spec/eggs: none
 		spec/compiler: 'xcode
 		
@@ -1198,7 +1198,7 @@ build-make: function/with [
 	"Build using GNU makefile"
 	spec [map!]
 ][
-	try/except [
+	try/with [
 		spec/eggs: none
 		file: mmake/make-project spec
 		eval-cmd/v ["make -f" file]
@@ -1595,7 +1595,7 @@ build: function/with [
 
 	if spec/bundle [
 		switch/default system/platform [
-			macOS [ try/except [prepare-macos-bundle spec] :on-error-throw ]
+			macOS [ try/with [prepare-macos-bundle spec] :on-error-throw ]
 		][
 			print-warn ["Bundle specified but not supported on this platform:" system/platform]
 		]
@@ -1863,11 +1863,11 @@ finalize-build: closure/with [spec [map!] file [file! none!] /no-fail][
 				print-error "Not using requested STRIP as it would invalidate a signature!"
 				print-error "There is no available sign identity to re-sign!"
 			][
-				try/except [do-strip spec out-file][print-error system/state/last-error]
+				try/with [do-strip spec out-file][print-error system/state/last-error]
 			]
 		]
 		if spec/upx [
-			try/except [do-upx out-file][print-error system/state/last-error]
+			try/with [do-upx out-file][print-error system/state/last-error]
 		]
 
 		if macOS? [
@@ -1894,7 +1894,7 @@ finalize-build: closure/with [spec [map!] file [file! none!] /no-fail][
 			out-file: move-file out-file out-file-override
 		]
 		if gzip? [
-			out-file: try/except [gzip-file out-file][
+			out-file: try/with [gzip-file out-file][
 				print-error system/state/last-error
 				out-file ;= return original file name
 			]
@@ -2000,11 +2000,11 @@ eval-code: function/with [
 					string? arg2 [ expand-env arg2 ]
 					block?  arg2 [ forall arg2 [if string? arg2/1 [ expand-env arg2/1]] ]
 				]
-				try/except [eval-cmd/v [system/options/boot '--script arg1 arg2]] :on-error-warn
-				;try/except [do/args arg1 arg2] :on-error-quit
+				try/with [eval-cmd/v [system/options/boot '--script arg1 arg2]] :on-error-warn
+				;try/with [do/args arg1 arg2] :on-error-quit
 			)
 			| set arg1 block! (
-				try/except [
+				try/with [
 					fn: function/with [spec] code :nest-context
 					fn spec code
 				] :on-error-warn
@@ -2173,7 +2173,7 @@ on-error-warn: func[err [error!]][
 ]
 
 attempt: func[code [block!] /local err][
-	try/except code :on-error-throw
+	try/with code :on-error-throw
 ]
 
 preprocess-rebol: function/with [
@@ -2184,7 +2184,7 @@ preprocess-rebol: function/with [
 	print-debug ["Preprocessed output:    " as-green to-local-file output]
 	set [dir: input:] split-path input
 	pushd dir
-	try/except [
+	try/with [
 		make-dir/deep first split-path output
 		blk: load/header input
 		hdr: take blk
@@ -2211,7 +2211,7 @@ pushd: function [
 popd: function [
 	/quiet
 ][
-	try/except [
+	try/with [
 		dir: take/last dirs-stack
 		if dir <> what-dir [
 			change-dir dir
@@ -2227,7 +2227,7 @@ delete: function/with [
 	if exists? file [
 		print-info ["Deleting:" as-green to-local-file file]
 		unless no-eval? [
-			try/except [lib/delete file] :on-error-throw
+			try/with [lib/delete file] :on-error-throw
 		]
 	]
 ] :nest-context
@@ -2370,7 +2370,7 @@ eval-cmd: function/with [
 			ask as-purple "^/Press enter to continue."
 		]
 	][
-		try/except [result-code: call/wait/shell cmd] :print-error
+		try/with [result-code: call/wait/shell cmd] :print-error
 		if all [
 			result-code <> 0 not no-quit not interactive?
 		][

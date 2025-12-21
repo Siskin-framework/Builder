@@ -89,7 +89,7 @@ prepare-dir: func[dir [file! string!]][
 ]
 write-file: func[file [file! block!] data][
 	if block? file [file: rejoin file]
-	try/except [
+	try/with [
 		write file data
 		sys/log/more 'SISKIN ["MSVC Generated:^[[33m" to-local-file file]
 	][	sys/log/error 'SISKIN system/state/last-error ]
@@ -195,7 +195,7 @@ vswhere: function[][
 	versions: copy []
 	if exists? vswhere [
 		output: make string! 1000
-		try/except [
+		try/with [
 			call/wait/shell/output to-local-file vswhere output
 			;probe output
 			append output "^M^/"

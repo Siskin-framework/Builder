@@ -71,7 +71,7 @@ prepare-dir: func[dir [file! string!]][
 ]
 write-file: func[file [file! block!] data][
 	if block? file [file: rejoin file]
-	try/except [
+	try/with [
 		write file data
 		sys/log/more 'SISKIN ["Xcode Generated:^[[33m" to-local-file file]
 	][	sys/log/error 'SISKIN system/state/last-error ]
@@ -310,7 +310,7 @@ make-project: func[
 		]
 		unless block? dirs/:dir [dirs/:dir: copy []]
 		
-		try/except [
+		try/with [
 			append dirs/:dir read dir
 		][
 			siskin/print-error ["Cannot read from:" as-red dir]
@@ -328,7 +328,7 @@ make-project: func[
 	foreach [dir files] dirs [
 		if #"/" <> first dir [ dir: join dir-out dir ]
 
-		try/except [tmp: read dir][
+		try/with [tmp: read dir][
 			siskin/print-error ["Cannot read from:" as-red dir]
 			continue
 		]
