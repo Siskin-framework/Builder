@@ -2,7 +2,7 @@ Rebol [
 	Title:  "Siskin Builder - core"
 	Type:    module
 	Name:    siskin
-	Version: 0.20.5
+	Version: 0.21.0
 	Author: "Oldes"
 	
 	exports: [
@@ -23,7 +23,7 @@ Rebol [
 banner: next rejoin [{
 ^[[0;33m═╗
 ^[[0;33m ║^[[1;31m    .-.
-^[[0;33m ║^[[1;31m   /'v'\   ^[[0;33mSISKIN-Framework Builder 0.20.5 Rebol } rebol/version {
+^[[0;33m ║^[[1;31m   /'v'\   ^[[0;33mSISKIN-Framework Builder 0.21.0 Rebol } rebol/version {
 ^[[0;33m ║^[[1;31m  (/^[[0;31muOu^[[1;31m\)  ^[[0;33mhttps://github.com/Siskin-framework/Builder/
 ^[[0;33m ╚════^[[1;31m"^[[0;33m═^[[1;31m"^[[0;33m═══════════════════════════════════════════════════════════════════════^[[m}]
 
@@ -84,6 +84,7 @@ all-options: [
 	  -  "--git-ssh" -      "Clone gits using password-protected SSH key"
 	  -  "--no-upx"  -      "Ignore default project's UPX compression setting"
 	  -  "--script"  "path" "Evaluate Rebol script"
+	  -  "--gzip"    -      "Compress the result with GZIP"
 ]
 
 ; mapping of commands used in the interactive input into command line arguments
@@ -199,6 +200,7 @@ nest-context: object [
 	clang?:       false
 	run-result?:  false
 	update?:      false
+	gzip?:        false
 	CI?:          false
 	target-names: copy []
 	interactive?: false
@@ -406,6 +408,13 @@ do-upx: closure/with [file [file!]][
 	]
 ] :nest-context
 
+gzip-file: closure/with [file [file!]][
+	print-info ["Compress file:" file]
+	bin: read/binary file
+	bin: compress/level bin 'gzip 9
+	out-file: write/binary join file %.gz bin
+] :nest-context
+
 do-rebol2: closure/with [code [string! file!]][
 	add-env-path root-dir
 	rebol2: any [
@@ -576,7 +585,7 @@ parse-nest: closure/with [
 			append dest/gits either all [git-ssh? not CI? ][
 				as url! join "git@github.com:" [val %.git]
 			][	join https://github.com/ [val %.git] ]
-		) opt [set val: [refinement!] (append dest/gits val)] ;optional branch
+		) opt [set val: [refinement! | tuple!] (append dest/gits val)] ;optional branch
 		| quote eggs: [opt 'only (clear dest/eggs) ] set val: block! (
 			append dest/eggs preprocess val
 		)
@@ -997,6 +1006,7 @@ do-nest: closure/with/extern [
 				| 'update  (update?: on)
 				| 'git-ssh (git-ssh?: on)
 				| 'no-upx  (no-upx?: on)
+				| 'gzip    (gzip?: on)
 				| 'output  set out-file-override: skip (
 					out-file-override: to-rebol-file out-file-override
 					unless abs-path? out-file-override [
@@ -1883,6 +1893,12 @@ finalize-build: closure/with [spec [map!] file [file! none!] /no-fail][
 		if out-file-override [
 			out-file: move-file out-file out-file-override
 		]
+		if gzip? [
+			out-file: try/except [gzip-file out-file][
+				print-error system/state/last-error
+				out-file ;= return original file name
+			]
+		]
 		print-ready
 		return true
 	]
@@ -1898,7 +1914,10 @@ clone-gits: function/with [
 	found-git?: false
 	forall gits [
 		git: first gits
-		branch: either refinement? second gits [first gits: next gits][none]
+		branch: all [
+			any [refinement? gits/2 tuple? gits/2]
+			first gits: next gits
+		]
 		print-info ["Using git:" as-yellow git]
 		dir: dirize to file! first split (second split-path git) #"."
 		unless found-git? [
