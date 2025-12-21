@@ -2093,6 +2093,7 @@ print-bird: does [
 ]
 print-ready: closure/with [][
 	result: query out-file [name size date]
+	unless result/name [print-failed exit]
 	print-bird
 	prin {^/^[[0;32m═[^[[1mSISKIN^[[0;32m]══^[[1;31m"^[[0;32m═^[[1;31m"^[[0;32m═>  ^[[1mBuild READY}
 	prin {^/^[[0;32m │}
