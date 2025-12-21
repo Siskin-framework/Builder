@@ -1162,7 +1162,7 @@ build-msvc: function/with [
 		file: rejoin [
 			any [spec/root what-dir]
 			%msvc/Release-
-			any [select [x64 "x64/" arm64 "ARM/"] spec/arch "Win32/"]
+			any [select [x64 "x64/" arm64 "ARM64/"] spec/arch "Win32/"]
 			spec/name
 		]
 		finalize-build spec file
