@@ -35,20 +35,13 @@ jobs:
       #        MOVE ./tree/rebol/Siskin/build/siskin-windows-x86_64.exe ./siskin-windows-x86_64-gcc.exe
 
       - name: Build 32bit Siskin using msvc
-        run: |
-          ./rebol3 siskin.r3 rebol/siskin --msvc siskin-windows-x86
-          MOVE ./tree/rebol/Rebol/msvc/Release-Win32/siskin-windows-x86.exe ./
+        run: ./rebol3 siskin.r3 rebol/siskin -o ./ --msvc siskin-windows-x86
 
       - name: Build 64bit Siskin using msvc
-        run: |
-          ./rebol3 siskin.r3 rebol/siskin --msvc siskin-windows-x86_64
-          MOVE ./tree/rebol/Rebol/msvc/Release-x64/siskin-windows-x86_64.exe ./
+        run: ./rebol3 siskin.r3 rebol/siskin -o ./ --msvc siskin-windows-x86_64
 
       - name: Build Arm64bit Siskin using msvc
-        run: |
-          ./rebol3 siskin.r3 rebol/siskin --msvc siskin-windows-arm64
-          MOVE ./tree/rebol/Rebol/msvc/Release-ARM64/siskin-windows-arm64.exe ./
-
+        run: ./rebol3 siskin.r3 rebol/siskin -o ./ --msvc siskin-windows-arm64
 
       #- name: Test 32bit Siskin project (gcc)
       #  run: ./siskin-windows-x86-gcc.exe
@@ -107,6 +100,7 @@ jobs:
           path: |
             ./siskin-windows-x86.exe
             ./siskin-windows-x86_64.exe
+            ./siskin-windows-arm64.exe
           #  ./siskin-windows-x86-gcc.exe
           #  ./siskin-windows-x86_64-gcc.exe
 
@@ -114,7 +108,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        os: [ubuntu-22.04]
+        os: [ubuntu-latest]
         #os: [ubuntu-latest]
         #os: [ubuntu-20.04, ubuntu-18.04]
 
@@ -130,15 +124,10 @@ jobs:
         run: sudo apt-get install gcc-multilib
 
       - name: Build 32bit Siskin using gcc
-        run: ./rebol3 siskin.r3 rebol/siskin siskin-linux-x86
+        run: ./rebol3 siskin.r3 rebol/siskin -o ./ --gzip siskin-linux-x86
 
       - name: Build 64bit Siskin using gcc
-        run: ./rebol3 siskin.r3 rebol/siskin siskin-linux-x86_64
-
-      - name: Move results into the root for uploading
-        run: |
-          mv ./tree/rebol/Siskin/build/siskin-linux-x86_64 ./
-          mv ./tree/rebol/Siskin/build/siskin-linux-x86 ./
+        run: ./rebol3 siskin.r3 rebol/siskin -o ./ --gzip siskin-linux-x86_64
 
       - name: List all possible test targets
         run: ./siskin-linux-x86_64 test --list
@@ -174,15 +163,10 @@ jobs:
       - name: Test only single command
         run: ./siskin-linux-x86_64 test list-dir
 
-      - name: Compress results before uploading
-        run: |
-          gzip -9 ./siskin-linux-x86_64
-          gzip -9 ./siskin-linux-x86
-
       - uses: actions/upload-artifact@v4
         with:
           name: Siskin-linux
-          path: ./siskin-linux*
+          path: ./siskin-linux*.gz
 
   macos:
     runs-on: macos-latest
@@ -222,27 +206,24 @@ jobs:
       #It looks it's not possible to build 32bit macOS version anymore using GitHub actions!
       #
       #- name: Build 32bit Siskin
-      #  run: |
-      #    ./rebol3 siskin.r3 rebol/siskin %siskin-windows-x86-osx
-      #    mv ./tree/rebol/Siskin/build/siskin-windows-x86-osx ./
+      #  run: ./rebol3 siskin.r3 rebol/siskin -o ./ siskin-macos-x86
 
       - name: Build x86_64 Siskin
-        run: ./rebol3 siskin.r3 rebol/siskin siskin-macos-x86_64
+        env: 
+          SISKIN_SIGN_IDENTITY: ${{ secrets.MACOS_IDENTITY_ID }}
+        run: ./rebol3 siskin.r3 rebol/siskin -o ./ --gzip siskin-macos-x86_64
 
       - name: Build ARM64 Siskin
-        run: ./rebol3 siskin.r3 rebol/siskin siskin-macos-aarch64
-
-      - name: Move results into the root for uploading
-        run: |
-          mv ./tree/rebol/Siskin/build/siskin-macos-x86_64 ./
-          mv ./tree/rebol/Siskin/build/siskin-macos-aarch64 ./
-
-      - name: Codesign executables
         env: 
-          MACOS_IDENTITY_ID: ${{ secrets.MACOS_IDENTITY_ID }}
-        run: |
-          /usr/bin/codesign --force -s $MACOS_IDENTITY_ID ./siskin-macos-x86_64 -v
-          /usr/bin/codesign --force -s $MACOS_IDENTITY_ID ./siskin-macos-aarch64 -v
+          SISKIN_SIGN_IDENTITY: ${{ secrets.MACOS_IDENTITY_ID }}
+        run: ./rebol3 siskin.r3 rebol/siskin -o ./ --gzip siskin-macos-aarch64
+
+#      - name: Codesign executables
+#        env: 
+#          MACOS_IDENTITY_ID: ${{ secrets.MACOS_IDENTITY_ID }}
+#        run: |
+#          /usr/bin/codesign --force -s $MACOS_IDENTITY_ID ./siskin-macos-x86_64 -v
+#          /usr/bin/codesign --force -s $MACOS_IDENTITY_ID ./siskin-macos-aarch64 -v
        
 
       - name: List all possible test targets
@@ -279,18 +260,13 @@ jobs:
       - name: Test only single command
         run: ./siskin-macos-x86_64 test list-dir
 
-      - name: Compress results before uploading
-        run: |
-          gzip -9 ./siskin-macos-x86_64
-          gzip -9 ./siskin-macos-aarch64
-
       - uses: actions/upload-artifact@v4
         with:
           name: Siskin-macos
-          path: ./siskin-macos-*
+          path: ./siskin-macos-*.gz
 
   script:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -303,8 +279,7 @@ jobs:
         run: ./rebol3 siskin.r3 rebol/siskin siskin.r3
 
       - name: Move results into the root for uploading
-        run: |
-          mv ./tree/rebol/Siskin/build/siskin.r3 ./build.r3
+        run: mv ./tree/rebol/Siskin/build/siskin.r3 ./build.r3
 
 
       - name: List all possible test targets
