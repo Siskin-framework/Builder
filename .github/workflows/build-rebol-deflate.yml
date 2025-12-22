@@ -101,7 +101,7 @@ jobs:
     - name: Build arm64 Rebol/Deflate extension
       run: ./siskin rebol/deflate.nest -o $OUT/deflate-macos-arm64.rebx.gz --gzip deflate-macos-arm64
 
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
         name: Rebol-Deflate-macos-${{github.run_id}}
         path: ${{env.OUT}}/*-macos-*.gz
