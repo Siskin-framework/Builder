@@ -24,11 +24,11 @@ jobs:
 
 
     - name: Build x86 Rebol/Deflate extension
-      run: ./siskin rebol/deflate.nest -o $OUT/deflate-windows-x86.rebx --msvc deflate-windows-x86
+      run: ./siskin rebol/deflate -o $OUT/deflate-windows-x86.rebx --msvc deflate-windows-x86
     - name: Build x64 Rebol/Deflate extension
-      run: ./siskin rebol/deflate.nest -o $OUT/deflate-windows-x64.rebx --msvc deflate-windows-x64
+      run: ./siskin rebol/deflate -o $OUT/deflate-windows-x64.rebx --msvc deflate-windows-x64
     - name: Build arm64 Rebol/Deflate extension
-      run: ./siskin rebol/deflate.nest -o $OUT/deflate-windows-arm64.rebx --msvc deflate-windows-arm64
+      run: ./siskin rebol/deflate -o $OUT/deflate-windows-arm64.rebx --msvc deflate-windows-arm64
     
     - uses: actions/upload-artifact@v4
       with:
@@ -49,9 +49,9 @@ jobs:
 
 
     - name: Build x86 Rebol/Deflate extension
-      run: ./siskin rebol/deflate.nest -o $OUT/deflate-linux-x86.rebx.gz --gzip deflate-linux-x86
+      run: ./siskin rebol/deflate -o $OUT/deflate-linux-x86.rebx.gz --gzip deflate-linux-x86
     - name: Build x64 Rebol/Deflate extension
-      run: ./siskin rebol/deflate.nest -o $OUT/deflate-linux-x64.rebx.gz --gzip deflate-linux-x64
+      run: ./siskin rebol/deflate -o $OUT/deflate-linux-x64.rebx.gz --gzip deflate-linux-x64
 
     - uses: actions/upload-artifact@v4
       with:
@@ -97,9 +97,9 @@ jobs:
   
 
     - name: Build x64 Rebol/Deflate extension
-      run: ./siskin rebol/deflate.nest -o $OUT/deflate-macos-x64.rebx.gz --gzip deflate-macos-x64
+      run: ./siskin rebol/deflate -o $OUT/deflate-macos-x64.rebx.gz --gzip deflate-macos-x64
     - name: Build arm64 Rebol/Deflate extension
-      run: ./siskin rebol/deflate.nest -o $OUT/deflate-macos-arm64.rebx.gz --gzip deflate-macos-arm64
+      run: ./siskin rebol/deflate -o $OUT/deflate-macos-arm64.rebx.gz --gzip deflate-macos-arm64
 
     - uses: actions/upload-artifact@v4
       with:
