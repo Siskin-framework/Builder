@@ -1890,7 +1890,8 @@ finalize-build: closure/with [spec [map!] file [file! none!] /no-fail][
 				eval-cmd/v ["otool -L" out-file]
 			]
 		]
-		if out-file-override [
+		if file? out-file-override [
+			prepare-dir @Moving first split-path out-file-override
 			out-file: move-file out-file out-file-override
 		]
 		if gzip? [
