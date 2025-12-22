@@ -84,11 +84,11 @@ jobs:
           ./rebol3 ./test/build/test.r3
 
       - name: Test build 8 (MSVC)
-        run: ./siskin-windows-x86_64.exe test --msvc 8
+        run: ./siskin-windows-x86_64.exe test -d --msvc 8
 
       - name: Test build 8 with output override (MSVC)
         run: |
-          ./siskin-windows-x86_64.exe test --msvc -o new.exe 8
+          ./siskin-windows-x86_64.exe test -d --msvc -o new.exe 8
           ./new.exe
 
       - name: Test only single command
