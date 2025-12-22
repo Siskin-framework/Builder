@@ -1,0 +1,108 @@
+### This file was generated! ###
+name: 'Rebol/Deflate extension'
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - .github/workflows/build-rebol-deflate.yml
+  workflow_dispatch:
+env:
+  OUT: ${{github.WORKSPACE}}/Release
+  CI_BUILD_OUTPUT: ${{github.WORKSPACE}}/Release
+  SISKIN_SIGN_IDENTITY: ${{ secrets.MACOS_IDENTITY_ID }}
+
+jobs:
+  
+  windows:
+    runs-on: windows-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Install Siskin Builder
+      uses: oldes/install-siskin@v0.21.0
+
+
+    - name: Build x86 Rebol/Deflate extension
+      run: ./siskin rebol/deflate.nest -o $OUT/deflate-windows-x86.rebx --msvc deflate-windows-x86
+    - name: Build x64 Rebol/Deflate extension
+      run: ./siskin rebol/deflate.nest -o $OUT/deflate-windows-x64.rebx --msvc deflate-windows-x64
+    - name: Build arm64 Rebol/Deflate extension
+      run: ./siskin rebol/deflate.nest -o $OUT/deflate-windows-arm64.rebx --msvc deflate-windows-arm64
+    
+    - uses: actions/upload-artifact@v4
+      with:
+        name: Rebol-Deflate-windows-${{github.run_id}}
+        path: ${{env.OUT}}/*.rebx
+  
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Install Siskin Builder
+      uses: oldes/install-siskin@v0.21.0
+
+    - name: Install GCC multilib
+      run: sudo apt-get install gcc-multilib
+
+
+    - name: Build x86 Rebol/Deflate extension
+      run: ./siskin rebol/deflate.nest -o $OUT/deflate-linux-x86.rebx.gz --gzip deflate-linux-x86
+    - name: Build x64 Rebol/Deflate extension
+      run: ./siskin rebol/deflate.nest -o $OUT/deflate-linux-x64.rebx.gz --gzip deflate-linux-x64
+
+    - uses: actions/upload-artifact@v4
+      with:
+        name: Rebol-Deflate-linux-${{github.run_id}}
+        path: ${{env.OUT}}/*-linux-*.gz
+  
+  macos:
+    runs-on: macos-latest
+    if: true
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Install Siskin Builder
+      uses: oldes/install-siskin@v0.21.0
+
+
+    - name: Install the Apple certificate
+    # https://docs.github.com/en/actions/guides/installing-an-apple-certificate-on-macos-runners-for-xcode-development
+      env:
+        BUILD_CERTIFICATE_BASE64: ${{ secrets.MACOS_CERTIFICATE }}
+        P12_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PWD }}
+        KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+      run: |
+        # create variables
+        CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
+        KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+
+        # import certificate from secrets
+        echo -n "$BUILD_CERTIFICATE_BASE64" | base64 --decode --output $CERTIFICATE_PATH
+
+        # create temporary keychain
+        security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+        security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
+        security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+
+        # import certificate to keychain
+        security import $CERTIFICATE_PATH -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
+        security list-keychain -d user -s $KEYCHAIN_PATH
+
+        # list available codesigning identities
+        security find-identity -v -p codesigning
+  
+
+    - name: Build x64 Rebol/Deflate extension
+      run: ./siskin rebol/deflate.nest -o $OUT/deflate-macos-x64.rebx.gz --gzip deflate-macos-x64
+    - name: Build arm64 Rebol/Deflate extension
+      run: ./siskin rebol/deflate.nest -o $OUT/deflate-macos-arm64.rebx.gz --gzip deflate-macos-arm64
+
+    - uses: actions/upload-artifact@v3
+      with:
+        name: Rebol-Deflate-macos-${{github.run_id}}
+        path: ${{env.OUT}}/*-macos-*.gz
+  
