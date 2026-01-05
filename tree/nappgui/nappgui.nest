@@ -1,0 +1,19 @@
+;-    .-.                                                                       
+;-   /'v'\   SISKIN-Builder project file                                        
+;-  (/uOu\)  https://github.com/Siskin-framework/Builder/                       
+;-===="="=======================================================================
+
+github: frang75/nappgui_src
+
+eggs: [
+	"Make NAppGUI debug (cmake)" [
+		name: %build-debug
+		cmd   %build/debug "cmake ../../nappgui_src/ -DCMAKE_BUILD_TYPE=Debug"
+		cmd   %build/debug {cmake --build . --config debug -j 8}
+	]
+	"Make NAppGUI release (cmake)" [
+		name: %build-release
+		cmd   %build/release "cmake ../../nappgui_src/ -DCMAKE_BUILD_TYPE=Release"
+		cmd   %build/release {cmake --build . --config release -j 8}
+	]
+]
