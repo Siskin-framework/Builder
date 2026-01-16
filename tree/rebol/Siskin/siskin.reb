@@ -1920,7 +1920,8 @@ clone-gits: function/with [
 			first gits: next gits
 		]
 		print-info ["Using git:" as-yellow git]
-		dir: dirize to file! first split (second split-path git) #"."
+		dir: second split-path git
+		if pos: find/last dir %.git [clear pos] 
 		unless found-git? [
 			locate-tool 'git none
 			found-git?: true
