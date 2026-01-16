@@ -5,6 +5,7 @@ Rebol [
 
 ext-name1: ask "Name of the extension: "
 ext-name2: lowercase copy ext-name1
+ext-name3: uppercase copy ext-name1
 ext-root:  join %Rebol- ext-name1
 
 ;; Check if there is already a project with this name.
@@ -19,6 +20,7 @@ make-dir ext-root
 ;; As we will work with binary data later, prepare the names as binary as well.
 name1: to binary! ext-name1
 name2: to binary! ext-name2
+name3: to binary! ext-name3
 
 ;; Try to download all template files as a ZIP archive.
 try/with [
@@ -41,8 +43,9 @@ foreach [path data] template [
 	][
 		bin: second data
 		if find [%.md %.r3 %.c %.h %.yml %.nest] suffix? path [
-			replace/all bin #{74656D706C617465} name2
-			replace/all bin #{54656D706C617465} name1
+			replace/all bin #{54656D706C617465} name1 ;= "Template"
+			replace/all bin #{74656D706C617465} name2 ;= "template"
+			replace/all bin #{54454D504C415445} name3 ;= "TEMPLATE"
 		]
 		write ext-root/:path :bin
 	]
