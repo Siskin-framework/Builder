@@ -2,7 +2,7 @@ Rebol [
 	Title:  "Siskin Builder - core"
 	Type:    module
 	Name:    siskin
-	Version: 0.21.1
+	Version: 0.21.2
 	Author: "Oldes"
 	
 	exports: [
@@ -23,7 +23,7 @@ Rebol [
 banner: next rejoin [{
 ^[[0;33m═╗
 ^[[0;33m ║^[[1;31m    .-.
-^[[0;33m ║^[[1;31m   /'v'\   ^[[0;33mSISKIN-Framework Builder 0.21.1 Rebol } rebol/version {
+^[[0;33m ║^[[1;31m   /'v'\   ^[[0;33mSISKIN-Framework Builder 0.21.2 Rebol } rebol/version {
 ^[[0;33m ║^[[1;31m  (/^[[0;31muOu^[[1;31m\)  ^[[0;33mhttps://github.com/Siskin-framework/Builder/
 ^[[0;33m ╚════^[[1;31m"^[[0;33m═^[[1;31m"^[[0;33m═══════════════════════════════════════════════════════════════════════^[[m}]
 
@@ -721,7 +721,11 @@ parse-nest: closure/with [
 			opt ['only (clear dest/frameworks)]
 			set val: [word! | file! | block!] (append dest/frameworks val)
 
-		|['set | 'set-env] set var: [any-string! | any-word!]set val: [string!] (add-env var val)
+		|['set | 'set-env] set var: [any-string! | any-word!] set val: [string! | file!] (
+			;; When file, then expand it, convert to full path and to OS syntax.
+			try [if file? val [val: to-local-file to-real-file expand-env copy val]]
+			add-env var val
+		)
 
 		| pos: set name: set-word! [
 			'action set spec: block! set code: block!(
@@ -2616,12 +2620,12 @@ add-env: func [
 	if value <> get-env key [
 		;print ["set.." mold key mold value]
 		set-env key value
-		print-info [
-			"Environment:"
-			as-green ajoin ["${" key #"}"]
-			as-cyan "is"
-			as-green mold value
-		]
+	]
+	print-info [
+		"Environment:"
+		as-green ajoin ["${" key #"}"]
+		as-cyan "is"
+		as-green mold value
 	]
 ]
 
