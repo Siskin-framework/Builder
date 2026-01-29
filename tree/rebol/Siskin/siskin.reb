@@ -327,6 +327,8 @@ do-args: closure/with [
 	]
 	
 	change-dir root-dir: system/options/path
+	unless get-env 'SISKIN_INSTALL [ add-env 'SISKIN_INSTALL root-dir/install ]
+	unless get-env 'SISKIN_TEMP    [ add-env 'SISKIN_TEMP    root-dir/temp    ]
 
 	if debug? [?? args]
 	if all [string? args empty? args][args: none]
