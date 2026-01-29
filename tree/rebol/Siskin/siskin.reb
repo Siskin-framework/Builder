@@ -779,7 +779,8 @@ parse-nest: closure/with [
 			add-pre-build dest ['msbuild val args]
 		)
 		|
-		'cmd set dir: opt file! set val: string! (
+		'cmd set dir: opt file! set val: [string! | block!] (
+			if block? val [val: form val]
 			add-pre-build dest ['cmd dir val]
 		)
 		|
