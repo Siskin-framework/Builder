@@ -891,6 +891,7 @@ do-nest: closure/with/extern [
 	nest-file: any [to-real-file nest nest]
 	forever [
 		debug?: defaults/debug?
+		add-env 'SISKIN_OPTION_DEBUG either debug? ["ON"]["OFF"]
 		if any [
 			none? nest-time
 			none? nest-file
