@@ -2,5 +2,5 @@
 ;-   /'v'\   SISKIN-Builder project file                                        
 ;-  (/uOu\)  https://github.com/Siskin-framework/Builder/                       
 ;-===="="=======================================================================
-;github: Oldes/Rebol-AGG
+github: Oldes/Rebol-AGG
 nest:   %Rebol-AGG/Rebol-AGG.nest
