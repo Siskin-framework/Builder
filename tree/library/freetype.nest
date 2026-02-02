@@ -1,0 +1,19 @@
+;-    .-.                                                                       
+;-   /'v'\   SISKIN-Builder project file                                        
+;-  (/uOu\)  https://github.com/Siskin-framework/Builder/                       
+;-===="="=======================================================================
+github: freetype/freetype /VER-2-14-1
+eggs: [
+	"Make FreeType (cmake)" [
+		name: %build-freetype
+		cmd [
+			"cmake -B $SISKIN_TEMP/freetype -S freetype -DCMAKE_BUILD_TYPE=Release"
+			"-DZLIB_LIBRARY=$SISKIN_INSTALL/lib/zs.lib"
+			"-DZLIB_INCLUDE_DIR=$SISKIN_INSTALL/include"
+			"-DPNG_LIBRARY=$SISKIN_INSTALL/lib/libpng.lib"
+			"-DPNG_INCLUDE_DIR=$SISKIN_INSTALL/include"
+		]
+		cmd "cmake --build   $SISKIN_TEMP/freetype --config release -j 8"
+		cmd "cmake --install $SISKIN_TEMP/freetype --prefix $SISKIN_INSTALL"
+	]
+]
