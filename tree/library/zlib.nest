@@ -1,0 +1,16 @@
+;-    .-.                                                                       
+;-   /'v'\   SISKIN-Builder project file                                        
+;-  (/uOu\)  https://github.com/Siskin-framework/Builder/                       
+;-===="="=======================================================================
+github: madler/zlib /v1.3.1.2
+eggs: [
+	"Make zlib (cmake)" [
+		name: %build-zlib
+		cmd [
+			"cmake -B $SISKIN_TEMP/zlib -S zlib -DCMAKE_BUILD_TYPE=Release"
+			"-DCMAKE_VERBOSE_MAKEFILE:BOOL=$SISKIN_OPTION_DEBUG"
+		]
+		cmd "cmake --build   $SISKIN_TEMP/zlib --config release -j 8"
+		cmd "cmake --install $SISKIN_TEMP/zlib --prefix $SISKIN_INSTALL"
+	]
+]
