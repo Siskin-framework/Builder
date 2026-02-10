@@ -1,0 +1,17 @@
+;-    .-.                                                                       
+;-   /'v'\   SISKIN-Builder project file                                        
+;-  (/uOu\)  https://github.com/Siskin-framework/Builder/                       
+;-===="="=======================================================================
+github: libsdl-org/SDL /release-3.4.0
+
+eggs: [
+	"Make sdl (cmake)" [
+		name: %build-sdl
+		cmd [
+			"cmake -B $SISKIN_TEMP/sdl3 -S sdl -DCMAKE_BUILD_TYPE=Release"
+			"-DCMAKE_VERBOSE_MAKEFILE:BOOL=$SISKIN_OPTION_DEBUG"
+		]
+		cmd "cmake --build   $SISKIN_TEMP/sdl3 --config release -j 8"
+		cmd "cmake --install $SISKIN_TEMP/sdl3 --prefix $SISKIN_INSTALL"
+	]
+]
