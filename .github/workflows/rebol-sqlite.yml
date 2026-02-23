@@ -42,13 +42,13 @@ jobs:
       shell: bash
       run:  ./rebol3 ./tree/rebol/Rebol-SQLite/ci-test.r3
 
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
-        name: Rebol-SQLite-${{github.run_id}}
+        name: Rebol-SQLite-Windows
         path: ${{env.OUT}}/sqlite*.rebx
 
   linux:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     if: true
     steps:
     - name: Checkout repository
@@ -79,9 +79,9 @@ jobs:
     - name: Compress 64bit Rebol/SQLite extension
       run:  gzip -9 $OUT/sqlite-linux-x64.rebx
 
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
-        name: Rebol-SQLite-${{github.run_id}}
+        name: Rebol-SQLite-Linux
         path: ${{env.OUT}}/sqlite-linux-*.gz
 
   macos:
@@ -146,9 +146,9 @@ jobs:
         gzip -9 $OUT/sqlite-macos-x64.rebx
         gzip -9 $OUT/sqlite-macos-arm64.rebx
 
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
-        name: Rebol-SQLite-${{github.run_id}}
+        name: Rebol-SQLite-macOS
         path: ${{env.OUT}}/sqlite-macos-*.gz
 
   openbsd:
@@ -178,9 +178,9 @@ jobs:
     - name: Compress 64bit Rebol/SQLite extension
       run:  gzip -9 $OUT/sqlite-openbsd-x64.rebx
 
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
-        name: Rebol-SQLite-${{github.run_id}}
+        name: Rebol-SQLite-OpenBSD
         path: ${{env.OUT}}/sqlite-openbsd-*.gz
 
   freebsd:
@@ -212,9 +212,9 @@ jobs:
     - name: Compress 64bit Rebol/SQLite extension
       run:  gzip -9 $OUT/sqlite-freebsd-x64.rebx
 
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
-        name: Rebol-SQLite-${{github.run_id}}
+        name: Rebol-SQLite-FreeBSD
         path: ${{env.OUT}}/sqlite-freebsd-*.gz
 
   dragonflybsd:
@@ -247,9 +247,9 @@ jobs:
     - name: Compress 64bit Rebol/SQLite extension
       run:  gzip -9 $OUT/sqlite-dragonflybsd-x64.rebx
 
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
-        name: Rebol-SQLite-${{github.run_id}}
+        name: Rebol-SQLite-DragonflyBSD
         path: ${{env.OUT}}/sqlite-dragonflybsd-*.gz
 
   Haiku-x86:
@@ -277,9 +277,9 @@ jobs:
           sudo mv ./tree/rebol/Rebol-SQLite/build/sqlite-x86.so $OUT/sqlite-haiku-x86.rebx
           sudo gzip -9 $OUT/sqlite-haiku-x86.rebx
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
-          name: Rebol-SQLite-${{github.run_id}}
+          name: Rebol-SQLite-Haiku-x86
           path: ${{env.OUT}}/sqlite-*.gz
 
   Haiku-x64:
@@ -307,7 +307,33 @@ jobs:
           sudo mv ./tree/rebol/Rebol-SQLite/build/sqlite-x64.so $OUT/sqlite-haiku-x64.rebx
           sudo gzip -9 $OUT/sqlite-haiku-x64.rebx
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
-          name: Rebol-SQLite-${{github.run_id}}
+          name: Rebol-SQLite-Haiku-x64
           path: ${{env.OUT}}/sqlite-*.gz
+
+  release:
+    runs-on: ubuntu-latest
+    needs: [windows, linux, macos, openbsd, freebsd, dragonflybsd, Haiku-x86, Haiku-x64]
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: artifacts
+        merge-multiple: true
+
+    - name: Create single archive
+      run: |
+        cd artifacts
+        zip -r ../Rebol-SQLite-all-platforms-${{ github.run_id }}.zip .
+        cd ..
+
+    - name: Upload single archive
+      uses: actions/upload-artifact@v4
+      with:
+        name: Rebol-SQLite-all-platforms
+        path: Rebol-SQLite-all-platforms-${{ github.run_id }}.zip
+        retention-days: 90
