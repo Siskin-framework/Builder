@@ -168,6 +168,8 @@ jobs:
         run: |
           uname -a
           ls -l /usr/lib/libc.so.*
+          doas ln -sf /usr/lib/libc.so.100.3 /usr/lib/libc.so.99.0
+          doas ldconfig /usr/lib
           mkdir $OUT
           curl https://github.com/Oldes/Rebol3/releases/download/3.17.0/rebol3-bulk-openbsd-x64.gz --output ./rebol3.gz --silent -L
           gunzip ./rebol3.gz
