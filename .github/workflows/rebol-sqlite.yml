@@ -159,12 +159,15 @@ jobs:
     - name: Crosscompilation for OpenBSD
       uses: vmactions/openbsd-vm@v1
       with:
+        release: "7.7"
         envs: 'OUT REBOL_MODULES_DIR'
         usesh: true
         prepare: |
           pkg_add curl git
 
         run: |
+          uname -a
+          ls -l /usr/lib/libc.so.*
           mkdir $OUT
           curl https://github.com/Oldes/Rebol3/releases/download/3.17.0/rebol3-bulk-openbsd-x64.gz --output ./rebol3.gz --silent -L
           gunzip ./rebol3.gz
