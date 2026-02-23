@@ -62,8 +62,8 @@ jobs:
       with:
         product: Bulk
 
-    - name: Install GCC multilib
-      run: sudo apt-get install gcc-multilib
+    - name: Install minimal 32-bit support
+      run: sudo apt-get update && sudo apt-get install -y gcc-multilib libc6-dev-i386
 
     - name: Build 32bit Rebol/SQLite extension
       run: ./rebol3 siskin.r3 rebol/sqlite -o $OUT/sqlite-linux-x86.rebx sqlite-x86
