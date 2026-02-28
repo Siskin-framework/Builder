@@ -1,0 +1,26 @@
+;-    .-.                                                                       
+;-   /'v'\   SISKIN-Builder project file                                        
+;-  (/uOu\)  https://github.com/Siskin-framework/Builder/                       
+;-===="="=======================================================================
+github: nanomsg/nanomsg /1.2.2
+eggs: [
+	"Make nanomsg (cmake)" [
+		name: %build-nanomsg
+		cmd [
+			"cmake -B $SISKIN_TEMP/nanomsg -S nanomsg -DCMAKE_BUILD_TYPE=Release"
+			"-DCMAKE_VERBOSE_MAKEFILE:BOOL=$SISKIN_OPTION_DEBUG"
+		]
+		cmd "cmake --build   $SISKIN_TEMP/nanomsg --config release -j 8"
+		cmd "cmake --install $SISKIN_TEMP/nanomsg --prefix $SISKIN_INSTALL"
+	]
+	"Make nanomsg static library (cmake)" [
+		name: %build-nanomsg-static
+		cmd [
+			"cmake -B $SISKIN_TEMP/nanomsg -S nanomsg -DCMAKE_BUILD_TYPE=Release"
+			"-DNN_STATIC_LIB=ON"
+			"-DCMAKE_VERBOSE_MAKEFILE:BOOL=$SISKIN_OPTION_DEBUG"
+		]
+		cmd "cmake --build   $SISKIN_TEMP/nanomsg --config release -j 8"
+		cmd "cmake --install $SISKIN_TEMP/nanomsg --prefix $SISKIN_INSTALL"
+	]
+]

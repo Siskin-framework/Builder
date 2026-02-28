@@ -1,0 +1,26 @@
+;-    .-.                                                                       
+;-   /'v'\   SISKIN-Builder project file                                        
+;-  (/uOu\)  https://github.com/Siskin-framework/Builder/                       
+;-===="="=======================================================================
+github: nanomsg/nng ;/v1.11
+eggs: [
+	"Make nng (cmake)" [
+		name: %build-nng
+		cmd [
+			"cmake -B $SISKIN_TEMP/nng -S nng -DCMAKE_BUILD_TYPE=Release"
+			"-DCMAKE_VERBOSE_MAKEFILE:BOOL=$SISKIN_OPTION_DEBUG"
+		]
+		cmd "cmake --build   $SISKIN_TEMP/nng --config release -j 8"
+		cmd "cmake --install $SISKIN_TEMP/nng --prefix $SISKIN_INSTALL"
+	]
+	"Make nng static lib only (cmake)" [
+		name: %build-nng-static
+		cmd [
+			"cmake -B $SISKIN_TEMP/nng -S nng -DCMAKE_BUILD_TYPE=Release"
+			"-DBUILD_SHARED_LIBS=OFF -DNNG_TESTS=OFF -DNNG_TOOLS=OFF"
+			"-DCMAKE_VERBOSE_MAKEFILE:BOOL=$SISKIN_OPTION_DEBUG"
+		]
+		cmd "cmake --build   $SISKIN_TEMP/nng --config release -j 8"
+		cmd "cmake --install $SISKIN_TEMP/nng --prefix $SISKIN_INSTALL"
+	]
+]
