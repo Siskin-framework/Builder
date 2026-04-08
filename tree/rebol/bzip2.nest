@@ -1,0 +1,6 @@
+;-    .-.                                                                       
+;-   /'v'\   SISKIN-Builder project file                                        
+;-  (/uOu\)  https://github.com/Siskin-framework/Builder/                       
+;-===="="=======================================================================
+github: Oldes/Rebol-Bzip2
+nest:   %Rebol-Bzip2/Rebol-Bzip2.nest
