@@ -122,6 +122,14 @@ eggs: only [
 			:make-siskin-arm64
 		]
 
+		"Siskin x86_64 static" [
+			;@@ Needs: sudo apt install musl-tool
+			name:     %siskin-linux-x86_64-static
+			:target-linux
+			:make-siskin-x64
+			:static-musl
+		]
+
 		;-- Haiku cross-compilation from a Docker image..     
 		;@@ https://hub.docker.com/r/haiku/cross-compiler/tags
 		;@@ docker.io/oldes/rebol-dev:haiku-x86
