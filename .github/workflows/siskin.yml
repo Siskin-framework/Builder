@@ -129,6 +129,11 @@ jobs:
       - name: Build 64bit Siskin using gcc
         run: ./rebol3 siskin.r3 rebol/siskin -o ./ --gzip siskin-linux-x86_64
 
+      - name: Install Musl tools
+        run: sudo apt install musl-tool
+      - name: Build 64bit Siskin as static
+        run: ./rebol3 siskin.r3 rebol/siskin -o ./ --gzip siskin-linux-x86_64-static
+
       - name: List all possible test targets
         run: ./siskin-linux-x86_64 test --list
       - name: Test build 1
