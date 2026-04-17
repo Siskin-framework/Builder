@@ -23,7 +23,7 @@ jobs:
       uses: actions/checkout@v5
 
     - name: Install Siskin Builder
-      uses: oldes/install-siskin@v0.21.0
+      uses: oldes/install-siskin@v0.21.15
 
 
     - name: Build x86 static Bzip2 library
@@ -51,7 +51,7 @@ jobs:
       uses: actions/checkout@v5
 
     - name: Install Siskin Builder
-      uses: oldes/install-siskin@v0.21.0
+      uses: oldes/install-siskin@v0.21.15
 
     - name: Install GCC multilib
       run: sudo apt-get install gcc-multilib
@@ -79,7 +79,7 @@ jobs:
       uses: actions/checkout@v5
 
     - name: Install Siskin Builder
-      uses: oldes/install-siskin@v0.21.0
+      uses: oldes/install-siskin@v0.21.15
 
 
     - name: Install the Apple certificate
