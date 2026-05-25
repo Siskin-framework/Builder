@@ -85,6 +85,7 @@ all-options: [
 	  -  "--no-upx"  -      "Ignore default project's UPX compression setting"
 	  -  "--script"  "path" "Evaluate Rebol script"
 	  -  "--gzip"    -      "Compress the result with GZIP"
+	  -  "--no-comp" -      "Don't invoke compilation/linking step"
 ]
 
 ; mapping of commands used in the interactive input into command line arguments
@@ -198,6 +199,7 @@ nest-context: object [
 	no-eval?:     false
 	no-upx?:      false
 	clang?:       false
+	no-comp?:     false
 	run-result?:  false
 	update?:      false
 	gzip?:        false
@@ -309,6 +311,7 @@ do-args: closure/with [
 			find args "--help"    [ print banner print help-options-cli quit]
 			find args "--git-ssh" [ git-ssh?: on]
 			find args "--update"  [ git-update?: on]
+			find args "--no-comp" [ no-comp?: on]
 		]
 	]
 
@@ -833,6 +836,9 @@ parse-nest: closure/with [
 			return false
 		)
 	]]
+
+	; Disable compiler assignment when "--no-comp" option is used
+	if no-comp? [dest/compiler: none]
 
 	dest/files: unique dest/files
 	new-line/all dest/files true
