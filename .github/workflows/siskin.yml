@@ -20,8 +20,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install Rebol
-        uses: oldes/install-rebol@v3.21.0
+      - name: Install Siskin Builder
+        uses: oldes/install-siskin@v0.21.15
 
       # 32bit gcc version would fail for now (requires 32bit mingw)
       #    - name: Build 32bit Siskin using gcc
@@ -35,13 +35,13 @@ jobs:
       #        MOVE ./tree/rebol/Siskin/build/siskin-windows-x86_64.exe ./siskin-windows-x86_64-gcc.exe
 
       - name: Build 32bit Siskin using msvc
-        run: ./rebol3 siskin.r3 rebol/siskin -o ./ --msvc siskin-windows-x86
+        run: ./siskin rebol/siskin -o ./ --msvc siskin-windows-x86
 
       - name: Build 64bit Siskin using msvc
-        run: ./rebol3 siskin.r3 rebol/siskin -o ./ --msvc siskin-windows-x86_64
+        run: ./siskin rebol/siskin -o ./ --msvc siskin-windows-x86_64
 
       - name: Build Arm64bit Siskin using msvc
-        run: ./rebol3 siskin.r3 rebol/siskin -o ./ --msvc siskin-windows-arm64
+        run: ./siskin rebol/siskin -o ./ --msvc siskin-windows-arm64
 
       #- name: Test 32bit Siskin project (gcc)
       #  run: ./siskin-windows-x86-gcc.exe
@@ -81,7 +81,7 @@ jobs:
       - name: Test Rebol Preprocessor
         run: |
           ./siskin-windows-x86_64.exe test test.r3
-          ./rebol3 ./test/build/test.r3
+          ./siskin --script ./test/build/test.r3
 
       - name: Test build 8 (MSVC)
         run: ./siskin-windows-x86_64.exe test -d --msvc 8
@@ -117,22 +117,22 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install Rebol
-        uses: oldes/install-rebol@v3.21.0
+      - name: Install Siskin Builder
+        uses: oldes/install-siskin@v0.21.15
 
       - name: Install GCC multilib
         run: sudo apt-get install gcc-multilib
 
       - name: Build 32bit Siskin using gcc
-        run: ./rebol3 siskin.r3 rebol/siskin -o ./ --gzip siskin-linux-x86
+        run: ./siskin rebol/siskin -o ./ --gzip siskin-linux-x86
 
       - name: Build 64bit Siskin using gcc
-        run: ./rebol3 siskin.r3 rebol/siskin -o ./ --gzip siskin-linux-x86_64
+        run: ./siskin rebol/siskin -o ./ --gzip siskin-linux-x86_64
 
       - name: Install Musl tools
         run: sudo apt-get install musl-tools
       - name: Build 64bit Siskin as static
-        run: ./rebol3 siskin.r3 rebol/siskin -o ./ --gzip siskin-linux-x86_64-static
+        run: ./siskin rebol/siskin -o ./ --gzip siskin-linux-x86_64-static
 
       - name: List all possible test targets
         run: ./siskin-linux-x86_64 test --list
@@ -163,7 +163,7 @@ jobs:
       - name: Test Rebol Preprocessor
         run: |
           ./siskin-linux-x86_64 test test.r3
-          ./rebol3 ./test/build/test.r3 
+          ./siskin --script ./test/build/test.r3 
 
       - name: Test only single command
         run: ./siskin-linux-x86_64 test list-dir
@@ -179,8 +179,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install Rebol
-        uses: oldes/install-rebol@v3.21.0
+      - name: Install Siskin Builder
+        uses: oldes/install-siskin@v0.21.15
 
       - name: Install the Apple certificate
       # https://docs.github.com/en/actions/guides/installing-an-apple-certificate-on-macos-runners-for-xcode-development
@@ -211,17 +211,17 @@ jobs:
       #It looks it's not possible to build 32bit macOS version anymore using GitHub actions!
       #
       #- name: Build 32bit Siskin
-      #  run: ./rebol3 siskin.r3 rebol/siskin -o ./ siskin-macos-x86
+      #  run: ./siskin rebol/siskin -o ./ siskin-macos-x86
 
       - name: Build x86_64 Siskin
         env: 
           SISKIN_SIGN_IDENTITY: ${{ secrets.MACOS_IDENTITY_ID }}
-        run: ./rebol3 siskin.r3 rebol/siskin -o ./ --gzip siskin-macos-x86_64
+        run: ./siskin rebol/siskin -o ./ --gzip siskin-macos-x86_64
 
       - name: Build ARM64 Siskin
         env: 
           SISKIN_SIGN_IDENTITY: ${{ secrets.MACOS_IDENTITY_ID }}
-        run: ./rebol3 siskin.r3 rebol/siskin -o ./ --gzip siskin-macos-aarch64
+        run: ./siskin rebol/siskin -o ./ --gzip siskin-macos-aarch64
 
 #      - name: Codesign executables
 #        env: 
@@ -260,7 +260,7 @@ jobs:
       - name: Test Rebol Preprocessor
         run: |
           ./siskin-macos-x86_64 test test.r3
-          ./rebol3 ./test/build/test.r3
+          ./siskin --script ./test/build/test.r3
 
       - name: Test only single command
         run: ./siskin-macos-x86_64 test list-dir
@@ -276,45 +276,45 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install Rebol
-        uses: oldes/install-rebol@v3.21.0
+      - name: Install Siskin Builder
+        uses: oldes/install-siskin@v0.21.15
 
 
       - name: Preprocess Siskin script
-        run: ./rebol3 siskin.r3 rebol/siskin siskin.r3
+        run: ./siskin rebol/siskin siskin.r3
 
       - name: Move results into the root for uploading
         run: mv ./tree/rebol/Siskin/build/siskin.r3 ./build.r3
 
 
       - name: List all possible test targets
-        run: ./rebol3 build.r3 test --list
+        run: ./siskin --script build.r3 test --list
       - name: Test build 1
-        run: ./rebol3 build.r3 test test-1
+        run: ./siskin --script build.r3 test test-1
       - name: Test build 2
-        run: ./rebol3 build.r3 test test-2
+        run: ./siskin --script build.r3 test test-2
       - name: Test build 3
-        run: ./rebol3 build.r3 test test-3
+        run: ./siskin --script build.r3 test test-3
       - name: Test build 4
-        run: ./rebol3 build.r3 test test-4
+        run: ./siskin --script build.r3 test test-4
       - name: Test build 5
-        run: ./rebol3 build.r3 test test-5
+        run: ./siskin --script build.r3 test test-5
       - name: Test build 6
-        run: ./rebol3 build.r3 test test-6
+        run: ./siskin --script build.r3 test test-6
       - name: Test build 7
-        run: ./rebol3 build.r3 test test-7
+        run: ./siskin --script build.r3 test test-7
       - name: Test build 8
-        run: ./rebol3 build.r3 test "test-8 spaced"
+        run: ./siskin --script build.r3 test "test-8 spaced"
       - name: Test build multiple at once
-        run: ./rebol3 build.r3 test 1 2 "test-8 spaced"
+        run: ./siskin --script build.r3 test 1 2 "test-8 spaced"
 
       - name: Test Rebol Preprocessor
         run: |
-          ./rebol3 build.r3 test test.r3
-          ./rebol3 ./test/build/test.r3 
+          ./siskin --script build.r3 test test.r3
+          ./siskin --script ./test/build/test.r3 
 
       - name: Test only single command
-        run: ./rebol3 build.r3 test list-dir
+        run: ./siskin --script build.r3 test list-dir
 
       - name: Compress results before uploading
         run: gzip -9 ./build.r3
