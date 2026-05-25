@@ -3,4 +3,4 @@
 ;-  (/uOu\)  https://github.com/Siskin-framework/Builder/                       
 ;-===="="=======================================================================
 github: Oldes/Rebol-Console
-eggs: []
+nest:   %Rebol-Console/Rebol-Console.nest
