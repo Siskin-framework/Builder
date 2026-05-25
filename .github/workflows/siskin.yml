@@ -21,7 +21,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install Rebol
-        uses: oldes/install-rebol@v3.21.15
+        uses: oldes/install-rebol@v3.21.0
 
       # 32bit gcc version would fail for now (requires 32bit mingw)
       #    - name: Build 32bit Siskin using gcc
@@ -118,7 +118,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install Rebol
-        uses: oldes/install-rebol@v3.21.15
+        uses: oldes/install-rebol@v3.21.0
 
       - name: Install GCC multilib
         run: sudo apt-get install gcc-multilib
@@ -180,7 +180,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install Rebol
-        uses: oldes/install-rebol@v3.21.15
+        uses: oldes/install-rebol@v3.21.0
 
       - name: Install the Apple certificate
       # https://docs.github.com/en/actions/guides/installing-an-apple-certificate-on-macos-runners-for-xcode-development
@@ -277,7 +277,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install Rebol
-        uses: oldes/install-rebol@v3.21.15
+        uses: oldes/install-rebol@v3.21.0
 
 
       - name: Preprocess Siskin script
