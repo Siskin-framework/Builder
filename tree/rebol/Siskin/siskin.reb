@@ -2,7 +2,7 @@ Rebol [
 	Title:  "Siskin Builder - core"
 	Type:    module
 	Name:    siskin
-	Version: 0.21.2
+	Version: 0.22.0
 	Author: "Oldes"
 	
 	exports: [
@@ -23,7 +23,7 @@ Rebol [
 banner: next rejoin [{
 ^[[0;33m═╗
 ^[[0;33m ║^[[1;31m    .-.
-^[[0;33m ║^[[1;31m   /'v'\   ^[[0;33mSISKIN-Framework Builder 0.21.2 Rebol } rebol/version {
+^[[0;33m ║^[[1;31m   /'v'\   ^[[0;33mSISKIN-Framework Builder 0.22.0 Rebol } rebol/version {
 ^[[0;33m ║^[[1;31m  (/^[[0;31muOu^[[1;31m\)  ^[[0;33mhttps://github.com/Siskin-framework/Builder/
 ^[[0;33m ╚════^[[1;31m"^[[0;33m═^[[1;31m"^[[0;33m═══════════════════════════════════════════════════════════════════════^[[m}]
 
@@ -1806,7 +1806,7 @@ build: function/with [
 	finalize-build spec either archive-only? [archive][out-file]
 ] :nest-context
 
-probe-spec: func[spec [map!] values [block!] /local val][
+probe-spec: func[spec [map!] values [block!] /local val data][
 	foreach key values [
 		val: spec/:key
 		unless any [
@@ -1814,7 +1814,10 @@ probe-spec: func[spec [map!] values [block!] /local val][
 			all [series? val empty? val]
 		][
 			if block? val [new-line val true]
-			print-debug format [$0.32 9 ": " $33 ] reduce [key mold val]
+			;; backward compatibility theak...
+			data: [key mold val]
+			if system/version < 3.21.20 [data: reduce data]
+			print-debug format [$0.32 9 ": " $33 ] data
 		]
 	]
 ]

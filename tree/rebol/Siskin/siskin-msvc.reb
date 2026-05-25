@@ -243,11 +243,13 @@ make-project: func[
 		"c:\Program Files (x86)\Microsoft Visual Studio\2017\Community"
 	]
 
+	siskin/print-info ["MSVC path:" as-green MSVC-PATH]
+
 	if not exists? to-rebol-file MSVC-PATH [
 		siskin/print-error "MSVC path not found!"
 		quit/return 2
 	]
-	siskin/print-info ["MSVC path:" as-green MSVC-PATH]
+	
 
 	TOOLSET-VERSION: any [
 		all [find MSVC-PATH "\2022\" "v143"]

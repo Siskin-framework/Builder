@@ -123,7 +123,7 @@ eggs: only [
 		]
 
 		"Siskin x86_64 static" [
-			;@@ Needs: sudo apt install musl-tool
+			;@@ Needs: sudo apt install musl-tools
 			name:     %siskin-linux-x86_64-static
 			:target-linux
 			:make-siskin-x64
