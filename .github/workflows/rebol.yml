@@ -18,52 +18,57 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Install Rebol
-      uses: oldes/install-rebol@v3.16.0
+    - name: Install Siskin
+      uses: oldes/install-siskin@v0.22.0
 
-    - name: Build 64bit Rebol/Base using MSVC
-      run: |
-        ./rebol3 siskin.r3 rebol --msvc %rebol3-base-windows-x64
-        MOVE ./tree/rebol/Rebol/msvc/Release-x64/rebol3-base-windows-x64.exe ./
+    #- name: Build 64bit Rebol/Base using MSVC
+    #  run: |
+    #    ./siskin rebol --msvc %rebol3-base-windows-x64
+    #    MOVE ./tree/rebol/Rebol/msvc/Release-x64/rebol3-base-windows-x64.exe ./
 
     - name: Build 64bit Rebol/Core using MSVC
       run: |
-        ./rebol3 siskin.r3 rebol --msvc %rebol3-core-windows-x64
+        ./siskin rebol --msvc %rebol3-core-windows-x64
         MOVE ./tree/rebol/Rebol/msvc/Release-x64/rebol3-core-windows-x64.exe ./
 
     - name: Build 64bit Rebol/Bulk using MSVC
       run: |
-        ./rebol3 siskin.r3 rebol --msvc %rebol3-bulk-windows-x64
+        ./siskin rebol --msvc %rebol3-bulk-windows-x64
         MOVE ./tree/rebol/Rebol/msvc/Release-x64/rebol3-bulk-windows-x64.exe ./
 
-    - name: Build 32bit Rebol/Base using MSVC
-      run: |
-        ./rebol3 siskin.r3 rebol --msvc %rebol3-base-windows-x86
-        MOVE ./tree/rebol/Rebol/msvc/Release-Win32/rebol3-base-windows-x86.exe ./
+    #- name: Build 32bit Rebol/Base using MSVC
+    #  run: |
+    #    ./siskin rebol --msvc %rebol3-base-windows-x86
+    #    MOVE ./tree/rebol/Rebol/msvc/Release-Win32/rebol3-base-windows-x86.exe ./
 
     - name: Build 32bit Rebol/Core using MSVC
       run: |
-        ./rebol3 siskin.r3 rebol --msvc %rebol3-core-windows-x86
+        ./siskin rebol --msvc %rebol3-core-windows-x86
         MOVE ./tree/rebol/Rebol/msvc/Release-Win32/rebol3-core-windows-x86.exe ./
 
     - name: Build 32bit Rebol/Bulk using MSVC
       run: |
-        ./rebol3 siskin.r3 rebol --msvc %rebol3-bulk-windows-x86
+        ./siskin rebol --msvc %rebol3-bulk-windows-x86
         MOVE ./tree/rebol/Rebol/msvc/Release-Win32/rebol3-bulk-windows-x86.exe ./
+
+    - name: Build ARM64 Rebol/Bulk using MSVC
+      run: |
+        ./siskin rebol --msvc %rebol3-bulk-windows-arm64
+        MOVE ./tree/rebol/Rebol/msvc/Release-Win32/rebol3-bulk-windows-arm64.exe ./
 
     ###############################################################################
     # Building Rebol as a shared library...
     - name: Build 32bit Rebol/Core as a shared library using MSVC
-      run: ./rebol3 siskin.r3 rebol --msvc %lib-rebol3-core-windows-x86
+      run: ./siskin rebol --msvc %lib-rebol3-core-windows-x86
     - name: Build 64bit Rebol/Core as a shared library using MSVC
-      run: ./rebol3 siskin.r3 rebol --msvc %lib-rebol3-core-windows-x64
+      run: ./siskin rebol --msvc %lib-rebol3-core-windows-x64
         
     ###############################################################################
     # Building sample host applications using Rebol as a shared library...
     - name: Build 32bit Rebol/Core as a host application using MSVC
-      run: ./rebol3 siskin.r3 rebol --msvc %host-core-windows-x86
+      run: ./siskin rebol --msvc %host-core-windows-x86
     - name: Build 64bit Rebol/Core as a host application using MSVC
-      run: ./rebol3 siskin.r3 rebol --msvc %host-core-windows-x64
+      run: ./siskin rebol --msvc %host-core-windows-x64
 
     - name: Move library and host files into root
       run: |
@@ -93,89 +98,89 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Install Rebol
-      uses: oldes/install-rebol@v3.16.0
+    - name: Install Siskin
+      uses: oldes/install-siskin@v0.22.0
 
     - name: Install GCC multilib
       run: sudo apt-get install gcc-multilib
 
-    - name: Build 32bit Rebol/Base using gcc
-      run: ./rebol3 siskin.r3 rebol %rebol3-base-linux-x86
+#    - name: Build 32bit Rebol/Base using gcc
+#      run: ./siskin rebol %rebol3-base-linux-x86
     - name: Build 32bit Rebol/Core using gcc
-      run: ./rebol3 siskin.r3 rebol %rebol3-core-linux-x86
+      run: ./siskin rebol %rebol3-core-linux-x86
     - name: Build 32bit Rebol/Bulk using gcc
-      run: ./rebol3 siskin.r3 rebol %rebol3-bulk-linux-x86
+      run: ./siskin rebol %rebol3-bulk-linux-x86
 
-    - name: Build 64bit Rebol/Base using gcc
-      run: ./rebol3 siskin.r3 rebol %rebol3-base-linux-x64
+#    - name: Build 64bit Rebol/Base using gcc
+#      run: ./siskin rebol %rebol3-base-linux-x64
     - name: Build 64bit Rebol/Core using gcc
-      run: ./rebol3 siskin.r3 rebol %rebol3-core-linux-x64
+      run: ./siskin rebol %rebol3-core-linux-x64
     - name: Build 64bit Rebol/Bulk using gcc
-      run: ./rebol3 siskin.r3 rebol %rebol3-bulk-linux-x64
+      run: ./siskin rebol %rebol3-bulk-linux-x64
 
     - name: Setup arm cross-compilers 
       run: |
         sudo apt-get update
         sudo apt-get install gcc-arm-linux-gnueabi gcc-arm-linux-gnueabihf gcc-aarch64-linux-gnu gcc-riscv64-linux-gnu
 
-    - name: Build Rebol/Base for armv6 (gnueabi)
-      run: ./rebol3 siskin.r3 rebol %rebol3-base-linux-gnueabi
+#    - name: Build Rebol/Base for armv6 (gnueabi)
+#      run: ./siskin rebol %rebol3-base-linux-gnueabi
     - name: Build Rebol/Core for armv6 (gnueabi)
-      run: ./rebol3 siskin.r3 rebol %rebol3-core-linux-gnueabi
+      run: ./siskin rebol %rebol3-core-linux-gnueabi
     - name: Build Rebol/Bulk for armv6 (gnueabi)
-      run: ./rebol3 siskin.r3 rebol %rebol3-bulk-linux-gnueabi
+      run: ./siskin rebol %rebol3-bulk-linux-gnueabi
 
-    - name: Build Rebol/Base for armv7 (gnueabihf)
-      run: ./rebol3 siskin.r3 rebol %rebol3-base-linux-gnueabihf
+#    - name: Build Rebol/Base for armv7 (gnueabihf)
+#      run: ./siskin rebol %rebol3-base-linux-gnueabihf
     - name: Build Rebol/Core for armv7 (gnueabihf)
-      run: ./rebol3 siskin.r3 rebol %rebol3-core-linux-gnueabihf
+      run: ./siskin rebol %rebol3-core-linux-gnueabihf
     - name: Build Rebol/Bulk for armv7 (gnueabihf)
-      run: ./rebol3 siskin.r3 rebol %rebol3-bulk-linux-gnueabihf
+      run: ./siskin rebol %rebol3-bulk-linux-gnueabihf
 
-    - name: Build Rebol/Base for arm64 (aarch64)
-      run: ./rebol3 siskin.r3 rebol %rebol3-base-linux-aarch64
+#    - name: Build Rebol/Base for arm64 (aarch64)
+#      run: ./siskin rebol %rebol3-base-linux-aarch64
     - name: Build Rebol/Core for arm64 (aarch64)
-      run: ./rebol3 siskin.r3 rebol %rebol3-core-linux-aarch64
+      run: ./siskin rebol %rebol3-core-linux-aarch64
     - name: Build Rebol/Bulk for arm64 (aarch64)
-      run: ./rebol3 siskin.r3 rebol %rebol3-bulk-linux-aarch64
+      run: ./siskin rebol %rebol3-bulk-linux-aarch64
 
-    - name: Build Rebol/Base for riscv64
-      run: ./rebol3 siskin.r3 rebol %rebol3-base-linux-riscv64
+#    - name: Build Rebol/Base for riscv64
+#      run: ./siskin rebol %rebol3-base-linux-riscv64
     - name: Build Rebol/Core for riscv64
-      run: ./rebol3 siskin.r3 rebol %rebol3-core-linux-riscv64
+      run: ./siskin rebol %rebol3-core-linux-riscv64
     - name: Build Rebol/Bulk for riscv64
-      run: ./rebol3 siskin.r3 rebol %rebol3-bulk-linux-riscv64
+      run: ./siskin rebol %rebol3-bulk-linux-riscv64
 
     - name: Rename ARM cross-compilation target results
       run: |
-        mv ./tree/rebol/Rebol/build/rebol3-base-linux-gnueabi   ./tree/rebol/Rebol/build/rebol3-base-linux-armv6
+#        mv ./tree/rebol/Rebol/build/rebol3-base-linux-gnueabi   ./tree/rebol/Rebol/build/rebol3-base-linux-armv6
         mv ./tree/rebol/Rebol/build/rebol3-core-linux-gnueabi   ./tree/rebol/Rebol/build/rebol3-core-linux-armv6
         mv ./tree/rebol/Rebol/build/rebol3-bulk-linux-gnueabi   ./tree/rebol/Rebol/build/rebol3-bulk-linux-armv6
-        mv ./tree/rebol/Rebol/build/rebol3-base-linux-gnueabihf ./tree/rebol/Rebol/build/rebol3-base-linux-armv7
+#        mv ./tree/rebol/Rebol/build/rebol3-base-linux-gnueabihf ./tree/rebol/Rebol/build/rebol3-base-linux-armv7
         mv ./tree/rebol/Rebol/build/rebol3-core-linux-gnueabihf ./tree/rebol/Rebol/build/rebol3-core-linux-armv7
         mv ./tree/rebol/Rebol/build/rebol3-bulk-linux-gnueabihf ./tree/rebol/Rebol/build/rebol3-bulk-linux-armv7
-        mv ./tree/rebol/Rebol/build/rebol3-base-linux-aarch64   ./tree/rebol/Rebol/build/rebol3-base-linux-arm64
+#        mv ./tree/rebol/Rebol/build/rebol3-base-linux-aarch64   ./tree/rebol/Rebol/build/rebol3-base-linux-arm64
         mv ./tree/rebol/Rebol/build/rebol3-core-linux-aarch64   ./tree/rebol/Rebol/build/rebol3-core-linux-arm64
         mv ./tree/rebol/Rebol/build/rebol3-bulk-linux-aarch64   ./tree/rebol/Rebol/build/rebol3-bulk-linux-arm64
 
     - name: Create archives from each version
       run: |
-        gzip -9 ./tree/rebol/Rebol/build/rebol3-base-linux-x86
+#        gzip -9 ./tree/rebol/Rebol/build/rebol3-base-linux-x86
         gzip -9 ./tree/rebol/Rebol/build/rebol3-core-linux-x86
         gzip -9 ./tree/rebol/Rebol/build/rebol3-bulk-linux-x86
-        gzip -9 ./tree/rebol/Rebol/build/rebol3-base-linux-x64
+#        gzip -9 ./tree/rebol/Rebol/build/rebol3-base-linux-x64
         gzip -9 ./tree/rebol/Rebol/build/rebol3-core-linux-x64
         gzip -9 ./tree/rebol/Rebol/build/rebol3-bulk-linux-x64
-        gzip -9 ./tree/rebol/Rebol/build/rebol3-base-linux-armv6
+#        gzip -9 ./tree/rebol/Rebol/build/rebol3-base-linux-armv6
         gzip -9 ./tree/rebol/Rebol/build/rebol3-core-linux-armv6
         gzip -9 ./tree/rebol/Rebol/build/rebol3-bulk-linux-armv6
-        gzip -9 ./tree/rebol/Rebol/build/rebol3-base-linux-armv7
+#        gzip -9 ./tree/rebol/Rebol/build/rebol3-base-linux-armv7
         gzip -9 ./tree/rebol/Rebol/build/rebol3-core-linux-armv7
         gzip -9 ./tree/rebol/Rebol/build/rebol3-bulk-linux-armv7
-        gzip -9 ./tree/rebol/Rebol/build/rebol3-base-linux-arm64
+#        gzip -9 ./tree/rebol/Rebol/build/rebol3-base-linux-arm64
         gzip -9 ./tree/rebol/Rebol/build/rebol3-core-linux-arm64
         gzip -9 ./tree/rebol/Rebol/build/rebol3-bulk-linux-arm64
-        gzip -9 ./tree/rebol/Rebol/build/rebol3-base-linux-riscv64
+#        gzip -9 ./tree/rebol/Rebol/build/rebol3-base-linux-riscv64
         gzip -9 ./tree/rebol/Rebol/build/rebol3-core-linux-riscv64
         gzip -9 ./tree/rebol/Rebol/build/rebol3-bulk-linux-riscv64
 
@@ -190,8 +195,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install Rebol
-        uses: oldes/install-rebol@v3.16.0
+      - name: Install Siskin
+        uses: oldes/install-siskin@v0.22.0
 
       - name: Install the Apple certificate
       # https://docs.github.com/en/actions/guides/installing-an-apple-certificate-on-macos-runners-for-xcode-development
@@ -219,33 +224,33 @@ jobs:
           # list available codesigning identities
           security find-identity -v -p codesigning
 
-      - name: Build 64bit Rebol/Base using clang
-        run: ./rebol3 siskin.r3 rebol %rebol3-base-macos-x64
+#      - name: Build 64bit Rebol/Base using clang
+#        run: ./siskin rebol %rebol3-base-macos-x64
       - name: Build 64bit Rebol/Core using clang
-        run: ./rebol3 siskin.r3 rebol %rebol3-core-macos-x64
+        run: ./siskin rebol %rebol3-core-macos-x64
       - name: Build 64bit Rebol/Bulk using clang
-        run: ./rebol3 siskin.r3 rebol %rebol3-bulk-macos-x64
+        run: ./siskin rebol %rebol3-bulk-macos-x64
 
-      - name: Build ARM64 Rebol/Base using clang
-        run: ./rebol3 siskin.r3 rebol %rebol3-base-macos-arm64
+#      - name: Build ARM64 Rebol/Base using clang
+#        run: ./siskin rebol %rebol3-base-macos-arm64
       - name: Build ARM64 Rebol/Core using clang
-        run: ./rebol3 siskin.r3 rebol %rebol3-core-macos-arm64
+        run: ./siskin rebol %rebol3-core-macos-arm64
       - name: Build ARM64 Rebol/Bulk using clang
-        run: ./rebol3 siskin.r3 rebol %rebol3-bulk-macos-arm64
+        run: ./siskin rebol %rebol3-bulk-macos-arm64
 
       - name: Build 64bit Rebol/Core as a shared library
-        run: ./rebol3 siskin.r3 rebol %lib-rebol3-core-macos-x64
+        run: ./siskin rebol %lib-rebol3-core-macos-x64
       - name: Build 64bit Rebol/Core as a host application
-        run: ./rebol3 siskin.r3 rebol %host-core-macos-x64
+        run: ./siskin rebol %host-core-macos-x64
 
       - name: Codesign executables
         env: 
           MACOS_IDENTITY_ID: ${{ secrets.MACOS_IDENTITY_ID }}
         run: |
-          /usr/bin/codesign --force -s $MACOS_IDENTITY_ID ./tree/rebol/Rebol/build/rebol3-base-macos-x64 -v
+#          /usr/bin/codesign --force -s $MACOS_IDENTITY_ID ./tree/rebol/Rebol/build/rebol3-base-macos-x64 -v
           /usr/bin/codesign --force -s $MACOS_IDENTITY_ID ./tree/rebol/Rebol/build/rebol3-core-macos-x64 -v
           /usr/bin/codesign --force -s $MACOS_IDENTITY_ID ./tree/rebol/Rebol/build/rebol3-bulk-macos-x64 -v
-          /usr/bin/codesign --force -s $MACOS_IDENTITY_ID ./tree/rebol/Rebol/build/rebol3-base-macos-arm64 -v
+#          /usr/bin/codesign --force -s $MACOS_IDENTITY_ID ./tree/rebol/Rebol/build/rebol3-base-macos-arm64 -v
           /usr/bin/codesign --force -s $MACOS_IDENTITY_ID ./tree/rebol/Rebol/build/rebol3-core-macos-arm64 -v
           /usr/bin/codesign --force -s $MACOS_IDENTITY_ID ./tree/rebol/Rebol/build/rebol3-bulk-macos-arm64 -v
           /usr/bin/codesign --force -s $MACOS_IDENTITY_ID ./tree/rebol/Rebol/build/lib-rebol3-core-macos-x64.dylib -v
@@ -253,10 +258,10 @@ jobs:
 
       - name: Create archives from each version
         run: |
-          gzip -9 ./tree/rebol/Rebol/build/rebol3-base-macos-x64
+#          gzip -9 ./tree/rebol/Rebol/build/rebol3-base-macos-x64
           gzip -9 ./tree/rebol/Rebol/build/rebol3-core-macos-x64
           gzip -9 ./tree/rebol/Rebol/build/rebol3-bulk-macos-x64
-          gzip -9 ./tree/rebol/Rebol/build/rebol3-base-macos-arm64
+ #         gzip -9 ./tree/rebol/Rebol/build/rebol3-base-macos-arm64
           gzip -9 ./tree/rebol/Rebol/build/rebol3-core-macos-arm64
           gzip -9 ./tree/rebol/Rebol/build/rebol3-bulk-macos-arm64
           gzip -9 ./tree/rebol/Rebol/build/lib-rebol3-core-macos-x64.dylib
@@ -288,8 +293,8 @@ jobs:
           make -f rebol-bsd-bootstrap-64bit.mk
           mv ./rebol-bsd-bootstrap-64bit ../../Builder/r3
           cd ../../Builder
-          ./r3 siskin.r3 rebol rebol3-base-dragonflybsd-x64
-          mv ./tree/rebol/Rebol/build/rebol3-base-dragonflybsd-x64 ./rebol3-base-dragonflybsd-x64
+#          ./r3 siskin.r3 rebol rebol3-base-dragonflybsd-x64
+#          mv ./tree/rebol/Rebol/build/rebol3-base-dragonflybsd-x64 ./rebol3-base-dragonflybsd-x64
           ./r3 siskin.r3 rebol rebol3-core-dragonflybsd-x64
           mv ./tree/rebol/Rebol/build/rebol3-core-dragonflybsd-x64 ./rebol3-core-dragonflybsd-x64
           ./r3 siskin.r3 rebol rebol3-bulk-dragonflybsd-x64
@@ -297,7 +302,7 @@ jobs:
 
     - name: Prepare build results
       run:  |
-        gzip -9 ./rebol3-base-dragonflybsd-x64
+#        gzip -9 ./rebol3-base-dragonflybsd-x64
         gzip -9 ./rebol3-core-dragonflybsd-x64
         gzip -9 ./rebol3-bulk-dragonflybsd-x64
 
@@ -324,8 +329,8 @@ jobs:
           make -f rebol-bsd-bootstrap-64bit.mk
           mv ./rebol-bsd-bootstrap-64bit ../../Builder/r3
           cd ../../Builder
-          ./r3 siskin.r3 rebol rebol3-base-openbsd-x64
-          mv ./tree/rebol/Rebol/build/rebol3-base-openbsd-x64 ./rebol3-base-openbsd-x64
+#          ./r3 siskin.r3 rebol rebol3-base-openbsd-x64
+#          mv ./tree/rebol/Rebol/build/rebol3-base-openbsd-x64 ./rebol3-base-openbsd-x64
           ./r3 siskin.r3 rebol rebol3-core-openbsd-x64
           mv ./tree/rebol/Rebol/build/rebol3-core-openbsd-x64 ./rebol3-core-openbsd-x64
           ./r3 siskin.r3 rebol rebol3-bulk-openbsd-x64
@@ -333,7 +338,7 @@ jobs:
 
     - name: Prepare build results
       run:  |
-        gzip -9 ./rebol3-base-openbsd-x64
+#        gzip -9 ./rebol3-base-openbsd-x64
         gzip -9 ./rebol3-core-openbsd-x64
         gzip -9 ./rebol3-bulk-openbsd-x64
 
@@ -353,19 +358,21 @@ jobs:
         prepare: |
           pkg install -y curl git
         run: |
-          curl -L -S https://github.com/Siskin-framework/Builder/releases/download/0.13.0/siskin-freebsd-x86_64.gz --output siskin.gz
-          gunzip ./siskin.gz
-          chmod u+x ./siskin
-          ./siskin rebol %rebol3-base-freebsd-x64
-          mv ./tree/rebol/Rebol/build/rebol3-base-freebsd-x64 ./rebol3-base-freebsd-x64
-          ./siskin rebol %rebol3-core-freebsd-x64
-          mv ./tree/rebol/Rebol/build/rebol3-core-freebsd-x64 ./rebol3-core-freebsd-x64
-          ./siskin rebol %rebol3-bulk-freebsd-x64
-          mv ./tree/rebol/Rebol/build/rebol3-bulk-freebsd-x64 ./rebol3-bulk-freebsd-x64
+          git clone -b bootstrap https://github.com/Siskin-framework/Rebol.git --depth 1
+          cd ./Rebol/make/
+          make -f rebol-bsd-bootstrap-64bit.mk
+          mv ./rebol-bsd-bootstrap-64bit ../../Builder/r3
+          cd ../../Builder
+#          ./r3 siskin.r3 rebol %rebol3-base-freebsd-x64
+#          mv ./tree/rebol/Rebol/build/rebol3-base-freebsd-x64 ../rebol3-base-freebsd-x64
+          ./r3 siskin.r3 rebol %rebol3-core-freebsd-x64
+          mv ./tree/rebol/Rebol/build/rebol3-core-freebsd-x64 ../rebol3-core-freebsd-x64
+          ./r3 siskin.r3 rebol %rebol3-bulk-freebsd-x64
+          mv ./tree/rebol/Rebol/build/rebol3-bulk-freebsd-x64 ../rebol3-bulk-freebsd-x64
 
     - name: Prepare build results
       run:  |
-        gzip -9 ./rebol3-base-freebsd-x64
+#        gzip -9 ./rebol3-base-freebsd-x64
         gzip -9 ./rebol3-core-freebsd-x64
         gzip -9 ./rebol3-bulk-freebsd-x64
 
