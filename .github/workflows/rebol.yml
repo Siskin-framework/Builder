@@ -44,7 +44,7 @@ jobs:
     - name: Build ARM64 Rebol/Bulk using MSVC
       run: |
         ./siskin rebol --msvc %rebol3-bulk-windows-arm64
-        MOVE ./tree/rebol/Rebol/msvc/Release-Win32/rebol3-bulk-windows-arm64.exe ./
+        MOVE ./tree/rebol/Rebol/msvc/Release-ARM64/rebol3-bulk-windows-arm64.exe ./
 
     ###############################################################################
     # Building Rebol as a shared library...
@@ -83,7 +83,7 @@ jobs:
   linux:
     strategy:
       fail-fast: true
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
@@ -313,14 +313,15 @@ jobs:
         prepare: |
           pkg install -y curl git
         run: |
+          cd ..
           git clone -b bootstrap https://github.com/Siskin-framework/Rebol.git --depth 1
           cd ./Rebol/make/
           make -f rebol-bsd-bootstrap-64bit.mk
           mv ./rebol-bsd-bootstrap-64bit ../../Builder/r3
           cd ../../Builder
-          ./r3 siskin.r3 rebol %rebol3-core-freebsd-x64
+          ./r3 siskin.r3 rebol rebol3-core-freebsd-x64
           mv ./tree/rebol/Rebol/build/rebol3-core-freebsd-x64 ../rebol3-core-freebsd-x64
-          ./r3 siskin.r3 rebol %rebol3-bulk-freebsd-x64
+          ./r3 siskin.r3 rebol rebol3-bulk-freebsd-x64
           mv ./tree/rebol/Rebol/build/rebol3-bulk-freebsd-x64 ../rebol3-bulk-freebsd-x64
 
     - name: Prepare build results
