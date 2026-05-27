@@ -71,7 +71,7 @@ jobs:
 
     ###############################################################################
     # Collecting build artifacts...
-    - uses: actions/upload-artifact@v5
+    - uses: actions/upload-artifact@v7
       with:
         name: Rebol-${{github.run_id}}-windows
         path: |
@@ -157,7 +157,7 @@ jobs:
         gzip -9 ./tree/rebol/Rebol/build/rebol3-core-linux-riscv64
         gzip -9 ./tree/rebol/Rebol/build/rebol3-bulk-linux-riscv64
 
-    - uses: actions/upload-artifact@v5
+    - uses: actions/upload-artifact@v7
       with:
         name: Rebol-${{github.run_id}}-linux
         path: ./tree/rebol/Rebol/build/rebol3-*.gz
@@ -232,7 +232,7 @@ jobs:
           gzip -9 ./tree/rebol/Rebol/build/lib-rebol3-core-macos-x64.dylib
           gzip -9 ./tree/rebol/Rebol/build/host-core-macos-x64
 
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v7
         with:
           name: Rebol-${{github.run_id}}-macos
           path: ./tree/rebol/Rebol/build/*.gz
@@ -246,7 +246,7 @@ jobs:
       with:
         usesh: true
         prepare: |
-          pkg install -y llvm16 libnghttp2 git libiconv
+          pkg install -y rsync llvm16 libnghttp2 git libiconv
         run: |
           ln -s /usr/local/bin/clang16 /usr/local/bin/clang
           clang --version
@@ -269,7 +269,7 @@ jobs:
         gzip -9 ./rebol3-core-dragonflybsd-x64
         gzip -9 ./rebol3-bulk-dragonflybsd-x64
 
-    - uses: actions/upload-artifact@v5
+    - uses: actions/upload-artifact@v7
       with:
         name: Rebol-${{github.run_id}}-dragonfly
         path: ./rebol3*.gz
@@ -302,7 +302,7 @@ jobs:
         gzip -9 ./rebol3-core-openbsd-x64
         gzip -9 ./rebol3-bulk-openbsd-x64
 
-    - uses: actions/upload-artifact@v5
+    - uses: actions/upload-artifact@v7
       with:
         name: Rebol-${{github.run_id}}-openbsd
         path: ./rebol3*.gz
@@ -334,7 +334,7 @@ jobs:
         gzip -9 ./rebol3-core-freebsd-x64
         gzip -9 ./rebol3-bulk-freebsd-x64
 
-    - uses: actions/upload-artifact@v5
+    - uses: actions/upload-artifact@v7
       with:
         name: Rebol-${{github.run_id}}-freebsd
         path: ./rebol3*.gz
@@ -365,7 +365,7 @@ jobs:
           sudo gzip -9 ./rebol3-core-haiku-x86
           sudo gzip -9 ./rebol3-bulk-haiku-x86
 
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v7
         with:
           name: Rebol-${{github.run_id}}-haiku-x86
           path: ./rebol3-*.gz
@@ -396,7 +396,7 @@ jobs:
           sudo gzip -9 ./rebol3-core-haiku-x64
           sudo gzip -9 ./rebol3-bulk-haiku-x64
 
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v7
         with:
           name: Rebol-${{github.run_id}}-haiku-x64
           path: ./rebol3-*.gz
