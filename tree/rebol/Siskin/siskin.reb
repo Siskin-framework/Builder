@@ -20,12 +20,12 @@ Rebol [
 	]
 ]
 ;? system
-banner: next rejoin [{
+banner: does [next rejoin [{
 ^[[0;33m═╗
 ^[[0;33m ║^[[1;31m    .-.
 ^[[0;33m ║^[[1;31m   /'v'\   ^[[0;33mSISKIN Builder 0.22.1 Rebol } rebol/version " (" rebol/platform {)
 ^[[0;33m ║^[[1;31m  (/^[[0;31muOu^[[1;31m\)  ^[[0;33mhttps://github.com/Siskin-framework/Builder/
-^[[0;33m ╚════^[[1;31m"^[[0;33m═^[[1;31m"^[[0;33m═══════════════════════════════════════════════════════════════════════^[[m}]
+^[[0;33m ╚════^[[1;31m"^[[0;33m═^[[1;31m"^[[0;33m═══════════════════════════════════════════════════════════════════════^[[m}]]
 
        import 'prebol
 msvc:  import 'msvc
@@ -67,25 +67,26 @@ if system/version < 3.17.2 [
 append system/options/log [siskin: 1]
 
 all-options: [
-    #"c" "--clean"   -      "Remove cached results before build"
-    #"d" "--debug"   -      "Maximum verbosity and debug messages"
-    #"h" "--help"    -      "Display available options"
-    #"o" "--output"  "path" "Destination path to use instead of the default one"
-    #"q" "--quiet"   -      "Minimum output"
-    #"l" "--list"    -      "List all possible targets (eggs) in the nest"
-    #"r" "--run"     -      "Execute build product immediately"
-    #"t" "--test"    -      "Soft run without real evaluation"
-    #"u" "--update"  -      "Update all linked source repositories before build"
-    #"v" "--verbose" -      "Make the operation more talkative"
-    #"V" "--version" -      "Show version number and quit"
-	  -  "--msvc"    -      "Create Visual Studio project and use it for a build"
-	  -  "--xcode"   -      "Create XCode project and use it for a build"
-	  -  "--make"    -      "Create makefile and use it for a build"
-	  -  "--git-ssh" -      "Clone gits using password-protected SSH key"
-	  -  "--no-upx"  -      "Ignore default project's UPX compression setting"
-	  -  "--script"  "path" "Evaluate Rebol script"
-	  -  "--gzip"    -      "Compress the result with GZIP"
-	  -  "--no-comp" -      "Don't invoke compilation/linking step"
+    #"c" "--clean"    -      "Remove cached results before build"
+    #"d" "--debug"    -      "Maximum verbosity and debug messages"
+    #"h" "--help"     -      "Display available options"
+    #"o" "--output"   "path" "Destination path to use instead of the default one"
+    #"q" "--quiet"    -      "Minimum output"
+    #"l" "--list"     -      "List all possible targets (eggs) in the nest"
+    #"r" "--run"      -      "Execute build product immediately"
+    #"t" "--test"     -      "Soft run without real evaluation"
+    #"u" "--update"   -      "Update all linked source repositories before build"
+    #"v" "--verbose"  -      "Make the operation more talkative"
+    #"V" "--version"  -      "Show version number and quit"
+	  -  "--msvc"     -      "Create Visual Studio project and use it for a build"
+	  -  "--xcode"    -      "Create XCode project and use it for a build"
+	  -  "--make"     -      "Create makefile and use it for a build"
+	  -  "--git-ssh"  -      "Clone gits using password-protected SSH key"
+	  -  "--no-upx"   -      "Ignore default project's UPX compression setting"
+	  -  "--script"   "path" "Evaluate Rebol script"
+	  -  "--gzip"     -      "Compress the result with GZIP"
+	  -  "--no-comp"  -      "Don't invoke compilation/linking step"
+	  -  "--platform" "name" "Override system/platform value (for POSIX only!)"
 ]
 
 ; mapping of commands used in the interactive input into command line arguments
@@ -126,7 +127,7 @@ init-options: func[/local long short hlp1 hlp2][
 		repend supported-commands [long long]
 		long: form long
 		if arg <> '- [append append long SP arg]
-		append hlp1 pad long 13
+		append hlp1 pad long 15
 		append hlp1 as-green doc
 		append hlp2 pad long 13
 		append hlp2 as-green doc
@@ -220,6 +221,7 @@ nest-context: object [
 	result:       none
 	out-file:     none
 	out-file-override: none
+	platform-override: none
 	app-file:     none ;; bundle output
 
 	defaults: context [
@@ -252,6 +254,7 @@ do-args: closure/with [
 ][
 	init-options
 	system/options/quiet: false
+	unprotect 'system/platform
 	;? system/options
 	;	? system/script/args
 	;	? system/options/args
@@ -312,6 +315,18 @@ do-args: closure/with [
 			find args "--git-ssh" [ git-ssh?: on]
 			find args "--update"  [ git-update?: on]
 			find args "--no-comp" [ no-comp?: on]
+			platform-override: select args "--platform" [
+				try/with [
+					if system/platform != 'Windows [
+						system/platform: to word! probe platform-override
+						print-info ["System platform changed to:" as-green system/platform]
+					]
+				][
+					print system/state/last-error
+					platform-override: none
+				]
+				remove/part find args "--platform" 2
+			]
 		]
 	]
 
@@ -321,11 +336,13 @@ do-args: closure/with [
 	if system/platform = 'Linux [
 		tmp: copy ""
 		call/shell/output/wait "uname -s" tmp
-		tmp: to word! trim/all tmp
-		if find [OpenBSD FreeBSD] tmp [
-			unprotect 'system/platform
-			system/platform: tmp
-			print-info ["System platform changed to:" as-green tmp]
+		print-info ["System uname:" as-green trim/tail tmp]
+		if not platform-override [
+			tmp: to word! trim/all tmp
+			if find [OpenBSD FreeBSD] tmp [
+				system/platform: tmp
+				print-info ["System platform changed to:" as-green tmp]
+			]
 		]
 	]
 	
