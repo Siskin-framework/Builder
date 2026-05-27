@@ -18,7 +18,7 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Install Siskin Builder
         uses: oldes/install-siskin@v0.21.15
@@ -94,7 +94,7 @@ jobs:
       - name: Test only single command
         run: ./siskin-windows-x86_64.exe test list-dir
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: Siskin-windows
           path: |
@@ -115,7 +115,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Install Siskin Builder
         uses: oldes/install-siskin@v0.21.15
@@ -168,7 +168,7 @@ jobs:
       - name: Test only single command
         run: ./siskin-linux-x86_64 test list-dir
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: Siskin-linux
           path: ./siskin-linux*.gz
@@ -177,7 +177,7 @@ jobs:
     runs-on: macos-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Install Siskin Builder
         uses: oldes/install-siskin@v0.21.15
@@ -265,16 +265,16 @@ jobs:
       - name: Test only single command
         run: ./siskin-macos-x86_64 test list-dir
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: Siskin-macos
           path: ./siskin-macos-*.gz
 
   script:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Install Siskin Builder
         uses: oldes/install-siskin@v0.21.15
@@ -319,7 +319,7 @@ jobs:
       - name: Compress results before uploading
         run: gzip -9 ./build.r3
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: Siskin-script
           path: ./build.r3.gz
@@ -330,7 +330,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Login to Docker Hub
         uses: docker/login-action@v2
@@ -349,7 +349,7 @@ jobs:
           sudo mv ./tree/rebol/Siskin/build/siskin-haiku-x86 ./
           sudo gzip -9 ./siskin-haiku-x86
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: Siskin-Haiku-x86
           path: ./siskin-haiku-x86.gz
@@ -360,7 +360,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Login to Docker Hub
         uses: docker/login-action@v2
@@ -379,7 +379,7 @@ jobs:
           sudo mv ./tree/rebol/Siskin/build/siskin-haiku-x86_64 ./
           sudo gzip -9 ./siskin-haiku-x86_64
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: Siskin-Haiku-x64
           path: ./siskin-haiku-x86_64.gz
