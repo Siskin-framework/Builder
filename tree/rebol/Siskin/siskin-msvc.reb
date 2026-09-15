@@ -17,6 +17,7 @@ SUBSYSTEM:
 LIBRARY-PATH:
 INCLUDE-PATH:
 ADDITIONAL-DEPENDENCIES:
+CONFIGURATION:
 CONFIGURATION-TYPE:
 PROJECT-FILES:
 PROJECT-DEFINES:
@@ -26,6 +27,7 @@ RESOURCE-ITEM:
 MSVC-PATH:
 TOOLSET-VERSION:
 STACK-SIZE:
+ADDITIONAL_OPTIONS:
 none
 
 
@@ -171,12 +173,12 @@ form-pre-post-build: func[
 		)
 		| 'pushd set val file! (
 			append result rejoin [
-				"CD " to-windows-file pushd dir
+				"CD " to-windows-file pushd val
 			]
 		)
 		| 'popd (
 			append result rejoin [
-				"^/CD" to-windows-file popd
+				"^/CD " to-windows-file popd
 			]
 		)
 		|
@@ -226,6 +228,7 @@ make-project: func[
 	;dir    [file! string!]
 	/guid
 		id [string!] "Visual studio project type GUID"
+	/debug? "Force DEBUG build."
 	/local
 		name tmp output dir dir-vs dir-bin defines includes rel-file
 		filters items ver lib-paths
@@ -242,6 +245,8 @@ make-project: func[
 		"c:\Program Files\Microsoft Visual Studio\2022\Community"
 		"c:\Program Files (x86)\Microsoft Visual Studio\2017\Community"
 	]
+
+	CONFIGURATION: either debug? ["Debug"]["Release"]
 
 	siskin/print-info ["MSVC path:" as-green MSVC-PATH]
 
@@ -269,6 +274,8 @@ make-project: func[
 	]
 
 	STACK-SIZE: any [spec/stack-size ""]
+	ADDITIONAL_OPTIONS: clear ""
+	if all [not debug? spec/strip] [append ADDITIONAL_OPTIONS "/DEBUG:NONE "]
 	
 	try [
 		; this part is a little bit hackish!
@@ -437,8 +444,8 @@ make-project: func[
 
 
 	clear output
-	reword/escape/into build-vs-release self [#"#" #"#"] output
-	output: write-file [dir-vs %build- name %-release.bat] output
+	reword/escape/into build-vs self [#"#" #"#"] output
+	output: write-file [dir-vs %build- name either debug? [%-debug.bat][%-release.bat]] output
 
 	siskin/print-info {^[[1;35mMSVC Done^[[m}
 	output
@@ -544,6 +551,7 @@ vcxproj: {<?xml version="1.0" encoding="utf-8"?>
 	  <AdditionalDependencies>#ADDITIONAL-DEPENDENCIES#%(AdditionalDependencies)</AdditionalDependencies>
 	  <SubSystem>#SUBSYSTEM#</SubSystem>
 	  <StackReserveSize>#STACK-SIZE#</StackReserveSize>
+		<AdditionalOptions>#ADDITIONAL_OPTIONS# %(AdditionalOptions)</AdditionalOptions>
 	</Link>
 	<PreBuildEvent>#PRE-BUILD-EVENT#</PreBuildEvent>
 	<PostBuildEvent>#POST-BUILD-EVENT#</PostBuildEvent>
@@ -559,7 +567,7 @@ vcxproj: {<?xml version="1.0" encoding="utf-8"?>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <DebugInformationFormat>None</DebugInformationFormat>
 	  <PreprocessorDefinitions>#PROJECT-DEFINES#%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <WholeProgramOptimization>false</WholeProgramOptimization>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
 	</ClCompile>
 	<Link>
 	  <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -567,6 +575,10 @@ vcxproj: {<?xml version="1.0" encoding="utf-8"?>
 	  <AdditionalDependencies>#ADDITIONAL-DEPENDENCIES#%(AdditionalDependencies)</AdditionalDependencies>
 	  <SubSystem>#SUBSYSTEM#</SubSystem>
 	  <StackReserveSize>#STACK-SIZE#</StackReserveSize>
+	  <LinkIncremental>false</LinkIncremental>
+	  <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+	  <GenerateDebugInformation>false</GenerateDebugInformation>
+		<AdditionalOptions>#ADDITIONAL_OPTIONS# %(AdditionalOptions)</AdditionalOptions>
 	</Link>
 	<PreBuildEvent>#PRE-BUILD-EVENT#</PreBuildEvent>
 	<PostBuildEvent>#POST-BUILD-EVENT#</PostBuildEvent>
@@ -598,10 +610,10 @@ vcxproj.filters: {<?xml version="1.0" encoding="utf-8"?>
   </ItemGroup>
 </Project>}
 
-build-vs-release: {@echo off
+build-vs: {@echo off
 call "#MSVC-PATH#\VC\Auxiliary\Build\vcvarsall.bat" #ARCH#
 cd %~dp0
-msbuild "#PROJECT-NAME#.sln" /p:Configuration=Release /p:Platform="#PLATFORM-X#"
+msbuild "#PROJECT-NAME#.sln" /p:Configuration=#CONFIGURATION# /p:Platform="#PLATFORM-X#"
 cd %~dp0
 }
 

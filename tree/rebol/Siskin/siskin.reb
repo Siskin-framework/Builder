@@ -2,7 +2,7 @@ Rebol [
 	Title:  "Siskin Builder - core"
 	Type:    module
 	Name:    siskin
-	Version: 0.22.1
+	Version: 0.22.3
 	Author: "Oldes"
 	
 	exports: [
@@ -23,7 +23,7 @@ Rebol [
 banner: does [next rejoin [{
 ^[[0;33m═╗
 ^[[0;33m ║^[[1;31m    .-.
-^[[0;33m ║^[[1;31m   /'v'\   ^[[0;33mSISKIN Builder 0.22.1 Rebol } rebol/version " (" rebol/platform {)
+^[[0;33m ║^[[1;31m   /'v'\   ^[[0;33mSISKIN Builder 0.22.3 Rebol } rebol/version " (" rebol/platform {)
 ^[[0;33m ║^[[1;31m  (/^[[0;31muOu^[[1;31m\)  ^[[0;33mhttps://github.com/Siskin-framework/Builder/
 ^[[0;33m ╚════^[[1;31m"^[[0;33m═^[[1;31m"^[[0;33m═══════════════════════════════════════════════════════════════════════^[[m}]]
 
@@ -381,6 +381,10 @@ do-args: closure/with [
 
 do-strip: closure/with [spec [map!] file [file!]][
 	;-- strip resulted binary
+	if debug? [
+		print-error "STRIP ignored in the debug build!"
+		exit
+	]
 	any [
 		all [file? spec/strip       exists? strip: spec/strip]
 		all [spec/compiler = 'clang exists? strip: locate-tool 'llvm-strip none]
@@ -408,12 +412,12 @@ do-upx: closure/with [file [file!]][
 		unless windows? [exit]
 		try/with [
 			print-info "Downloading UPX"
-			bin: read https://github.com/upx/upx/releases/download/v5.0.0/upx-5.0.0-win32.zip
-			if #{8C34B9CEC2C225BF71F43CF2B788043D0D203D23EDB54F649FBEC16F34938D80} <> checksum bin 'sha256 [
+			bin: read https://github.com/upx/upx/releases/download/v5.2.0/upx-5.2.0-win32.zip
+			if #{28275e48a8b5ff9719c98a3d6ce68cb4437721f599ca2d904e8f4026a0a0558b} <> checksum bin 'sha256 [
 				print-error "UPX binary checksum failed!"
 				exit
 			]
-			exe: codecs/zip/decode/only bin [%upx-5.0.0-win32/upx.exe]
+			exe: codecs/zip/decode/only bin [%upx-5.2.0-win32/upx.exe]
 			upx: write root-dir/upx.exe exe/2/2
 			add-env-path root-dir
 		] [	print-error system/state/last-error exit ]
@@ -1187,12 +1191,12 @@ build-msvc: function/with [
 ][
 	try/with [
 		spec/eggs: none
-		bat: msvc/make-project spec
+		bat: msvc/make-project/:debug? spec
 		eval-cmd/v [bat]
 		;? spec
 		file: rejoin [
 			any [spec/root what-dir]
-			%msvc/Release-
+			either debug? [%msvc/Debug-][%msvc/Release-]
 			any [select [x64 "x64/" arm64 "ARM64/"] spec/arch "Win32/"]
 			spec/name
 		]
@@ -1892,12 +1896,18 @@ finalize-build: closure/with [spec [map!] file [file! none!] /no-fail][
 			]
 		]
 
-		if spec/strip [
-			either all [macOS? spec/sign <> false not sign][
-				print-error "Not using requested STRIP as it would invalidate a signature!"
-				print-error "There is no available sign identity to re-sign!"
-			][
-				try/with [do-strip spec out-file][print-error system/state/last-error]
+		if all [spec/strip not debug?] [
+			case [
+				all [macOS? spec/sign <> false not sign][
+					print-error "Not using requested STRIP as it would invalidate a signature!"
+					print-error "There is no available sign identity to re-sign!"
+				]
+				force-compiler = @msvc [
+					print-warn "Not using the STRIP utility for MSVC builds (`/DEBUG:NONE` option used instead)"
+				] 
+				'else [
+					try/with [do-strip spec out-file][print-error system/state/last-error]
+				]
 			]
 		]
 		if spec/upx [
@@ -2036,8 +2046,8 @@ eval-code: function/with [
 					string? arg2 [ expand-env arg2 ]
 					block?  arg2 [ forall arg2 [if string? arg2/1 [ expand-env arg2/1]] ]
 				]
-				try/with [eval-cmd/v [system/options/boot '--script arg1 arg2]] :on-error-warn
-				;try/with [do/args arg1 arg2] :on-error-quit
+				;try/with [eval-cmd/v [system/options/boot '--script arg1 arg2]] :on-error-warn
+				try/with [do/args arg1 arg2] :on-error-warn
 			)
 			| set arg1 block! (
 				try/with [
@@ -2302,6 +2312,9 @@ append-flag: func[flags [string!] flag [string!]][
 ]
 
 add-flag: func[dest [map!] flag [any-word! any-string!] /local pos][
+	if any-string? flag [
+		expand-env flag
+	] 
 	flag: any [
 		select [
 			NSL "-nostdlib"
@@ -2746,9 +2759,17 @@ move-file: function/with [src [file!] dst [file!]][
 		dst: join dirize dst second split-path src
 	]
 	unless no-eval? [
-		delete dst
 		print-info ["Moving" as-green src 'to as-green dst]
-		rename src dst
+		delete dst
+		;; rename may fail when used across volumes (e.g. under WSL)!
+		try/with [rename src dst][
+			;; in that case try manual copy
+			;; (will fail when src is a directory!)
+			all [
+				write/binary dst read/binary src
+				delete src
+			] 
+		]
 	]
 	dst
 ] :nest-context
