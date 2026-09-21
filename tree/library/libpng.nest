@@ -6,10 +6,18 @@ github: pnggroup/libpng /v1.6.54
 eggs: [
 	"Make libpng (cmake)" [
 		name: %build-libpng
-		cmd [
-			"cmake -B $SISKIN_TEMP/libpng libpng -DCMAKE_BUILD_TYPE=Release"
-			"-DZLIB_LIBRARY=$SISKIN_INSTALL/lib/zs.lib"
-			"-DZLIB_INCLUDE_DIR=$SISKIN_INSTALL/include"
+		#either Windows? [
+			cmd [
+				"cmake -B $SISKIN_TEMP/libpng libpng -DCMAKE_BUILD_TYPE=Release"
+				"-DZLIB_LIBRARY=$SISKIN_INSTALL/lib/zs.lib"
+				"-DZLIB_INCLUDE_DIR=$SISKIN_INSTALL/include"
+			]
+		][
+			cmd [
+				"cmake -B $SISKIN_TEMP/libpng libpng -DCMAKE_BUILD_TYPE=Release"
+				"-DZLIB_LIBRARY=$SISKIN_INSTALL/lib/libz.a"
+				"-DZLIB_INCLUDE_DIR=$SISKIN_INSTALL/include"
+			]
 		]
 		cmd "cmake --build   $SISKIN_TEMP/libpng --config release -j 8"
 		cmd "cmake --install $SISKIN_TEMP/libpng --prefix $SISKIN_INSTALL"

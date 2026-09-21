@@ -39,7 +39,7 @@ jobs:
         path: ./red-*.exe
 
   linux:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
