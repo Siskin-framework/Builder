@@ -120,6 +120,11 @@ jobs:
       - name: Install Siskin Builder
         uses: oldes/install-siskin@v0.21.15
 
+      - name: Fix broken Ubuntu mirrors
+        run: |
+          sudo rm -f /etc/apt/apt-mirrors.txt
+          sudo apt-get update
+    
       - name: Install GCC multilib
         run: sudo apt-get install gcc-multilib
 
