@@ -6,13 +6,27 @@ github: freetype/freetype /VER-2-14-1
 eggs: [
 	"Make FreeType (cmake)" [
 		name: %build-freetype
-		cmd [
-			"cmake -B $SISKIN_TEMP/freetype -S freetype -DCMAKE_BUILD_TYPE=Release"
-			"-DZLIB_LIBRARY=$SISKIN_INSTALL/lib/zs.lib"
-			"-DZLIB_INCLUDE_DIR=$SISKIN_INSTALL/include"
-			"-DPNG_LIBRARY=$SISKIN_INSTALL/lib/libpng.lib"
-			"-DPNG_INCLUDE_DIR=$SISKIN_INSTALL/include"
+		#either Windows? [
+			cmd [
+				"cmake -B $SISKIN_TEMP/freetype -S freetype -DCMAKE_BUILD_TYPE=Release"
+				"-DZLIB_LIBRARY=$SISKIN_INSTALL/lib/zs.lib"
+				"-DZLIB_INCLUDE_DIR=$SISKIN_INSTALL/include"
+				"-DPNG_LIBRARY=$SISKIN_INSTALL/lib/libpng.lib"
+				"-DPNG_INCLUDE_DIR=$SISKIN_INSTALL/include"
+			]
+		][
+			cmd [
+				"cmake -B $SISKIN_TEMP/freetype -S freetype -DCMAKE_BUILD_TYPE=Release"
+				"-DZLIB_LIBRARY=$SISKIN_INSTALL/lib/libz.a"
+				"-DZLIB_INCLUDE_DIR=$SISKIN_INSTALL/include"
+				"-DPNG_LIBRARY=$SISKIN_INSTALL/lib/libpng.a"
+				"-DPNG_INCLUDE_DIR=$SISKIN_INSTALL/include"
+				"-DBUILD_SHARED_LIBS=OFF"
+				"-DFT_DISABLE_BZIP2=ON"
+				;"-DCMAKE_DISABLE_FIND_PACKAGE_BrotliDec=TRUE"
+			]
 		]
+
 		cmd "cmake --build   $SISKIN_TEMP/freetype --config release -j 8"
 		cmd "cmake --install $SISKIN_TEMP/freetype --prefix $SISKIN_INSTALL"
 	]
