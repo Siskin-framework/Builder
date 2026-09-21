@@ -2,7 +2,7 @@ Rebol [
 	Title:  "Siskin Builder - core"
 	Type:    module
 	Name:    siskin
-	Version: 0.22.1
+	Version: 0.22.3
 	Author: "Oldes"
 	
 	exports: [
@@ -17,13 +17,14 @@ Rebol [
 		haiku?
 		turris?
 		bsd?
+		expand-env
 	]
 ]
 ;? system
 banner: does [next rejoin [{
 ^[[0;33m═╗
 ^[[0;33m ║^[[1;31m    .-.
-^[[0;33m ║^[[1;31m   /'v'\   ^[[0;33mSISKIN Builder 0.22.1 Rebol } rebol/version " (" rebol/platform {)
+^[[0;33m ║^[[1;31m   /'v'\   ^[[0;33mSISKIN Builder 0.22.3 Rebol } rebol/version " (" rebol/platform {)
 ^[[0;33m ║^[[1;31m  (/^[[0;31muOu^[[1;31m\)  ^[[0;33mhttps://github.com/Siskin-framework/Builder/
 ^[[0;33m ╚════^[[1;31m"^[[0;33m═^[[1;31m"^[[0;33m═══════════════════════════════════════════════════════════════════════^[[m}]]
 
@@ -87,6 +88,7 @@ all-options: [
 	  -  "--gzip"     -      "Compress the result with GZIP"
 	  -  "--no-comp"  -      "Don't invoke compilation/linking step"
 	  -  "--platform" "name" "Override system/platform value (for POSIX only!)"
+	  -  "--arch"     "arch" "Override system/build/arch value"
 ]
 
 ; mapping of commands used in the interactive input into command line arguments
@@ -222,6 +224,7 @@ nest-context: object [
 	out-file:     none
 	out-file-override: none
 	platform-override: none
+	arch-override: none
 	app-file:     none ;; bundle output
 
 	defaults: context [
@@ -327,6 +330,17 @@ do-args: closure/with [
 				]
 				remove/part find args "--platform" 2
 			]
+			arch-override: select args "--arch" [
+				try/with [
+					unprotect in system/build 'arch
+					system/build/arch: to word! arch-override
+					print-info ["Target architecture changed to:" as-green system/build/arch]
+				][
+					print system/state/last-error
+					arch-override: none
+				]
+				remove/part find args "--arch" 2
+			]
 		]
 	]
 
@@ -349,6 +363,7 @@ do-args: closure/with [
 	change-dir root-dir: system/options/path
 	unless get-env 'SISKIN_INSTALL [ add-env 'SISKIN_INSTALL root-dir/install ]
 	unless get-env 'SISKIN_TEMP    [ add-env 'SISKIN_TEMP    root-dir/temp    ]
+	unless get-env 'SISKIN_ARCH    [ add-env 'SISKIN_ARCH form system/build/arch ]
 
 	if debug? [?? args]
 	if all [string? args empty? args][args: none]
@@ -652,7 +667,7 @@ parse-nest: closure/with [
 		)
 
 		|[quote files: | quote file:][
-			'none ( clear dest/files )
+			['none | none!] ( clear dest/files )
 			|
 			opt ['only (clear dest/files )]
 			opt-get-word
@@ -743,9 +758,11 @@ parse-nest: closure/with [
 			opt ['only (clear dest/frameworks)]
 			set val: [word! | file! | block!] (append dest/frameworks val)
 
-		|['set | 'set-env] set var: [any-string! | any-word!] set val: [string! | file!] (
+		|['set | 'set-env] set var: [any-string! | any-word!] set val: [string! | file! | block!] (
+			if block? val [val: ajoin/with val SP]
+			try [val: expand-env copy val]
 			;; When file, then expand it, convert to full path and to OS syntax.
-			try [if file? val [val: to-local-file to-real-file expand-env copy val]]
+			if file? val [try [val: to-local-file to-real-file val]]
 			add-env var val
 		)
 
@@ -766,9 +783,14 @@ parse-nest: closure/with [
 					return false
 				]
 				if block? val [val: preprocess val]
-				either all [val block? dest/:name] [
-					append dest/:name val
-				][	dest/(name): val]
+				case [
+					all [val block? dest/:name] [
+						append dest/:name val
+					]
+					'else [
+						dest/(name): val
+					]
+				]
 			)
 		]
 		| set name: get-word! pos: (
@@ -2079,6 +2101,7 @@ eval-code: function/with [
 		)
 		| 'cmd set dir [file! | none!] set val string! (
 			;print ["cmd." mold dir]
+			val: expand-env val
 			if dir [
 				if not exists? dir [make-dir/deep dir]
 				pushd dir
