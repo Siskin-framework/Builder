@@ -2065,7 +2065,7 @@ eval-code: function/with [
 		'do [
 			set arg1 file! set arg2 [block! | string! | none! | none] (
 				case [
-					string? arg2 [ expand-env arg2 ]
+					string? arg2 [ arg2: to block! expand-env arg2 ]
 					block?  arg2 [ forall arg2 [if string? arg2/1 [ expand-env arg2/1]] ]
 				]
 				;try/with [eval-cmd/v [system/options/boot '--script arg1 arg2]] :on-error-warn
