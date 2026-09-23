@@ -276,6 +276,7 @@ make-project: func[
 	STACK-SIZE: any [spec/stack-size ""]
 	ADDITIONAL_OPTIONS: clear ""
 	if all [not debug? spec/strip] [append ADDITIONAL_OPTIONS "/DEBUG:NONE "]
+	if debug? [append ADDITIONAL_OPTIONS "/VERBOSE:LIB "]
 	
 	try [
 		; this part is a little bit hackish!
@@ -543,15 +544,17 @@ vcxproj: {<?xml version="1.0" encoding="utf-8"?>
 	<ClCompile>
 	  <WarningLevel>Level3</WarningLevel>
 	  <Optimization>Disabled</Optimization>
+	  <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
 	  <SDLCheck>true</SDLCheck>
-      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+	  <MultiProcessorCompilation>true</MultiProcessorCompilation>
 	  <PreprocessorDefinitions>#PROJECT-DEFINES#%(PreprocessorDefinitions)</PreprocessorDefinitions>
 	</ClCompile>
 	<Link>
+	  <GenerateDebugInformation>true</GenerateDebugInformation>
 	  <AdditionalDependencies>#ADDITIONAL-DEPENDENCIES#%(AdditionalDependencies)</AdditionalDependencies>
 	  <SubSystem>#SUBSYSTEM#</SubSystem>
 	  <StackReserveSize>#STACK-SIZE#</StackReserveSize>
-		<AdditionalOptions>#ADDITIONAL_OPTIONS# %(AdditionalOptions)</AdditionalOptions>
+	  <AdditionalOptions>#ADDITIONAL_OPTIONS# %(AdditionalOptions)</AdditionalOptions>
 	</Link>
 	<PreBuildEvent>#PRE-BUILD-EVENT#</PreBuildEvent>
 	<PostBuildEvent>#POST-BUILD-EVENT#</PostBuildEvent>
@@ -564,10 +567,10 @@ vcxproj: {<?xml version="1.0" encoding="utf-8"?>
 	  <FunctionLevelLinking>true</FunctionLevelLinking>
 	  <IntrinsicFunctions>false</IntrinsicFunctions>
 	  <SDLCheck>true</SDLCheck>
-      <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <DebugInformationFormat>None</DebugInformationFormat>
+	    <MultiProcessorCompilation>true</MultiProcessorCompilation>
+	    <DebugInformationFormat>None</DebugInformationFormat>
 	  <PreprocessorDefinitions>#PROJECT-DEFINES#%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    <WholeProgramOptimization>true</WholeProgramOptimization>
+	  <WholeProgramOptimization>true</WholeProgramOptimization>
 	</ClCompile>
 	<Link>
 	  <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -578,7 +581,7 @@ vcxproj: {<?xml version="1.0" encoding="utf-8"?>
 	  <LinkIncremental>false</LinkIncremental>
 	  <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
 	  <GenerateDebugInformation>false</GenerateDebugInformation>
-		<AdditionalOptions>#ADDITIONAL_OPTIONS# %(AdditionalOptions)</AdditionalOptions>
+	  <AdditionalOptions>#ADDITIONAL_OPTIONS# %(AdditionalOptions)</AdditionalOptions>
 	</Link>
 	<PreBuildEvent>#PRE-BUILD-EVENT#</PreBuildEvent>
 	<PostBuildEvent>#POST-BUILD-EVENT#</PostBuildEvent>
