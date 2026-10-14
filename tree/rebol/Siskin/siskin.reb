@@ -87,7 +87,7 @@ all-options: [
 	  -  "--script"   "path" "Evaluate Rebol script"
 	  -  "--gzip"     -      "Compress the result with GZIP"
 	  -  "--no-comp"  -      "Don't invoke compilation/linking step"
-	  -  "--platform" "name" "Override system/platform value (for POSIX only!)"
+	  -  "--platform" "name" "Override system/platform value"
 	  -  "--arch"     "arch" "Override system/build/arch value"
 ]
 
@@ -257,6 +257,7 @@ do-args: closure/with [
 ][
 	init-options
 	system/options/quiet: false
+	extend system 'real-platform system/platform
 	unprotect 'system/platform
 	;? system/options
 	;	? system/script/args
@@ -320,10 +321,8 @@ do-args: closure/with [
 			find args "--no-comp" [ no-comp?: on]
 			platform-override: select args "--platform" [
 				try/with [
-					if system/platform != 'Windows [
-						system/platform: to word! probe platform-override
-						print-info ["System platform changed to:" as-green system/platform]
-					]
+					system/platform: to word! platform-override
+					print-info ["System platform changed to:" as-green system/platform]
 				][
 					print system/state/last-error
 					platform-override: none
@@ -347,7 +346,7 @@ do-args: closure/with [
 	unless system/options/quiet [print banner]
 
 	;- (temp hack): allow identify real platform
-	if system/platform = 'Linux [
+	if system/real-platform = 'Linux [
 		tmp: copy ""
 		call/shell/output/wait "uname -s" tmp
 		print-info ["System uname:" as-green trim/tail tmp]
@@ -464,7 +463,7 @@ do-rebol2: closure/with [code [string! file!]][
 	]
 	if 'file <> exists? rebol2 [
 		print-error "REBOL2 not found!"
-		switch system/platform [
+		switch system/real-platform [
 			windows [
 				url: http://www.rebol.com/downloads/v278/rebol-view-278-3-1.exe
 				crc: #{1DEF65DDE53AB24C122DA6C76646A36D7D910790}
@@ -480,7 +479,7 @@ do-rebol2: closure/with [code [string! file!]][
 			]
 		]
 		unless url [
-			print-error ["REBOL2 not available for" system/platform "platform!"]
+			print-error ["REBOL2 not available for" system/real-platform "platform!"]
 			exit
 		]
 		try/with [
@@ -2134,6 +2133,7 @@ eval-code: function/with [
 	]]
 ] :nest-context
 
+
 windows?: does [system/platform = 'Windows]
 macOS?:   does [to logic! find [macOS Macintosh] system/platform]
 linux?:   does [system/platform = 'Linux]
@@ -2145,6 +2145,7 @@ haiku?:   does [system/platform = 'Haiku]
 turris?:  does [system/platform = 'Turris]
 posix?:   does [to logic! find [linux macos openbsd freebsd netbsd dragonflybsd macintosh haiku turris] system/platform]
 BSD?:     does [to logic! find [macos openbsd freebsd netbsd dragonflybsd] system/platform]
+WASM?:    does [system/platform = 'WASM]
 
 
 print-error: func[err][ sys/log/error 'SISKIN any [err system/state/last-error] ]
@@ -2543,7 +2544,7 @@ rel-path?: func[path][#"/" <> first path]
 env-paths: none 
 env-paths-init: does [
 	unless env-paths [
-		env-paths: split get-env "PATH" either windows? [#";"][#":"]
+		env-paths: split get-env "PATH" either system/real-platform = 'Windows [#";"][#":"]
 		forall env-paths [
 			change env-paths to-abs-dir env-paths/1
 		]
