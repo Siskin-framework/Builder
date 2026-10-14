@@ -1062,7 +1062,7 @@ do-nest: closure/with/extern [
 				| 'msvc    (force-compiler: @msvc)
 				| 'xcode   (force-compiler: @xcode)
 				| 'make    (force-compiler: @make)
-				| 'update  (update?: on)
+				| 'update  (git-update?: on)
 				| 'git-ssh (git-ssh?: on)
 				| 'no-upx  (no-upx?: on)
 				| 'gzip    (gzip?: on)
@@ -1082,7 +1082,7 @@ do-nest: closure/with/extern [
 						rebuild?:    false
 						clang?:      false
 						run-result?: false
-						update?:     false
+						git-update?: false
 						git-ssh?:    false
 						force-compiler: none
 						out-file-override: none
@@ -1160,6 +1160,16 @@ get-spec: closure/with [
 ] :nest-context
 
 
+get-git-dir: func[
+	"Returns local directory name of a git repository"
+	git [url! file!]
+	/local dir pos
+][
+	dir: second split-path git
+	if pos: find/last/match dir %.git [clear pos]
+	dir
+]
+
 update-git: function/with [
 	git [file!]
 ][
@@ -1177,7 +1187,10 @@ update-git: function/with [
 update-gits: function/with [
 	spec [map!]
 ][
-	foreach git spec/gits [ update-git get-git-dir git ]
+	foreach git spec/gits [
+		;; gits may be followed by an optional branch (refinement! or tuple!)
+		if any [url? git file? git] [update-git get-git-dir git]
+	]
 ] :nest-context
 
 build-target: closure/with [
@@ -1991,17 +2004,13 @@ clone-gits: function/with [
 			first gits: next gits
 		]
 		print-info ["Using git:" as-yellow git]
-		dir: second split-path git
-		if pos: find/last dir %.git [clear pos] 
+		dir: get-git-dir git
 		unless found-git? [
 			locate-tool 'git none
 			found-git?: true
 		]
-		either exists? dir [
-			if all [found-git? git-update?] [
-				update-git dir
-			]
-		][
+		;; updates are handled per target in `build-target`
+		unless exists? dir [
 			cmd: ["git clone" git "--depth 1 --quiet"]
 			if branch [append cmd ["--branch" branch]]
 			res: either find/match git https:// [
