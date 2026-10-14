@@ -1,0 +1,4 @@
+;; tests/flags/flags.nest
+compiler: gcc
+source:   %src/
+eggs: [ "flags" [ name: %flags files: [%flags.c] ] ]

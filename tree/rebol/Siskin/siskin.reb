@@ -91,6 +91,9 @@ all-options: [
 	  -  "--no-comp"  -      "Don't invoke compilation/linking step"
 	  -  "--platform" "name" "Override system/platform value"
 	  -  "--arch"     "arch" "Override system/build/arch value"
+	  -  "--cflags"   "flags" "Additional compiler flags (also SISKIN_CFLAGS)"
+	  -  "--lflags"   "flags" "Additional linker flags (also SISKIN_LFLAGS)"
+	  -  "--define"   "def"   "Additional preprocessor define (also SISKIN_DEFINES)"
 ]
 
 ; mapping of commands used in the interactive input into command line arguments
@@ -227,6 +230,9 @@ nest-context: object [
 	out-file-override: none
 	platform-override: none
 	arch-override: none
+	cli-cflags:   copy ""  ;; collected from `--cflags` (per command batch)
+	cli-lflags:   copy ""  ;; collected from `--lflags`
+	cli-defines:  copy []  ;; collected from `--define`
 	app-file:     none ;; bundle output
 
 	defaults: context [
@@ -293,21 +299,26 @@ do-args: closure/with [
 			if string? args/1 [
 				parse args/1 [
 					"--" to end (
-						unless find all-options args/1 [
+						unless pos: find all-options args/1 [
 							throw-unknown-option args/1
 						]
+						;; skip the option's value (may start with `-`)
+						if pos/2 <> '- [args: next args]
 					)
 					|
 					#"-" copy ops: to end (
 						new: clear []
+						skip-val?: false
 						forall ops [
-							either tmp: select/case all-options ops/1 [
-								append new copy tmp 
+							either pos: find/case all-options ops/1 [
+								append new copy pos/2
+								skip-val?: pos/3 <> '-
 							][
 								throw-unknown-option args/1
 							]
 						]
 						change/part args new 1
+						if skip-val? [args: next args]
 					)
 				]
 			]
@@ -1066,6 +1077,9 @@ do-nest: closure/with/extern [
 				| 'git-ssh (git-ssh?: on)
 				| 'no-upx  (no-upx?: on)
 				| 'gzip    (gzip?: on)
+				| 'cflags  set val: string! (append append cli-cflags val SP)
+				| 'lflags  set val: string! (append append cli-lflags val SP)
+				| 'define  set val: string! (append cli-defines val)
 				| 'output  set out-file-override: skip (
 					out-file-override: to-rebol-file out-file-override
 					unless abs-path? out-file-override [
@@ -1086,6 +1100,9 @@ do-nest: closure/with/extern [
 						git-ssh?:    false
 						force-compiler: none
 						out-file-override: none
+						clear cli-cflags
+						clear cli-lflags
+						clear cli-defines
 						result-code: 0
 					)
 
@@ -1204,6 +1221,7 @@ build-target: closure/with [
 			return false
 		]
 		if git-update? [update-gits spec]
+		apply-extra-flags spec
 
 		if force-compiler [
 			switch force-compiler [
@@ -2398,6 +2416,33 @@ add-flag: func[dest [map!] flag [any-word! any-string!] /local pos][
 		append-flag dest/lflags flag
 	]
 ]
+
+split-flags: func[
+	"Splits whitespace separated flags (no quoting support)"
+	str [string! none!]
+	/local ws nw f
+][
+	unless str [return copy []]
+	ws: charset " ^-^M^/"
+	nw: complement ws
+	collect [parse str [any [some ws | copy f some nw (keep f)]]]
+]
+
+apply-extra-flags: function/with [
+	"Adds flags from SISKIN_* environment variables and CLI options"
+	spec [map!]
+][
+	foreach [cflags lflags defines] reduce [
+		get-env "SISKIN_CFLAGS" get-env "SISKIN_LFLAGS" get-env "SISKIN_DEFINES"
+		cli-cflags              cli-lflags              cli-defines
+	][
+		foreach flag split-flags cflags [add-flag spec flag]
+		foreach flag split-flags lflags [append-flag spec/lflags flag]
+		foreach def either block? defines [defines][split-flags defines] [
+			append spec/defines copy def
+		]
+	]
+] :nest-context
 
 eval-cmd: function/with [
 	cmd /no-pipe /no-quit /log log-file [file!]
