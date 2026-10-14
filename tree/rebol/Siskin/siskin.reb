@@ -1228,7 +1228,10 @@ build-target: closure/with [
 	timestamp: now/time/precise
 	try/with [
 		unless spec: get-spec command [
-			print-error ["Command not handled:" as-red mold command]
+			;; get-spec returns none when no egg matches and false when the egg’s spec fails to parse
+			if none? spec [
+				print-error ["Command not handled:" as-red mold command]
+			]
 			print-failed
 			return false
 		]

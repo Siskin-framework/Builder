@@ -1,0 +1,5 @@
+
+eggs: [
+	"bad"  [ no-such-action ]
+	"good" [ do [print "good egg"] ]
+]
