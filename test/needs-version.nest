@@ -1,0 +1,6 @@
+
+eggs: [
+	"ok"    [ needs: [siskin 0.1.0]      do [print "ok"] ]
+	"newer" [ needs: [siskin 99.0.0]     do [print "should not run"] ]
+	"mixed" [ needs: [siskin 0.1.0 git]  do [print "mixed ok"] ]
+]

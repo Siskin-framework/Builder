@@ -2,7 +2,7 @@ Rebol [
 	Title:  "Siskin Builder - core"
 	Type:    module
 	Name:    siskin
-	Version: 0.23.0
+	Version: 0.23.0   ;; keep in sync with `siskin-version` below!
 	Author: "Oldes"
 	
 	exports: [
@@ -22,11 +22,12 @@ Rebol [
 		expand-env
 	]
 ]
+siskin-version: 0.23.0
 ;? system
 banner: does [next rejoin [{
 ^[[0;33m═╗
 ^[[0;33m ║^[[1;31m    .-.
-^[[0;33m ║^[[1;31m   /'v'\   ^[[0;33mSISKIN Builder 0.23.0 Rebol } rebol/version " (" rebol/platform {)
+^[[0;33m ║^[[1;31m   /'v'\   ^[[0;33mSISKIN Builder } siskin-version { Rebol } rebol/version " (" rebol/platform {)
 ^[[0;33m ║^[[1;31m  (/^[[0;31muOu^[[1;31m\)  ^[[0;33mhttps://github.com/Siskin-framework/Builder/
 ^[[0;33m ╚════^[[1;31m"^[[0;33m═^[[1;31m"^[[0;33m═══════════════════════════════════════════════════════════════════════^[[m}]]
 
@@ -2638,6 +2639,18 @@ prep-needs: func[
 ][
 	unless block? needs [needs: reduce [needs]]
 	forall needs [
+		;; `siskin <tuple>` is a minimum version check, not a tool
+		if all [needs/1 = 'siskin tuple? needs/2][
+			if siskin-version < needs/2 [
+				print-error [
+					"Nest requires Siskin" needs/2
+					"or newer, running" as-red siskin-version
+				]
+				return false
+			]
+			needs: next needs
+			continue
+		]
 		;prin ["Needs:" as-green pad needs/1 12]
 		either tool: apply :locate-tool [needs/1 arch required] [
 			;print ["using:" as-green to-local-file tool]
