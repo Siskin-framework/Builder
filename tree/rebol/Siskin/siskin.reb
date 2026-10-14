@@ -93,6 +93,7 @@ all-options: [
 	  -  "--arch"     "arch" "Override system/build/arch value"
 	  -  "--cflags"   "flags" "Additional compiler flags (also SISKIN_CFLAGS)"
 	  -  "--lflags"   "flags" "Additional linker flags (also SISKIN_LFLAGS)"
+	  -  "--cppflags" "flags" "Additional C++ only compiler flags (also SISKIN_CPPFLAGS)"
 	  -  "--define"   "def"   "Additional preprocessor define (also SISKIN_DEFINES)"
 	  -  "--undefine" "name"  "Remove preprocessor define (also SISKIN_UNDEFINES)"
 ]
@@ -233,6 +234,7 @@ nest-context: object [
 	arch-override: none
 	cli-cflags:   copy ""  ;; collected from `--cflags` (per command batch)
 	cli-lflags:   copy ""  ;; collected from `--lflags`
+	cli-cppflags: copy ""  ;; collected from `--cppflags`
 	cli-defines:  copy []  ;; collected from `--define`
 	cli-undefines: copy [] ;; collected from `--undefine`
 	app-file:     none ;; bundle output
@@ -1081,6 +1083,7 @@ do-nest: closure/with/extern [
 				| 'gzip    (gzip?: on)
 				| 'cflags  set val: string! (append append cli-cflags val SP)
 				| 'lflags  set val: string! (append append cli-lflags val SP)
+				| 'cppflags set val: string! (append append cli-cppflags val SP)
 				| 'define  set val: string! (append cli-defines val)
 				| 'undefine set val: string! (append cli-undefines val)
 				| 'output  set out-file-override: skip (
@@ -1105,6 +1108,7 @@ do-nest: closure/with/extern [
 						out-file-override: none
 						clear cli-cflags
 						clear cli-lflags
+						clear cli-cppflags
 						clear cli-defines
 						clear cli-undefines
 						result-code: 0
@@ -2436,12 +2440,13 @@ apply-extra-flags: function/with [
 	"Adds flags from SISKIN_* environment variables and CLI options"
 	spec [map!]
 ][
-	foreach [cflags lflags defines] reduce [
-		get-env "SISKIN_CFLAGS" get-env "SISKIN_LFLAGS" get-env "SISKIN_DEFINES"
-		cli-cflags              cli-lflags              cli-defines
+	foreach [cflags lflags cppflags defines] reduce [
+		get-env "SISKIN_CFLAGS" get-env "SISKIN_LFLAGS" get-env "SISKIN_CPPFLAGS" get-env "SISKIN_DEFINES"
+		cli-cflags              cli-lflags              cli-cppflags              cli-defines
 	][
 		foreach flag split-flags cflags [add-flag spec flag]
 		foreach flag split-flags lflags [append-flag spec/lflags flag]
+		foreach flag split-flags cppflags [append-flag spec/cppflags flag]
 		foreach def either block? defines [defines][split-flags defines] [
 			append spec/defines copy def
 		]
