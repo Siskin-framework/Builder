@@ -17,6 +17,8 @@ Rebol [
 		haiku?
 		turris?
 		bsd?
+		host-windows?
+		host-macOS?
 		expand-env
 	]
 ]
@@ -406,7 +408,7 @@ do-strip: closure/with [spec [map!] file [file!]][
 	]
 	either exists? strip [
 		print-info ["Stripping binary from:" as-yellow size? file as-cyan "bytes"]
-		eval-cmd/no-quit/v [to-local-file strip file either macOS? [""]["-s "]]
+		eval-cmd/no-quit/v [to-local-file strip file either host-macOS? [""]["-s "]]
 	][
 		print-error "STRIP command not found!"
 	]
@@ -423,7 +425,7 @@ do-upx: closure/with [file [file!]][
 		exists? expand-env copy upx
 	][
 		print-error "UPX command not found!"
-		unless windows? [exit]
+		unless host-windows? [exit]
 		try/with [
 			print-info "Downloading UPX"
 			bin: read https://github.com/upx/upx/releases/download/v5.2.0/upx-5.2.0-win32.zip
@@ -489,7 +491,7 @@ do-rebol2: closure/with [code [string! file!]][
 				print-error "REBOL2 binary checksum failed!"
 				exit
 			]
-			either Windows? [
+			either host-windows? [
 				rebol2: write root-dir/rebol2.exe bin
 			][
 				; file is *.tar.gz
@@ -1836,7 +1838,7 @@ build: function/with [
 				exit
 			]
 
-			either macOS? [
+			either host-macOS? [
 				;print-error "FIXME: AR utility on macOS does not support input from @ file"
 				;print-error "Archive file not created."
 				tmp: rejoin [
@@ -1899,7 +1901,7 @@ finalize-build: closure/with [spec [map!] file [file! none!] /no-fail][
 		'file = exists? out-file: join file %.dll
 	][
 		;- output is a result of compilation, so we may sign, strip, compress, etc.
-		if all [macOS? spec/sign <> false][
+		if all [host-macOS? spec/sign <> false][
 			if any [
 				; 1. sign is environment variable...
 				all [
@@ -1939,7 +1941,7 @@ finalize-build: closure/with [spec [map!] file [file! none!] /no-fail][
 			try/with [do-upx out-file][print-error system/state/last-error]
 		]
 
-		if macOS? [
+		if host-macOS? [
 			if sign [
 				eval-cmd/v combine [
 					{codesign --sign "} (sign) {" -f}
@@ -2139,7 +2141,7 @@ eval-code: function/with [
 
 
 windows?: does [system/platform = 'Windows]
-macOS?:   does [to logic! find [macOS Macintosh] system/platform]
+macOS?:   does [did find [macOS Macintosh] system/platform]
 linux?:   does [system/platform = 'Linux]
 openbsd?: does [system/platform = 'OpenBSD]
 freebsd?: does [system/platform = 'FreeBSD]
@@ -2147,10 +2149,13 @@ netbsd?:  does [system/platform = 'NetBSD]
 dragonflybsd?: does [system/platform = 'DragonFlyBSD]
 haiku?:   does [system/platform = 'Haiku]
 turris?:  does [system/platform = 'Turris]
-posix?:   does [to logic! find [linux macos openbsd freebsd netbsd dragonflybsd macintosh haiku turris] system/platform]
-BSD?:     does [to logic! find [macos openbsd freebsd netbsd dragonflybsd] system/platform]
+posix?:   does [did find [linux macos openbsd freebsd netbsd dragonflybsd macintosh haiku turris] system/platform]
+BSD?:     does [did find [macos openbsd freebsd netbsd dragonflybsd] system/platform]
 WASM?:    does [system/platform = 'WASM]
 
+;; host checks (not affected by `--platform` override)
+host-windows?: does [system/real-platform = 'Windows]
+host-macOS?:   does [did find [macOS Macintosh] system/real-platform]
 
 print-error: func[err][ sys/log/error 'SISKIN any [err system/state/last-error] ]
 print-info:  func[msg][ sys/log/info  'SISKIN msg ]
@@ -2227,7 +2232,7 @@ expand-env: function [
 ]
 
 as-env: func[val][
-	ajoin either windows? [
+	ajoin either host-windows? [
 		[#"%" val #"%"]
 	][	["${" val #"}"]]
 ]
@@ -2618,7 +2623,7 @@ locate-tool: function/with [
 				all [exists? android-ndk: expand-env %$ANDROID_NDK_HOME exists? dirize android-ndk/toolchains]
 				             android-ndk: none
 			][
-				switch system/platform [
+				switch system/real-platform[
 					windows [ add-env "OS_NAME" "windows-x86_64" ]
 					linux   [ add-env "OS_NAME" "linux-x86_64"   ]
 					macos   [ add-env "OS_NAME" "darwin-x86_64"  ]
@@ -2743,8 +2748,12 @@ prepare-macos-bundle: function/with [
 			;@@ TODO!!!
 		]
 		if %.iconset = ico-type [
-			eval-cmd/v ["iconutil -c icns -o " resources-dir/app.icns ico]
-			spec/bundle/icon: "app" 
+			either host-macOS? [
+				eval-cmd/v ["iconutil -c icns -o " resources-dir/app.icns ico]
+				spec/bundle/icon: "app"
+			][
+				print-warn "Bundle icon from .iconset requires macOS host (iconutil)!"
+			]
 		]
 	]
 

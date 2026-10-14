@@ -1,0 +1,10 @@
+;; tests/host/host.nest
+eggs: [
+	"platforms" [
+		do [print [
+			"target:" system/platform "host:" system/real-platform
+			"windows?" windows? "host-windows?" host-windows?
+			"macOS?" macOS? "host-macOS?" host-macOS?
+		]]
+	]
+]
