@@ -1664,17 +1664,18 @@ build: function/with [
 
 	unless ccpp [
 		any [
-			all [spec/ccpp any[
-				exists? ccpp: expand-env copy spec/ccpp
-				exists? ccpp: expand-env rejoin [spec/tools spec/ccpp]
+			all [spec/ccpp any [
+				exists? ccpp: expand-env as file! copy form spec/ccpp
+				exists? ccpp: expand-env as file! ajoin [spec/tools spec/ccpp]
 			]]
 			all [
-				tmp: find/last copy cc "gcc"
-				exists? ccpp: head replace tmp "gcc" "g++"
-			]
-			all [
-				tmp: find/last copy cc "clang"
-				exists? ccpp: head replace tmp "clang" "clang++"
+				tmp: any [
+					all [tmp: find/last copy cc "gcc"   head replace tmp "gcc"   "g++"    ]
+					all [tmp: find/last copy cc "clang" head replace tmp "clang" "clang++"]
+				]
+				ccpp: either abs-path? tmp [
+					all [exists? tmp  tmp]
+				][	locate-tool/required tmp spec/arch ]
 			]
 			ccpp: cc
 		]
@@ -1694,6 +1695,7 @@ build: function/with [
 
 	n: length? spec/files
 	i: 0
+	needs-cpp-linker?: false
 
 	if n > 0 [
 		unless system/options/quiet [
@@ -1800,7 +1802,7 @@ build: function/with [
 			;append-flag lflags "-dynamiclib"
 			;probe get-env "CC"
 			eval-cmd/v [
-				"$CC"
+				either needs-cpp-linker? ["$CCPP"]["$CC"]
 				;"-v"
 				"-o" out-file
 				join "@" to-local-file spec/objects/objects.txt

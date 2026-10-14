@@ -1,0 +1,8 @@
+
+compiler: gcc
+
+source:   %src/cpp-link/
+eggs: [
+	"C++ only"    [ name: %cpp-only files: [%hello.cpp] ]
+	"Mixed C/C++" [ name: %mixed    files: [%main.c %greet.cpp] ]
+]
