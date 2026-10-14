@@ -9,6 +9,8 @@ siskin: none
 
 ;-- variables:
 Compiler:
+CPP-Compiler:
+LINKER:
 Root-dir:
 Objs-dir:
 Source-dir:
@@ -19,6 +21,7 @@ INCLUDES:
 DEFINES:
 FRAMEWORKS:
 CFLAGS:
+CXXFLAGS:
 LFLAGS:
 PRODUCT:
 PREP:
@@ -151,7 +154,7 @@ make-project: func[
 	/guid
 		id [string!] "Visual studio project type GUID"
 	/local
-		output dir-bin dir-out rel-file name obj tmp file
+		output dir-bin dir-out rel-file name obj tmp file cpp? needs-cpp?
 ][
 	unless siskin [siskin: system/modules/siskin]
 	output: make string! 30000
@@ -182,13 +185,18 @@ make-project: func[
 	;-- compose .pbxproj file
 	if siskin/debug? [?? spec]
 
-	Compiler: spec/compiler
+ 	Compiler: spec/compiler
+	CPP-Compiler: either spec/ccpp [to-posix-file spec/ccpp][form Compiler]
+	unless any [spec/ccpp find CPP-Compiler "++"] [
+		case [
+			tmp: find/last CPP-Compiler "gcc"   [change/part tmp "g++" 3]
+			tmp: find/last CPP-Compiler "clang" [insert skip tmp 5 "++"]
+		]
+	]
 	Root-dir:   undirize spec/root
 	Objs-dir:     dirize any [spec/objects spec/temp "."]
 	Source-dir: undirize join spec/root any [spec/source ""]
-? Objs-dir 
 	if #"/" <> first Objs-dir [insert Objs-dir join Root-dir #"/"]
-? Objs-dir 
 	append Objs-dir rejoin [
 		spec/compiler #"-" spec/arch #"/" spec/name
 	]
@@ -200,6 +208,7 @@ make-project: func[
 	DEFINES:    clear ""
 	FRAMEWORKS: clear ""
 	CFLAGS:     clear ""
+	CXXFLAGS:   clear ""
 	LFLAGS:     clear ""
 	CLEAN:      clear ""
 	File-build-targets: clear ""
@@ -229,7 +238,8 @@ make-project: func[
 		append FRAMEWORKS join " \^/^--framework " file
 	]
 
-	append CFLAGS spec/cflags 
+	append CFLAGS spec/cflags
+	append CXXFLAGS spec/cppflags
 	append LFLAGS spec/lflags
 
 	foreach file sort spec/shared [
@@ -243,9 +253,11 @@ make-project: func[
 	append OBJS #"\"
 
 	tmp: copy []
+	needs-cpp?: false
 
 	foreach file sort spec/files [
 		rel-file: skip get-relative-path file dir-out 3
+		if cpp?: find siskin/cpp-extensions suffix? file [needs-cpp?: true]
 ;		file: find/tail file spec/root
 ;		set [d n] split-path file
 		parse file [ spec/root file: (file: join "$R/" file) ]
@@ -258,9 +270,12 @@ make-project: func[
 
 		append File-build-targets rejoin [
 			"^/^/" obj ": " file
-			"^/^-$(CC) " file " $(CFLAGS) -o " obj
+			"^/^-" either cpp? ["$(CXX) "]["$(CC) "] file
+			either cpp? [" $(CXXFLAGS)"][" $(CFLAGS)"] " -o " obj
 		]
 	]
+	LINKER: either needs-cpp? ["$(CXX)"]["$(CC)"]
+
 	foreach dir sort unique tmp [
 		append PREP join "^/^-mkdir -p " dir
 		append CLEAN rejoin ["^/^-$(RM) " dir %*.o]
@@ -325,6 +340,7 @@ PRODUCT= <PRODUCT>
 
 # For the build toolchain:
 CC=	   $(TOOLS)<Compiler>
+CXX=   $(TOOLS)<CPP-Compiler>
 NM=	   $(TOOLS)nm
 STRIP= $(TOOLS)strip
 
@@ -355,6 +371,7 @@ FRAMEWORKS=<FRAMEWORKS>
 LIBS=<LIBS>
 
 CFLAGS= -c $(INCLUDES) $(DEFINES) <CFLAGS> $(USE_FLAGS)
+CXXFLAGS= $(CFLAGS) <CXXFLAGS>
 LFLAGS= $(LIBS) $(FRAMEWORKS) <LFLAGS> $(USE_FLAGS)
 
 
@@ -381,7 +398,7 @@ OBJS = <OBJS>
 ### Main build target:
 
 $(PRODUCT):	prep $(OBJS) $(RES)
-	$(CC) -o $(PRODUCT) $(OBJS) $(LFLAGS)
+	<LINKER> -o $(PRODUCT) $(OBJS) $(LFLAGS)
 
 ### File build targets: <File-build-targets>
 
