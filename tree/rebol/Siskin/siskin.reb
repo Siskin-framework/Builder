@@ -332,7 +332,7 @@ do-args: closure/with [
 			arch-override: select args "--arch" [
 				try/with [
 					unprotect in system/build 'arch
-					system/build/arch: to word! arch-override
+					system/build/arch: arch-override: to word! arch-override
 					print-info ["Target architecture changed to:" as-green system/build/arch]
 				][
 					print system/state/last-error
@@ -540,6 +540,7 @@ parse-nest: closure/with [
 		block? dest [dest: to map! dest]
 		none?  dest [dest: copy/deep template]
 	]
+	if arch-override [dest/arch: arch-override]
 
 	src-dir: any [dest/source %""]
 	truthy: ['true  | 'on  | quote 1]
@@ -630,7 +631,7 @@ parse-nest: closure/with [
 			append dest/eggs preprocess val
 		)
 		| quote stack-size: set val:  integer!            ( dest/stack-size: val )
-		| quote arch:       set val:  word!               ( dest/arch:       val )
+		| quote arch:       set val:  word!               ( dest/arch: any [arch-override val] )
 		| quote root:       set val:  file!               ( dest/root: clean-path val )
 		| quote sign:      [set val: string! | logic]     ( dest/sign:       val )
 		| quote bundle:     set val:  block!              (
@@ -1482,6 +1483,7 @@ build: function/with [
 		spec/arch: any [
 			all [p1 any [none? p2 (index? p1) > (index? p2)] 'x32]
 			all [p2 any [none? p1 (index? p1) < (index? p2)] 'x64]
+			system/build/arch
 		]
 	]
 

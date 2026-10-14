@@ -1,0 +1,4 @@
+eggs: [
+	"default"  [           do [print ["ARCH:" spec/arch]] ]
+	"nest-x86" [ arch: x86 do [print ["ARCH:" spec/arch]] ]
+]
