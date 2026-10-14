@@ -94,6 +94,7 @@ all-options: [
 	  -  "--cflags"   "flags" "Additional compiler flags (also SISKIN_CFLAGS)"
 	  -  "--lflags"   "flags" "Additional linker flags (also SISKIN_LFLAGS)"
 	  -  "--define"   "def"   "Additional preprocessor define (also SISKIN_DEFINES)"
+	  -  "--undefine" "name"  "Remove preprocessor define (also SISKIN_UNDEFINES)"
 ]
 
 ; mapping of commands used in the interactive input into command line arguments
@@ -233,6 +234,7 @@ nest-context: object [
 	cli-cflags:   copy ""  ;; collected from `--cflags` (per command batch)
 	cli-lflags:   copy ""  ;; collected from `--lflags`
 	cli-defines:  copy []  ;; collected from `--define`
+	cli-undefines: copy [] ;; collected from `--undefine`
 	app-file:     none ;; bundle output
 
 	defaults: context [
@@ -1080,6 +1082,7 @@ do-nest: closure/with/extern [
 				| 'cflags  set val: string! (append append cli-cflags val SP)
 				| 'lflags  set val: string! (append append cli-lflags val SP)
 				| 'define  set val: string! (append cli-defines val)
+				| 'undefine set val: string! (append cli-undefines val)
 				| 'output  set out-file-override: skip (
 					out-file-override: to-rebol-file out-file-override
 					unless abs-path? out-file-override [
@@ -1103,6 +1106,7 @@ do-nest: closure/with/extern [
 						clear cli-cflags
 						clear cli-lflags
 						clear cli-defines
+						clear cli-undefines
 						result-code: 0
 					)
 
@@ -2440,6 +2444,14 @@ apply-extra-flags: function/with [
 		foreach flag split-flags lflags [append-flag spec/lflags flag]
 		foreach def either block? defines [defines][split-flags defines] [
 			append spec/defines copy def
+		]
+	]
+	;; undefines are applied last, so they win over nest, env and CLI defines
+	undefs: append split-flags get-env "SISKIN_UNDEFINES" cli-undefines
+	foreach name undefs [
+		remove-each def spec/defines [
+			d: form def
+			any [d == name  find/match/case d join name #"="]
 		]
 	]
 ] :nest-context

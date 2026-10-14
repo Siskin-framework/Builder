@@ -1,0 +1,8 @@
+
+compiler: gcc
+source:   %src/
+eggs: [
+	"plain" [ name: %undef1 define: FROM_NEST          files: [%undef.c] ]
+	"value" [ name: %undef2 define: "FROM_NEST=1"      files: [%undef.c] ]
+	"other" [ name: %undef3 define: [FROM_NEST_OTHER]  files: [%undef.c] ]
+]
