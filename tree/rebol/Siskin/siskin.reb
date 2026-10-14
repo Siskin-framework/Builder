@@ -2445,19 +2445,34 @@ apply-extra-flags: function/with [
 	"Adds flags from SISKIN_* environment variables and CLI options"
 	spec [map!]
 ][
-	foreach [cflags lflags cppflags defines] reduce [
-		get-env "SISKIN_CFLAGS" get-env "SISKIN_LFLAGS" get-env "SISKIN_CPPFLAGS" get-env "SISKIN_DEFINES"
-		cli-cflags              cli-lflags              cli-cppflags              cli-defines
-	][
-		foreach flag split-flags cflags [add-flag spec flag]
-		foreach flag split-flags lflags [append-flag spec/lflags flag]
-		foreach flag split-flags cppflags [append-flag spec/cppflags flag]
-		foreach def either block? defines [defines][split-flags defines] [
-			append spec/defines copy def
+	sources: reduce [
+		;; kind      label               value
+		'cflags    "SISKIN_CFLAGS"    get-env "SISKIN_CFLAGS"
+		'lflags    "SISKIN_LFLAGS"    get-env "SISKIN_LFLAGS"
+		'cppflags  "SISKIN_CPPFLAGS"  get-env "SISKIN_CPPFLAGS"
+		'defines   "SISKIN_DEFINES"   get-env "SISKIN_DEFINES"
+		'undefines "SISKIN_UNDEFINES" get-env "SISKIN_UNDEFINES"
+		'cflags    "--cflags"         cli-cflags
+		'lflags    "--lflags"         cli-lflags
+		'cppflags  "--cppflags"       cli-cppflags
+		'defines   "--define"         cli-defines
+		'undefines "--undefine"       cli-undefines
+	]
+	undefs: copy []
+	foreach [kind label value] sources [
+		vals: either block? value [value][split-flags value]
+		if empty? vals [continue]
+		label: ajoin ["(" label "):"]
+		print-info ["Extra" kind label as-green form vals]
+		switch kind [
+			cflags    [foreach f vals [add-flag spec copy f]]
+			lflags    [foreach f vals [append-flag spec/lflags copy f]]
+			cppflags  [foreach f vals [append-flag spec/cppflags copy f]]
+			defines   [foreach d vals [append spec/defines copy d]]
+			undefines [append undefs vals]
 		]
 	]
 	;; undefines are applied last, so they win over nest, env and CLI defines
-	undefs: append split-flags get-env "SISKIN_UNDEFINES" cli-undefines
 	foreach name undefs [
 		remove-each def spec/defines [
 			d: form def
