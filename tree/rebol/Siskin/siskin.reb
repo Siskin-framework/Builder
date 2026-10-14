@@ -91,6 +91,7 @@ all-options: [
 	  -  "--no-comp"  -      "Don't invoke compilation/linking step"
 	  -  "--platform" "name" "Override system/platform value"
 	  -  "--arch"     "arch" "Override system/build/arch value"
+	  -  "--cc"       "name" "Override compiler, name or path (also SISKIN_CC)"
 	  -  "--cflags"   "flags" "Additional compiler flags (also SISKIN_CFLAGS)"
 	  -  "--lflags"   "flags" "Additional linker flags (also SISKIN_LFLAGS)"
 	  -  "--cppflags" "flags" "Additional C++ only compiler flags (also SISKIN_CPPFLAGS)"
@@ -232,6 +233,7 @@ nest-context: object [
 	out-file-override: none
 	platform-override: none
 	arch-override: none
+	cli-cc:       none     ;; from `--cc`
 	cli-cflags:   copy ""  ;; collected from `--cflags` (per command batch)
 	cli-lflags:   copy ""  ;; collected from `--lflags`
 	cli-cppflags: copy ""  ;; collected from `--cppflags`
@@ -1081,6 +1083,7 @@ do-nest: closure/with/extern [
 				| 'git-ssh (git-ssh?: on)
 				| 'no-upx  (no-upx?: on)
 				| 'gzip    (gzip?: on)
+				| 'cc      set val: string! (cli-cc: val)
 				| 'cflags  set val: string! (append append cli-cflags val SP)
 				| 'lflags  set val: string! (append append cli-lflags val SP)
 				| 'cppflags set val: string! (append append cli-cppflags val SP)
@@ -1106,6 +1109,7 @@ do-nest: closure/with/extern [
 						git-ssh?:    false
 						force-compiler: none
 						out-file-override: none
+						cli-cc: none
 						clear cli-cflags
 						clear cli-lflags
 						clear cli-cppflags
@@ -1229,6 +1233,7 @@ build-target: closure/with [
 			return false
 		]
 		if git-update? [update-gits spec]
+		apply-compiler-override spec
 		apply-extra-flags spec
 
 		if force-compiler [
@@ -2459,6 +2464,24 @@ apply-extra-flags: function/with [
 			any [d == name  find/match/case d join name #"="]
 		]
 	]
+] :nest-context
+
+apply-compiler-override: function/with [
+	"Overrides the nest's compiler from `--cc` or SISKIN_CC"
+	spec [map!]
+][
+	cc: any [cli-cc get-env "SISKIN_CC"]
+	if any [none? cc empty? cc: trim copy cc no-comp?] [exit]
+	cc: to-rebol-file cc
+	name: copy second split-path cc
+	foreach ext [%.exe %.cmd %.bat] [clear-extension name ext]
+	spec/compiler: to word! to string! name
+	spec/ccpp: none   ;; derive C++ driver from the new compiler
+	spec/cc: either find cc #"/" [
+		;; a path; relative to where Siskin was started
+		either abs-path? cc [cc][clean-path join root-dir cc]
+	][	none ]        ;; just a name; resolved by `locate-tool`
+	print-info ["Compiler override:" as-green spec/compiler as-yellow any [spec/cc ""]]
 ] :nest-context
 
 eval-cmd: function/with [
