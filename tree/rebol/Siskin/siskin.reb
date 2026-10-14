@@ -959,7 +959,7 @@ do-nest: closure/with/extern [
 			set [nest-root: nest:] split-path nest-file
 			nest-root: pushd nest-root
 			nest-spec: parse-nest nest none
-			if none? nest-spec [exit]
+			unless nest-spec [exit]
 
 			if parent [
 				foreach [k v] parent [
