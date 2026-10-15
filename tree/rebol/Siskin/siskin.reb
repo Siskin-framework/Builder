@@ -2,7 +2,7 @@ Rebol [
 	Title:  "Siskin Builder - core"
 	Type:    module
 	Name:    siskin
-	Version: 0.23.0   ;; keep in sync with `siskin-version` below!
+	Version: 0.23.1   ;; keep in sync with `siskin-version` below!
 	Author: "Oldes"
 	
 	exports: [
@@ -22,7 +22,7 @@ Rebol [
 		expand-env
 	]
 ]
-siskin-version: 0.23.0
+siskin-version: 0.23.1
 ;? system
 banner: does [next rejoin [{
 ^[[0;33m═╗
@@ -381,7 +381,11 @@ do-args: closure/with [
 	
 	change-dir root-dir: system/options/path
 	unless get-env 'SISKIN_INSTALL [ add-env 'SISKIN_INSTALL root-dir/install ]
-	unless get-env 'SISKIN_TEMP    [ add-env 'SISKIN_TEMP    root-dir/temp    ]
+	either tmp: get-env 'SISKIN_TEMP [
+		;; set by the user: used as the temp dir for nests without `temp:`
+		;; (relative paths are resolved against the start dir)
+		defaults/temp: to-abs-dir tmp
+	][	add-env 'SISKIN_TEMP root-dir/temp ]
 	unless get-env 'SISKIN_ARCH    [ add-env 'SISKIN_ARCH form system/build/arch ]
 
 	if debug? [?? args]
@@ -661,8 +665,8 @@ parse-nest: closure/with [
 				dest/bundle: val
 			]
 		)
-		|[quote temp-dir: | quote temp:  ] set val: file! ( dest/temp:       val )
-		|[quote out-dir:  | quote output:] set val: file! ( dest/output:     val )
+		|[quote temp-dir: | quote temp:  ] set val: file! ( dest/temp:   dirize expand-env val )
+		|[quote out-dir:  | quote output:] set val: file! ( dest/output: dirize expand-env val )
 		|[quote compiler: | quote cc:    ] [
 			  set val: any-string! ( dest/cc: expand-env to-rebol-file val )
 			| falsy                ( dest/compiler: none)
@@ -1538,16 +1542,15 @@ build: function/with [
 	]
 
 	;- prepare a directory to hold object files                                 
-	;? spec/objects
+
 	if none? spec/objects [
-		spec/objects: dirize either out-file [
-			 rejoin [
-				dirize any [spec/temp %tmp/]
-				spec/compiler #"-" spec/arch #"/"
-				normalize-file-name out-file
-			]
-		][
-			any [spec/objects spec/temp  %tmp/]
+		;; <temp>/<platform>-<compiler>-<arch>/<name>/
+		;; (spec/temp is always set by defaults or `temp:` and is a dir)
+		spec/objects: as file! dirize ajoin [
+			spec/temp
+			normalize-file-name lowercase ajoin [system/platform #"-" spec/compiler #"-" spec/arch]
+			#"/"
+			if out-file [normalize-file-name out-file]
 		]
 	]
 
