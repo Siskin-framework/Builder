@@ -386,7 +386,10 @@ do-args: closure/with [
 		;; (relative paths are resolved against the start dir)
 		defaults/temp: to-abs-dir tmp
 	][	add-env 'SISKIN_TEMP root-dir/temp ]
-	unless get-env 'SISKIN_ARCH    [ add-env 'SISKIN_ARCH form system/build/arch ]
+	;; `--arch` always wins; otherwise keep a user-set SISKIN_ARCH
+	if any [arch-override not get-env 'SISKIN_ARCH] [
+		add-env 'SISKIN_ARCH form system/build/arch
+	]
 
 	if debug? [?? args]
 	if all [string? args empty? args][args: none]
