@@ -838,6 +838,11 @@ parse-nest: closure/with [
 			print-info val
 		)
 		|
+		'fail set val: string! (
+			print-error val
+			return false
+		)
+		|
 		'pushd set val: file! (
 			add-pre-build dest ['pushd val]
 		)
@@ -2212,7 +2217,7 @@ print-error: func[err][ sys/log/error 'SISKIN any [err system/state/last-error] 
 print-info:  func[msg][ sys/log/info  'SISKIN msg ]
 print-debug: func[msg][ sys/log/debug 'SISKIN msg ]
 print-more:  func[msg][ sys/log/more  'SISKIN msg ]
-print-warn:  func[msg][ sys/log/info  'SISKIN as-purple form either block? msg [reduce msg][msg]]
+print-warn:  func[msg][ sys/log/info  'SISKIN as-purple form reduce msg]
 
 
 print-bird: does [

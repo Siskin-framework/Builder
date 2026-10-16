@@ -1,0 +1,17 @@
+
+eggs: [
+	"fail"     [
+		fail "Intentional failure"
+		do [print "should not run"]
+	]
+	"skipped"  [
+		#if false [ fail "Should not fail" ]
+		do [print "ok"]
+	]
+	"platform" [
+		#if (all [macOS? system/build/arch = 'x86]) [
+			fail "It is not possible to make 32bit build on macOS"
+		]
+		do [print "ok"]
+	]
+]
