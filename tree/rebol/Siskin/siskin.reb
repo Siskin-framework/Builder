@@ -1658,7 +1658,7 @@ build: function/with [
 		print-info "Cleaning..."
 		foreach file spec/clean [
 			file: expand-env copy file
-			target: rejoin [spec/objects force-relative-file file %.o]
+			target: rejoin [spec/objects object-path spec file]
 
 			if debug? [?? target]
 			if exists? target [
@@ -1787,8 +1787,9 @@ build: function/with [
 			compile: "$CCPP"
 		]
 
-		target: rejoin [spec/objects force-relative-file file %.o]
-		target-short: rejoin [tmp-env force-relative-file file %.o]
+		obj: object-path spec file
+		target: rejoin [spec/objects obj]
+		target-short: rejoin [tmp-env obj]
 
 		p: to integer! round 100 * i / n
 		unless system/options/quiet [ prin rejoin [" [" pad/left p 4 "% ] "] ]
@@ -2246,6 +2247,17 @@ print-failed: closure/with [][
 force-relative-file: func[file][
 	either abs-path? file [next file][file]
 ]
+
+object-path: function/with [
+	"Returns object file path (relative to objects dir) for a source file"
+	spec [map!] file [file!]
+][
+	root: dirize any [spec/root nest-root]
+	join any [
+		all [find/match file root  skip file length? root]  ;; source inside the nest root
+		force-relative-file file                            ;; outside: keep its absolute path
+	] %.o
+] :nest-context
 
 pad: func[
 	str n
