@@ -1379,8 +1379,8 @@ build: function/with [
 			either source [
 				change file source
 			][
-				print-error ["Source file not found: " to-local-file file]
-				;quit
+				;; Some files may be generated, so this is not necessarily an error.
+				print-warn ["Source file not found:" to-local-file file]
 			]
 		]
 	]
