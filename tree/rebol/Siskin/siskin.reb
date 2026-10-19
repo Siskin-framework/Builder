@@ -2286,6 +2286,13 @@ expand-env: function [
 	value
 ]
 
+get-env-file: func [
+	"Returns an env var as a Rebol file, or none"
+	name [string!]
+][
+	all [name: get-env name  to-rebol-file name]
+]
+
 as-env: func[val][
 	ajoin either host-windows? [
 		[#"%" val #"%"]

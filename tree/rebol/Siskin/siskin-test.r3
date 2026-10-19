@@ -157,11 +157,11 @@ sh-cd: func [dir][ajoin ["cd " siskin/quote-sh-arg siskin/to-posix-file dir]]
 ]
 --test-- "msvc: cmd with dir" [
 	out: msvc/form-pre-post-build [cmd %sub/ "echo x"] base
-	has? out join "CD " msvc/to-windows-file join base %sub/
+	has? out msvc/escape-msbuild msvc/cd-cmd join base %sub/
 ]
 --test-- "msvc: cmd dir relative to the start dir" [
 	out: msvc/form-pre-post-build [cmd %sub/ "echo x"] join base %r/
-	has? out join "CD " msvc/to-windows-file join base %r/sub/
+	has? out msvc/escape-msbuild msvc/cd-cmd join base %r/sub/
 ]
 
 ;;=============================================================================
@@ -227,6 +227,49 @@ tmp-dir: make-dir %tmp-siskin-test/
 	]
 ]
 try [delete f delete tmp-dir]
+
+
+;;=============================================================================
+group "Pre-build: MSVC commands"
+;;=============================================================================
+
+count-of: func [text [string!] part [string!] /local n][
+	n: 0
+	while [text: find/tail text part][n: n + 1]
+	n
+]
+--test-- "msvc: one <Command> for all commands" [
+	out: msvc/form-pre-post-build [
+		cmd %sub/ "echo a"
+		call %x.bat
+		python %x.py
+		Rebol2 "print 1"
+		pushd %p/
+		popd
+	] base
+	is? count-of out "<Command>" 1
+]
+--test-- "msvc: cmd lines escaped" [has? msvc/form-pre-post-build [cmd _ "echo a & b"] base "echo a &amp; b"]
+--test-- "msvc: call"              [has? msvc/form-pre-post-build [call %x.bat] base {CALL "x.bat"}]
+--test-- "msvc: python"            [has? msvc/form-pre-post-build [python %x.py] base {python "x.py"}]
+--test-- "msvc: Rebol2"            [has? msvc/form-pre-post-build [Rebol2 "print 1"] base {-csw "print 1"}]
+--test-- "msvc: pushd/popd" [
+	out: msvc/form-pre-post-build [pushd %p/ popd] base
+	all [
+		true = has? out msvc/escape-msbuild msvc/cd-cmd join base %p/
+		true = any [
+			did find/last out msvc/escape-msbuild msvc/cd-cmd base
+			ajoin ["got " mold/flat out]
+		]
+	]
+]
+--test-- "msvc: cd-cmd escapes percent" [is? msvc/cd-cmd %/c/a%25b/ {CD /D "c:\a%%b\"}]
+--test-- "get-env-file" [
+	all [
+		true = is? siskin/get-env-file "SISKIN_NO_SUCH_VAR" none
+		true = is? siskin/get-env-file "SISKIN_TEST_VAR" %hello
+	]
+]
 
 ;;=============================================================================
 group "Shared helpers"

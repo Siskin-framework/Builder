@@ -74,79 +74,58 @@ escape-msbuild: func [
 	str
 ]
 
+cd-cmd: func [
+	"Forms a cmd.exe command changing the current dir"
+	dir [file!]
+][
+	ajoin [{CD /D "} replace/all to-windows-file dir "%" "%%" {"}]
+]
+
 form-pre-post-build: func [
 	code [block!]
 	base [file!] "Dir the script starts in"
-	/local val args tmp siskin result dir
+	/local val args siskin result dir line add
 ][
-	result: make string! 1024
-	append result "^/^-  <Command>cd .."
 	siskin: system/modules/siskin
 	siskin/emit-reset base
+	result: make string! 1024
+	add: func [cmd [string!]][append append result crlf escape-msbuild cmd]
+	append result "^/^-  <Command>cd .."
 
-	parse code [any[
+	parse code [any [
 		'do [
 			set val file! set args [block! | string! | none! | none] (
-				append result rejoin [crlf escape-msbuild siskin/form-do-cmd val args 'cmd]
+				add siskin/form-do-cmd val args 'cmd
 			)
 		]
-		|
-		'Rebol2 set val string! (
-			if none? siskin/config/Rebol2 [ siskin/config/Rebol2: %rebol2]
-			;if #"/" <> config/Rebol2/1 [insert config/Rebol2 root-dir]
-			replace/all val "#[LIB]" siskin/lib-extension
-			replace/all val "#[EXE]" siskin/exe-extension
-			append result rejoin [
-				"^-  <Command>"
-				to-local-file config/Rebol2 "-csw" trim/lines val
-				"^-  </Command>^/"
+		| 'Rebol2 set val string! (
+			val: trim/lines copy val
+			replace/all val "#[LIB]" form siskin/lib-extension
+			replace/all val "#[EXE]" form siskin/exe-extension
+			add ajoin [
+				siskin/quote-cmd-arg to-windows-file any [siskin/get-env-file "REBOL2" %rebol2]
+				" -csw " siskin/quote-cmd-arg val
 			]
 		)
 		| 'python set val file! (
-			append result rejoin [
-				"^-  <Command>"
-				to-local-file any [config/python %python] #" " to-local-file val
-				"^-  </Command>^/"
-			]
+			add ajoin ["python " siskin/quote-cmd-arg to-windows-file val]
 		)
-		| 'call set val [file!]  (
-			if #"/" <> first val [insert val what-dir]
-			append result rejoin [
-				"^-  <Command>"
-				"CALL " to-local-file val
-				"^-  </Command>^/"
-			]
+		| 'call set val file! (
+			add ajoin ["CALL " siskin/quote-cmd-arg to-windows-file val]
 		)
 		| 'cmd set dir [file! | none!] set val string! (
-			append result "^-  <Command>"
-			if dir [
-				append result rejoin ["CD " to-windows-file siskin/emit-pushd dir " & "]
-			]
-			foreach line split val lf [
+			if dir [add cd-cmd siskin/emit-pushd dir]
+			foreach line split siskin/expand-env copy val lf [
 				line: trim/head/tail line
-				unless empty? line [
-					append result rejoin [line " & "]
-				]
+				unless empty? line [add line]
 			]
-			if dir [
-				append result rejoin ["CD " to-windows-file siskin/emit-popd]
-			]
-			append result "^-  </Command>^/"
+			if dir [add cd-cmd siskin/emit-popd]
 		)
-		| 'pushd set val file! (
-			append result rejoin [
-				"CD " to-windows-file siskin/emit-pushd val
-			]
-		)
-		| 'popd (
-			append result rejoin [
-				"^/CD " to-windows-file siskin/emit-popd
-			]
-		)
+		| 'pushd set val file! (add cd-cmd siskin/emit-pushd val)
+		| 'popd                (add cd-cmd siskin/emit-popd)
 		|
 		copy val 2 skip (
 			siskin/print-warn ["!!! Ignoring setting: " mold/flat val]
-			;ask "Press enter to continue."
 		)
 	]]
 	append result "^/^-  </Command>^/^-"
