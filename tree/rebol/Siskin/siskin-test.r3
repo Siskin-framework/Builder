@@ -6,7 +6,7 @@ Rebol [
 import %prebol.reb
 import %siskin-msvc.reb
 import %siskin-xcode.reb
-import %siskin-make.reb
+mmake:  import %siskin-make.reb
 siskin: import %siskin.reb
 
 base: what-dir
@@ -23,5 +23,19 @@ assert [find/last out join "cd " siskin/to-posix-file base]
 ;; escaping
 assert [{ --args "a \"b\" c\\d"} = siskin/escape-sh-args {a "b" c\d}]
 assert [""  = siskin/escape-sh-args none]
+
+;; get-relative-path
+assert [%../src/a.c  = siskin/get-relative-path %/p/src/a.c %/p/msvc/]
+assert [%a.c         = siskin/get-relative-path %/p/a.c     %/p/]
+assert [%../../x/y.c = siskin/get-relative-path %/x/y.c     %/p/q/]
+assert [%../src/a.c  = siskin/get-relative-path %/p/src/a.c %/p/msvc]  ;; base without slash
+;; to-posix-file
+f: siskin/to-posix-file %/c/some/dir/file.c
+assert [not find f #"\"]
+assert [not find siskin/to-posix-file %"/c/a b/c.c" #"^""]  ;; no quoting
+;; emitters still load and use it
+assert [function? :siskin/get-relative-path]
+foreach mod [msvc mmake xcode] [assert [not in system/modules/:mod 'get-relative-path]]
+
 
 print "OK"

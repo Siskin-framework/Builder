@@ -2423,6 +2423,32 @@ to-local-file: function [
 	file
 ]
 
+get-relative-path: function [
+	"Returns `path` relative to the `base` directory"
+	path [file!] base [file!]
+][
+	path: split clean-path/only path #"/"
+	base: split clean-path/only dirize base #"/"
+	take/last base          ;-- remove the empty part
+	while [all [path/1 path/1 = base/1]] [remove path remove base]
+	insert/dup path ".." length? base
+	file: to file! any [first path %""]
+	while [not tail? path: next path][append append file #"/" path/1]
+	file
+]
+
+to-posix-file: either system/platform = 'windows [
+	func [path [file! string!]][
+		;; Siskin’s own to-local-file adds quotes around paths with spaces, and the emitters never did that.
+		;; so using `lib/to-local-file`
+		path: lib/to-local-file path
+		replace/all path #"\" #"/"
+		path
+	]
+][
+	:lib/to-local-file
+]
+
 append-flag: func[flags [string!] flag [string!]][
 	flag: append trim/tail flag #" "
 	unless find "-`" flag/1 [insert flag #"-"]
@@ -2977,3 +3003,55 @@ move-file: function/with [src [file!] dst [file!]][
 	]
 	dst
 ] :nest-context
+
+
+escape-sh-args: func [
+	"Forms `--args` for a generated sh script"
+	args [block! string! none!]
+][
+	if none? args [return ""]
+	args: either block? args [reform args][copy args]
+	; not nice and optimal, but I have no time now...
+	replace/all args #"\" "\\"
+	replace/all args #"^"" {\"}
+	replace/all args #"^/" "\n"
+	replace/all args #"^M" ""
+	ajoin [{ --args "} args {"}]
+]
+
+form-sh-pre-build: function [
+	"Forms pre-build commands as a sh script (used by make and xcode emitters)"
+	spec [map!]
+	code [block!]
+][
+	result: make string! 1000
+	clear emit-dirs
+	append result rejoin [
+		{#!/bin/sh^/}
+		{echo Prebuilding...^/}
+		{cd } to-posix-file spec/root
+	]
+	parse code [any [
+		'do [
+			set val: file! set args: [block! | string! | none! | none] (
+				if string? args [expand-env args]
+				append result rejoin [
+					lf to-posix-file system/options/boot
+					" --script " to-posix-file val
+					escape-sh-args args
+				]
+			)
+		]
+		| 'pushd set val: file! (
+			append append result "^/cd " to-posix-file emit-pushd val
+		)
+		| 'popd (
+			append append result "^/cd " to-posix-file emit-popd
+		)
+		|
+		copy val: 2 skip (
+			print-warn ["!!! Ignoring setting: " mold/flat val]
+		)
+	]]
+	result
+]

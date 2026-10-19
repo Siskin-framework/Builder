@@ -78,41 +78,11 @@ write-file: func[file [file! block!] data][
 	file
 ]
 
-get-relative-path: function[path base][
-    path: split clean-path/only path #"/"
-    base: split clean-path/only dirize base #"/"
-    take/last base          ;-- remove the empty part
-    while [all [path/1 path/1 = base/1]] [remove path remove base]
-    insert/dup path ".." length? base
-    file: to file! any [first path %""]
-    while [not tail? path: next path][append append file #"/" path/1]
-    file
-]
-
 get-file-type: function[file][
 	any [
 		select/case filetypes suffix? file
 		"file"
 	]
-]
-
-to-posix-file: either system/platform = 'windows [
-	func[path [file! string!]][
-		path: to-local-file path
-		replace/all path #"\" #"/" 
-		path
-	]
-][
-	:to-local-file
-]
-
-relativize-files: func[files [block!] dir /local tmp][
-	unless any-string? dir [exit]
-	forall files [
-		tmp: get-relative-path files/1 dir
-		append clear files/1 tmp	
-	]
-	files
 ]
 
 quoted: func[str][
@@ -121,59 +91,6 @@ quoted: func[str][
 	]
 	str
 ]
-
-escaped-args: func[args [block! string! none!]][
-	if none?  args [return ""]
-	args: either block? args [reform args][copy args]
-	; not nice and optimal, but I have no time now...
-	replace/all args #"\" "\\"
-	replace/all args #"^"" {\"}
-	replace/all args #"^/" "\n"
-	replace/all args #"^M" ""
-	ajoin [{ --args "} args {"}]
-]
-
-form-pre-post-build: func[
-	spec 
-	code [block!]
-	/local val args tmp siskin result
-][
-	result: make string! 1000
-	siskin: system/modules/siskin
-	clear siskin/emit-dirs
-	
-	append result rejoin [
-		{#!/bin/sh^/}
-		{echo Prebuilding...^/}
-		{cd } to-posix-file spec/root
-	]
-	parse code [any[
-		'do [
-			set val file! set args [block! | string! | none! | none] (
-				;?? args
-				if string? args [siskin/expand-env args]
-				append result rejoin [
-					lf to-posix-file system/options/boot ;to-local-file siskin/expand-env %$REBOL3
-					" --script " to-posix-file val
-					escaped-args args
-				]
-			)
-		]
-		| 'pushd set val file! (
-			append append result "^/cd " to-posix-file siskin/emit-pushd dir
-		)
-		| 'popd (
-			append append result "^/cd " to-posix-file siskin/emit-popd
-		)
-		|
-		copy val 2 skip (
-			siskin/print-warn ["!!! Ignoring setting: " mold/flat val]
-			;ask "Press enter to continue."
-		)
-	]]
-	result
-]
-
 
 make-project: func[
 	spec   [map!]
@@ -266,7 +183,7 @@ make-project: func[
 	dirs: make map! 10
 	foreach file join spec/files spec/assembly [
 		;file: siskin/get-file-with-extensions file [%.c %.cpp %.cc %.m %.S %.s %.sx]
-		rel-file: get-relative-path file dir-out
+		rel-file: siskin/get-relative-path file dir-out
 		set [dir name] split-path rel-file
 		
 		if none? blk: dirs/:dir [ blk: dirs/:dir: copy [] ]
@@ -307,7 +224,7 @@ make-project: func[
 			continue
 		]
 
-		rel-file: skip get-relative-path dir dir-out 3
+		rel-file: skip siskin/get-relative-path dir dir-out 3
 		append HEADER_SEARCH_PATHS rejoin [
 			{^-^-^-^-^-"} rel-file {",^/}
 		]
@@ -407,7 +324,7 @@ make-project: func[
 
 
 	foreach file spec/files [
-		rel-file: skip get-relative-path file dir-out 3
+		rel-file: skip siskin/get-relative-path file dir-out 3
 		file: find/tail file spec/root
 		set [d n] split-path file
 		id_file:    make-uuid "file" file 
@@ -436,7 +353,7 @@ make-project: func[
 	]
 
 	foreach file sort headers [
-		rel-file: skip get-relative-path file dir-out 3
+		rel-file: skip siskin/get-relative-path file dir-out 3
 		parse file [spec/root file: to end] ;; remove the root part of path, if possible
 
 		set [d n] split-path file
@@ -519,14 +436,14 @@ make-project: func[
 	spec/output: join %make/build/Release/ product
 
 
-	PRE-BUILD: form-pre-post-build spec any [spec/pre-build []]
+	PRE-BUILD: form-sh-pre-build spec any [spec/pre-build []]
 	PRE-BUILD-SCRIPT: siskin/to-local-file join dir-out %pre-build.sh
 	probe write-file [dir-out %pre-build.sh] PRE-BUILD
 
 	siskin/eval-cmd/v/force [{chmod +x } PRE-BUILD-SCRIPT]
 	replace/all PRE-BUILD-SCRIPT #" " "\\ " ;@@ add proper escaping!!!
 	;@@ TODO: post actions..
-	;POST-BUILD-EVENT: copy "" ;form-pre-post-build spec/post-build
+	;POST-BUILD-EVENT: copy "" ;form-sh-pre-build spec/post-build
 
 	GCC_WARN_64_TO_32_BIT_CONVERSION: either find spec/cflags @-Wno-shorten-64-to-32 [@NO][@YES]
 	

@@ -31,17 +31,6 @@ ADDITIONAL_OPTIONS:
 none
 
 
-get-relative-path: function[path base][
-    path: split clean-path/only path #"/"
-    base: split clean-path/only dirize base #"/"
-    take/last base          ;-- remove the empty part
-    while [all [path/1 path/1 = base/1]] [remove path remove base]
-    insert/dup path ".." length? base
-    file: to file! any [first path %""]
-    while [not tail? path: next path][append append file #"/" path/1]
-    file
-]
-
 to-windows-file: either system/platform = 'windows [
 	:to-local-file
 ][
@@ -53,16 +42,6 @@ to-windows-file: either system/platform = 'windows [
 		]
 		path
 	]
-]
-
-
-relativize-files: func[files [block!] dir /local tmp][
-	unless any-string? dir [exit]
-	forall files [
-		tmp: get-relative-path files/1 dir
-		append clear files/1 tmp	
-	]
-	files
 ]
 
 make-guid: func[/from name /local id] [
@@ -104,7 +83,7 @@ form-pre-post-build: func[
 	append result "^/^-  <Command>cd .."
 	siskin: system/modules/siskin
 	clear siskin/emit-dirs
-	
+
 	parse code [any[
 		'do [
 			set val file! set args [block! | string! | none! | none] (
@@ -331,7 +310,7 @@ make-project: func[
 		rejoin [
 		{  <ItemGroup>^/}
 		{    <ResourceCompile Include="}
-		to-windows-file get-relative-path spec/resource dir-vs {" />^/}
+		to-windows-file siskin/get-relative-path spec/resource dir-vs {" />^/}
 		{  </ItemGroup>}
 		]
 	][""]
@@ -343,7 +322,7 @@ make-project: func[
 	foreach file join spec/files spec/assembly [
 		;file: siskin/get-file-with-extensions file [%.c %.cpp %.cc %.m %.S %.s %.sx]
 		file: siskin/expand-env copy file
-		rel-file: get-relative-path file dir-vs
+		rel-file: siskin/get-relative-path file dir-vs
 		dir: first split-path rel-file
 		parse dir [remove any %../]    ; get directory name without .. (used in gui as names of folders)
 		take/last dir                  ; undirize
