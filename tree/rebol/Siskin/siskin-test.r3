@@ -331,8 +331,12 @@ sa: func [args][mold siskin/take-script-args args]
 --test-- "no --args"                    [is? sa ["--script" "/x.r3" "a"]         {[%/x.r3 ["a"]]}]
 --test-- "molded block"                 [is? sa ["--script" "/x.r3" "--args" {[a "b c" %f]}] {[%/x.r3 [a "b c" %f]]}]
 --test-- "molded string stays a string" [is? sa ["--script" "/x.r3" "--args" {"a %f"}]       {[%/x.r3 ["a %f"]]}]
---test-- "env in molded string"         [is? sa ["--script" "/x.r3" "--args" {"$SISKIN_TEST_VAR"}] {[%/x.r3 ["hello"]]}]
---test-- "env in molded block"          [is? sa ["--script" "/x.r3" "--args" {["$SISKIN_TEST_VAR"]}] {[%/x.r3 ["hello"]]}]
+--test-- "molded string not expanded again" [
+	is? sa ["--script" "/x.r3" "--args" {"$SISKIN_TEST_VAR"}] {[%/x.r3 ["$SISKIN_TEST_VAR"]]}
+]
+--test-- "molded block not expanded again" [
+	is? sa ["--script" "/x.r3" "--args" {["$SISKIN_TEST_VAR"]}] {[%/x.r3 ["$SISKIN_TEST_VAR"]]}
+]
 --test-- "unmolded legacy value"        [is? sa ["--script" "/x.r3" "--args" {a b c}]         {[%/x.r3 [a b c]]}]
 --test-- "extra argv kept"              [is? sa ["--script" "/x.r3" "--args" {[a]} "%b"]      {[%/x.r3 [a "%b"]]}]
 --test-- "relative script path"         [

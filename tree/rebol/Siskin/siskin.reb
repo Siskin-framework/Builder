@@ -2326,7 +2326,7 @@ take-script-args: function [
 		val: transcode any [take args ""]
 		;; one molded string or block (as emitted) -> unwrap it
 		if all [1 = length? val any [string? val/1 block? val/1]] [val: val/1]
-		val: any [prep-do-args val copy []]
+		if string? val [val: reduce [val]] ;; already expanded by the emitter
 		args: append val args ;; keep any extra argv as strings
 	]
 	reduce [script args]
