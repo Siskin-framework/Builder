@@ -26,6 +26,7 @@ LFLAGS:
 PRODUCT:
 PREP:
 CLEAN:
+PRE-BUILD:
 ; -----------
 none
 
@@ -53,6 +54,13 @@ quoted: func[str][
 		str: append insert copy str #"^"" #"^""
 	]
 	str
+]
+
+make-escape: func [
+	"Escapes a string for a makefile recipe line"
+	str [string!]
+][
+	replace/all copy str #"$" "$$"
 ]
 
 make-project: func[
@@ -222,13 +230,10 @@ make-project: func[
 ;	spec/output: join %make/build/Release/ product
 
 
-;	PRE-BUILD: form-sh-pre-build spec any [spec/pre-build []]
-;	PRE-BUILD-SCRIPT: siskin/to-local-file join dir-out %pre-build.sh
-;	write-file [dir-out %pre-build.sh] PRE-BUILD
-;	siskin/eval-cmd/v/force [{chmod +x } PRE-BUILD-SCRIPT]
-;	replace/all PRE-BUILD-SCRIPT #" " "\\ " ;@@ add proper escaping!!!
+	PRE-BUILD: make-escape siskin/quote-sh-arg siskin/to-posix-file
+		siskin/write-sh-pre-build spec dir-out
 	;@@ TODO: post actions..
-	;POST-BUILD-EVENT: copy "" ;form-sh-pre-build spec/post-build
+	;POST-BUILD-EVENT: copy "" ;siskin/form-sh-pre-build spec/post-build
 
 	file: join dir-out [spec/name %.mk]
 
@@ -284,8 +289,11 @@ LFLAGS= $(LIBS) $(FRAMEWORKS) <LFLAGS> $(USE_FLAGS)
 
 
 ### Build targets:
-.PHONY: default
+.PHONY: default prebuild
 default: $(PRODUCT);
+
+prebuild:
+	sh <PRE-BUILD>
 
 clean: <CLEAN>
 
@@ -301,6 +309,9 @@ strip:
 	$(STRIP) $(PRODUCT)
 
 OBJS = <OBJS>
+
+# pre-build runs before any object is compiled, without forcing a rebuild
+$(OBJS): | prebuild
 
 ### Main build target:
 

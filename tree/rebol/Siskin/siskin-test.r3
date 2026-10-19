@@ -264,4 +264,9 @@ xcode: system/modules/xcode
 --test-- "pbx-string plain"               [is? xcode/pbx-string {'/a b/x.sh'} {"'/a b/x.sh'"}]
 --test-- "pbx-string quotes, backslashes" [is? xcode/pbx-string {a"b\c} {"a\"b\\c"}]
 
+mmake: system/modules/mmake
+--test-- "make-escape dollar"           [is? mmake/make-escape {'a$b'} {'a$$b'}]
+--test-- "makefile has prebuild target" [has? mmake/makefile "prebuild:^/^-sh <PRE-BUILD>"]
+--test-- "objects wait for prebuild"    [has? mmake/makefile "$(OBJS): | prebuild"]
+
 summary
