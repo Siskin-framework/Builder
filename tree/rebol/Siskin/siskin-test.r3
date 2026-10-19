@@ -272,6 +272,36 @@ count-of: func [text [string!] part [string!] /local n][
 ]
 
 ;;=============================================================================
+group "Pre-build: unknown commands"
+;;=============================================================================
+
+--test-- "next-pre-build-cmd" [
+	b: [
+		foo 1 2
+		bar
+	]
+	is? index? siskin/next-pre-build-cmd b 4
+]
+--test-- "next-pre-build-cmd at the last command" [
+	b: [
+		foo 1 2
+	]
+	tail? siskin/next-pre-build-cmd b
+]
+--test-- "sh: command after unknown one is kept" [
+	has? siskin/form-sh-pre-build spec [
+		foo 1 2
+		do %a.reb _
+	] "a.reb"
+]
+--test-- "msvc: command after unknown one is kept" [
+	has? msvc/form-pre-post-build [
+		foo 1 2
+		do %a.reb _
+	] base "a.reb"
+]
+
+;;=============================================================================
 group "Shared helpers"
 ;;=============================================================================
 

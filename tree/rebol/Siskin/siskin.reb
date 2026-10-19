@@ -529,6 +529,16 @@ add-pre-build: func[dest cmd [block!]][
 	cmd: new-line/all reduce cmd false
 	append dest/pre-build new-line cmd true
 ]
+
+next-pre-build-cmd: func [
+;	"Returns the position of the next pre-build command (each one starts on a new line)"
+	pos [block!]
+][
+	pos: next pos
+	while [all [not tail? pos  not new-line? pos]][pos: next pos]
+	pos
+]
+
 add-action: func[
 	dest
 	name [set-word!]
@@ -3122,10 +3132,10 @@ form-sh-pre-build: function [
 		| 'popd (
 			append append result "^/cd " quote-sh-arg to-posix-file emit-popd
 		)
-		|
-		copy val: 2 skip (
-			print-warn ["!!! Ignoring setting: " mold/flat val]
-		)
+		| p: skip (
+			q: next-pre-build-cmd p
+			print-warn ["Ignoring pre-build command:" mold/flat copy/part p q]
+		) :q
 	]]
 	result
 ]

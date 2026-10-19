@@ -84,7 +84,7 @@ cd-cmd: func [
 form-pre-post-build: func [
 	code [block!]
 	base [file!] "Dir the script starts in"
-	/local val args siskin result dir line add
+	/local val args siskin result dir line add p q
 ][
 	siskin: system/modules/siskin
 	siskin/emit-reset base
@@ -123,10 +123,10 @@ form-pre-post-build: func [
 		)
 		| 'pushd set val file! (add cd-cmd siskin/emit-pushd val)
 		| 'popd                (add cd-cmd siskin/emit-popd)
-		|
-		copy val 2 skip (
-			siskin/print-warn ["!!! Ignoring setting: " mold/flat val]
-		)
+		| p: skip (
+			q: siskin/next-pre-build-cmd p
+			siskin/print-warn ["Ignoring pre-build command:" mold/flat copy/part p q]
+		) :q
 	]]
 	append result "^/^-  </Command>^/^-"
 	result
