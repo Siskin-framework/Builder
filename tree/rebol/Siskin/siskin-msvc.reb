@@ -118,7 +118,7 @@ form-pre-post-build: func[
 	siskin: system/modules/siskin
 	parse code [any[
 		'do [
-			set val file! set args [block! | string! | none] (
+			set val file! set args [block! | string! | none! | none] (
 				;?? args
 				if string? args [siskin/expand-env args]
 				append result rejoin [
