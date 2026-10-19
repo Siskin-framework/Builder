@@ -95,6 +95,8 @@ base: what-dir
 spec: make map! reduce ['root base]
 msvc: system/modules/msvc
 set-env "SISKIN_TEST_VAR" "hello"
+;; `do-args` normally sets it; needed by `host-windows?`
+extend system 'real-platform system/platform
 
 ;;=============================================================================
 group "Pre-build: `do` arguments"
@@ -201,6 +203,30 @@ group "Pre-build: command quoting"
 		true = has? out "%25%25a.reb"
 	]
 ]
+
+;;=============================================================================
+group "Pre-build: script file"
+;;=============================================================================
+
+tmp-dir: make-dir %tmp-siskin-test/
+;; NOTE: a failing `chmod` quits the whole run (eval-cmd), which also means a failure
+--test-- "write-sh-pre-build: chmod follows the host, not --platform" [
+	real: system/platform
+	unprotect 'system/platform
+	system/platform: either real = 'Windows ['Linux]['Windows]
+	f: try [siskin/write-sh-pre-build spec tmp-dir]
+	system/platform: real
+	case [
+		error? f [f]
+		real = 'Windows [true]
+		'else [
+			out: copy ""
+			call/wait/output ajoin ["test -x " siskin/quote-sh-arg siskin/to-posix-file f " && echo yes"] out
+			any [did find out "yes" "script is not executable"]
+		]
+	]
+]
+try [delete f delete tmp-dir]
 
 ;;=============================================================================
 group "Shared helpers"

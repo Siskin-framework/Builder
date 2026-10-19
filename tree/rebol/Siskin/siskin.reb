@@ -3131,6 +3131,6 @@ write-sh-pre-build: function [
 	file: join dir %pre-build.sh
 	write file form-sh-pre-build spec any [spec/pre-build []]
 	sys/log/more 'SISKIN ["Generated:^[[33m" to-local-file file]
-	unless windows? [eval-cmd/v/force [{chmod +x } to-local-file file]]
+	unless host-windows? [eval-cmd/v/force [{chmod +x } to-local-file file]]
 	file
 ]
