@@ -97,6 +97,7 @@ form-pre-post-build: func [
 			set val file! set args [block! | string! | none! | none] (
 				add siskin/form-do-cmd val args 'cmd
 			)
+			| set val block! (siskin/warn-do-code val)
 		]
 		| 'Rebol2 set val string! (
 			val: trim/lines copy val

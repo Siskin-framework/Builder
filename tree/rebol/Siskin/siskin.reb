@@ -539,6 +539,19 @@ next-pre-build-cmd: func [
 	pos
 ]
 
+warn-do-code: func [
+;	"Warns that inline `do [code]` can't run in a generated project; returns the message"
+	code [block!]
+	/local msg
+][
+	msg: reform [
+		"`do [code]` is not supported in generated projects (use `do %file`):"
+		mold/flat/part code 40
+	]
+	print-warn msg
+	msg
+]
+
 add-action: func[
 	dest
 	name [set-word!]
@@ -3125,6 +3138,7 @@ form-sh-pre-build: function [
 			set val: file! set args: [block! | string! | none! | none] (
 				append append result lf form-do-cmd val args 'sh
 			)
+			| set val: block! (warn-do-code val)
 		]
 		| 'pushd set val: file! (
 			append append result "^/cd " quote-sh-arg to-posix-file emit-pushd val

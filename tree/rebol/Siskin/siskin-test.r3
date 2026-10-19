@@ -302,6 +302,32 @@ group "Pre-build: unknown commands"
 ]
 
 ;;=============================================================================
+group "Pre-build: do [code]"
+;;=============================================================================
+
+--test-- "warn-do-code message" [has? siskin/warn-do-code [print 1] "use `do %file`"]
+--test-- "sh: do [code] not emitted, next command kept" [
+	out: siskin/form-sh-pre-build spec [
+		do [print 1]
+		do %a.reb _
+	]
+	all [
+		none? find out "print 1"
+		true = has? out "a.reb"
+	]
+]
+--test-- "msvc: do [code] not emitted, next command kept" [
+	out: msvc/form-pre-post-build [
+		do [print 1]
+		do %a.reb _
+	] base
+	all [
+		none? find out "print 1"
+		true = has? out "a.reb"
+	]
+]
+
+;;=============================================================================
 group "Shared helpers"
 ;;=============================================================================
 
