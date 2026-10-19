@@ -18,7 +18,6 @@ ADDITIONAL-DEPENDENCIES:
 CONFIGURATION-TYPE:
 PROJECT-FILES:
 PROJECT-DEFINES:
-PRE-BUILD:
 PRE-BUILD-SCRIPT:
 POST-BUILD-EVENT:
 RESOURCE-ITEM:
@@ -90,6 +89,16 @@ quoted: func[str][
 		str: append insert copy str #"^"" #"^""
 	]
 	str
+]
+
+pbx-string: func [
+	"Forms a quoted pbxproj string value"
+	str [string!]
+][
+	str: copy str
+	replace/all str #"\" "\\"
+	replace/all str #"^"" {\"}
+	ajoin [#"^"" str #"^""]
 ]
 
 make-project: func[
@@ -436,14 +445,10 @@ make-project: func[
 	spec/output: join %make/build/Release/ product
 
 
-	PRE-BUILD: form-sh-pre-build spec any [spec/pre-build []]
-	PRE-BUILD-SCRIPT: siskin/to-local-file join dir-out %pre-build.sh
-	probe write-file [dir-out %pre-build.sh] PRE-BUILD
-
-	siskin/eval-cmd/v/force [{chmod +x } PRE-BUILD-SCRIPT]
-	replace/all PRE-BUILD-SCRIPT #" " "\\ " ;@@ add proper escaping!!!
+	PRE-BUILD-SCRIPT: pbx-string siskin/quote-sh-arg siskin/to-posix-file
+		siskin/write-sh-pre-build spec dir-out
 	;@@ TODO: post actions..
-	;POST-BUILD-EVENT: copy "" ;form-sh-pre-build spec/post-build
+	;POST-BUILD-EVENT: copy "" ;siskin/form-sh-pre-build spec/post-build
 
 	GCC_WARN_64_TO_32_BIT_CONVERSION: either find spec/cflags @-Wno-shorten-64-to-32 [@NO][@YES]
 	

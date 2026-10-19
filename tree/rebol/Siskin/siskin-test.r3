@@ -246,4 +246,22 @@ sa: func [args][mold siskin/take-script-args args]
 	is? first siskin/take-script-args ["--script" "x.r3"] join system/options/path %x.r3
 ]
 
+;;=============================================================================
+group "Pre-build: script file"
+;;=============================================================================
+
+tmp-dir: make-dir %tmp-siskin-test/
+--test-- "write-sh-pre-build writes the script" [
+	f: siskin/write-sh-pre-build spec tmp-dir
+	all [
+		true = is? f join tmp-dir %pre-build.sh
+		true = has? read/string f "#!/bin/sh"
+	]
+]
+try [delete f delete tmp-dir]
+
+xcode: system/modules/xcode
+--test-- "pbx-string plain"               [is? xcode/pbx-string {'/a b/x.sh'} {"'/a b/x.sh'"}]
+--test-- "pbx-string quotes, backslashes" [is? xcode/pbx-string {a"b\c} {"a\"b\\c"}]
+
 summary
