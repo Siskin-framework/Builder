@@ -57,7 +57,7 @@ group: func ["Starts a named group of tests" name [string!]][
 		true [
 			fail-count: fail-count + 1
 			append failed name
-			print [as-red "[FAIL]" name "=>" mold/flat/part :result 80]
+			print [as-red "[FAIL]" name "=>" either string? :result [:result][mold/flat/part :result 80]]
 		]
 	]
 	:result
@@ -94,6 +94,7 @@ summary: does [
 base: what-dir
 spec: make map! reduce ['root base]
 msvc: system/modules/msvc
+set-env "SISKIN_TEST_VAR" "hello"
 
 ;;=============================================================================
 group "Pre-build: `do` arguments"
@@ -104,11 +105,11 @@ code: reduce ['do %a.reb none 'do %b.reb "x"]
 
 --test-- "sh: do without args"           [has? out: siskin/form-sh-pre-build spec copy/deep code "a.reb"]
 --test-- "sh: command after none args"   [has? out "b.reb"]
---test-- "sh: string args"               [has? out {--args "x"}]
+--test-- "sh: string args"               [has? out {["x"]}]
 
 --test-- "msvc: do without args"         [has? out: msvc/form-pre-post-build copy/deep code "a.reb"]
 --test-- "msvc: command after none args" [has? out "b.reb"]
---test-- "msvc: string args"             [has? out {--args "x"}]
+--test-- "msvc: string args"             [has? out {[\"x\"]}]
 
 ;;=============================================================================
 group "Pre-build: dir tracking"
@@ -138,13 +139,44 @@ clear siskin/emit-dirs
 ]
 
 ;;=============================================================================
-group "Pre-build: sh escaping"
+group "Pre-build: command quoting"
 ;;=============================================================================
 
---test-- "escape-sh-args quotes and backslashes" [
-	is? siskin/escape-sh-args {a "b" c\d} { --args "a \"b\" c\\d"}
+--test-- "sh: single quotes"         [is? siskin/quote-sh-arg {a'b $X `c`} {'a'\''b $X `c`'}]
+--test-- "cmd: spaces"               [is? siskin/quote-cmd-arg {a b}       {"a b"}]
+--test-- "cmd: embedded quotes"      [is? siskin/quote-cmd-arg {say "hi"}  {"say \"hi\""}]
+--test-- "cmd: special out of quote" [is? siskin/quote-cmd-arg {a"&b"}     {"a\"^^&b\""}]
+--test-- "cmd: percent"              [is? siskin/quote-cmd-arg {50%}       {"50%%"}]
+--test-- "cmd: trailing backslash"   [is? siskin/quote-cmd-arg {c:\dir\}   {"c:\dir\\"}]
+
+--test-- "r3 runner, sh" [
+	has? siskin/form-do-cmd/as %x.r3 [a "b" %c] 'sh 'r3 {--do 'do/args %x.r3 [a "b" %c]'}
 ]
---test-- "escape-sh-args none" [is? siskin/escape-sh-args none ""]
+--test-- "Siskin runner, sh" [
+	has? siskin/form-do-cmd/as %x.r3 [a "b" %c] 'sh 'Siskin {--script 'x.r3' --args '[a "b" %c]'}
+]
+--test-- "Siskin runner, no args" [
+	has? siskin/form-do-cmd/as %x.r3 none 'sh 'Siskin {--args '[]'}
+]
+--test-- "r3 runner, cmd" [
+	has? siskin/form-do-cmd/as %x.r3 [a "b" %c] 'cmd 'r3 {--do "do/args %%x.r3 [a \"b\" %%c]"}
+]
+--test-- "env expanded at generation" [
+	has? siskin/form-do-cmd/as %x.r3 "$SISKIN_TEST_VAR" 'sh 'r3 {["hello"]}
+]
+--test-- "Siskin runner args round trip" [
+	is? mold second siskin/take-script-args reduce [
+		"--script" "/x.r3" "--args" mold/flat siskin/prep-do-args {c:\dir\spec.reb}
+	] {["c:\dir\spec.reb"]}
+]
+--test-- "msvc: escaped for MSBuild/XML" [
+	out: msvc/form-pre-post-build reduce ['do %a.reb "x &y"]
+	all [
+		true = has? out "&amp;y"
+		none? find out "%a.reb"   ;; must be %25%25a.reb
+		true = has? out "%25%25a.reb"
+	]
+]
 
 ;;=============================================================================
 group "Shared helpers"
@@ -182,16 +214,15 @@ foreach mod [mmake xcode] [
 group "do arguments"
 ;;=============================================================================
 
-set-env "SISKIN_TEST_VAR" "hello"
 --test-- "prep-do-args none" [is? siskin/prep-do-args none none]
---test-- "prep-do-args loads a string" [
-	is? mold siskin/prep-do-args {a "b c" 1 %f} {[a "b c" 1 %f]}
+--test-- "prep-do-args keeps a string as one value" [
+	is? mold siskin/prep-do-args {a "b c" 1 %f} {[{a "b c" 1 %f}]}
 ]
 --test-- "prep-do-args expands env in a string" [
-	is? mold siskin/prep-do-args {"$SISKIN_TEST_VAR" x} {["hello" x]}
+	is? mold siskin/prep-do-args {$SISKIN_TEST_VAR x} {["hello x"]}
 ]
---test-- "prep-do-args rejects invalid syntax" [
-	error? try [siskin/prep-do-args {"unclosed}]
+--test-- "prep-do-args keeps a path string" [
+	is? mold siskin/prep-do-args {c:\dir\spec.reb} {["c:\dir\spec.reb"]}
 ]
 --test-- "prep-do-args expands env in block strings" [
 	is? mold siskin/prep-do-args ["$SISKIN_TEST_VAR" x %f] {["hello" x %f]}
@@ -201,6 +232,18 @@ set-env "SISKIN_TEST_VAR" "hello"
 	siskin/prep-do-args reduce [s]
 	siskin/prep-do-args s
 	is? s "$SISKIN_TEST_VAR"
+]
+
+sa: func [args][mold siskin/take-script-args args]
+--test-- "no --args"                    [is? sa ["--script" "/x.r3" "a"]         {[%/x.r3 ["a"]]}]
+--test-- "molded block"                 [is? sa ["--script" "/x.r3" "--args" {[a "b c" %f]}] {[%/x.r3 [a "b c" %f]]}]
+--test-- "molded string stays a string" [is? sa ["--script" "/x.r3" "--args" {"a %f"}]       {[%/x.r3 ["a %f"]]}]
+--test-- "env in molded string"         [is? sa ["--script" "/x.r3" "--args" {"$SISKIN_TEST_VAR"}] {[%/x.r3 ["hello"]]}]
+--test-- "env in molded block"          [is? sa ["--script" "/x.r3" "--args" {["$SISKIN_TEST_VAR"]}] {[%/x.r3 ["hello"]]}]
+--test-- "unmolded legacy value"        [is? sa ["--script" "/x.r3" "--args" {a b c}]         {[%/x.r3 [a b c]]}]
+--test-- "extra argv kept"              [is? sa ["--script" "/x.r3" "--args" {[a]} "%b"]      {[%/x.r3 [a "%b"]]}]
+--test-- "relative script path"         [
+	is? first siskin/take-script-args ["--script" "x.r3"] join system/options/path %x.r3
 ]
 
 summary

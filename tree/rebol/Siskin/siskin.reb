@@ -277,21 +277,14 @@ do-args: closure/with [
 	;? system/options
 	;	? system/script/args
 	;	? system/options/args
-	args: system/options/args	
+	args: system/options/args
 
 	if string? args [ args: prepare-interactive args ]
 
-	;@@ this is temporary hack before finding a better way how to handle raw args!
 	if all [args "--script" = first args] [
-		; I've added this option to be able preprocess builds using Rebol scripts
-		; without need to download Rebol as an additional utility (in GitHub actions)
-		script: to-rebol-file take remove args
-		if rel-path? script [ insert script system/options/path ]
-		if "--args" = first args [take args] ;ignored
-		;? script
-		;? args
+		set [script: args:] take-script-args args
 		print-debug ["Executing script:" as-red to-local-file script]
-		print-debug ["..with arguments:" as-red form args]
+		print-debug ["..with arguments:" as-red mold args]
 		system/options/quiet: true
 		try/with [ do/args script args ][
 			print-error system/state/last-error
@@ -2125,12 +2118,7 @@ eval-code: function/with [
 		|
 		'do [
 			set arg1 file! set arg2 [block! | string! | none! | none] (
-				case [
-					string? arg2 [ arg2: to block! expand-env arg2 ]
-					block?  arg2 [ forall arg2 [if string? arg2/1 [ expand-env arg2/1]] ]
-				]
-				;try/with [eval-cmd/v [system/options/boot '--script arg1 arg2]] :on-error-warn
-				try/with [do/args arg1 arg2] :on-error-warn
+				try/with [do/args arg1 prep-do-args arg2] :on-error-warn
 			)
 			| set arg1 block! (
 				try/with [
@@ -2302,6 +2290,39 @@ as-env: func[val][
 	ajoin either host-windows? [
 		[#"%" val #"%"]
 	][	["${" val #"}"]]
+]
+
+prep-do-args: function [
+;;	"Normalizes `do %script args` arguments into a block (env vars expanded)"
+	args [block! string! none!]
+][
+	case [
+		none?   args [none]
+		;string? args [transcode expand-env copy args]
+		string? args [reduce [expand-env copy args]]
+		'else [
+			args: copy/deep args
+			forall args [if string? args/1 [expand-env args/1]]
+			args
+		]
+	]
+]
+
+take-script-args: function [
+	"Extracts `--script file [--args value]` from command line args; returns [script args]"
+	args [block!] "Command line args starting with --script (modified)"
+][
+	script: to-rebol-file take remove args
+	if rel-path? script [insert script system/options/path]
+	if "--args" = first args [
+		take args
+		val: transcode any [take args ""]
+		;; one molded string or block (as emitted) -> unwrap it
+		if all [1 = length? val any [string? val/1 block? val/1]] [val: val/1]
+		val: any [prep-do-args val copy []]
+		args: append val args ;; keep any extra argv as strings
+	]
+	reduce [script args]
 ]
 
 on-error-quit: func[err][
@@ -3005,18 +3026,60 @@ move-file: function/with [src [file!] dst [file!]][
 ] :nest-context
 
 
-escape-sh-args: func [
-	"Forms `--args` for a generated sh script"
-	args [block! string! none!]
+quote-sh-arg: func [
+	"Quotes a value as one sh argument"
+	arg [string!]
 ][
-	if none? args [return ""]
-	args: either block? args [reform args][copy args]
-	; not nice and optimal, but I have no time now...
-	replace/all args #"\" "\\"
-	replace/all args #"^"" {\"}
-	replace/all args #"^/" "\n"
-	replace/all args #"^M" ""
-	ajoin [{ --args "} args {"}]
+	ajoin [#"'" replace/all copy arg #"'" {'\''} #"'"]
+]
+
+quote-cmd-arg: function [
+	"Quotes a value as one argument for a batch file (cmd.exe + CRT argv rules)"
+	arg [string!]
+][
+	out: make string! 2 + length? arg
+	append out #"^""
+	in-q?: true  ;; cmd's own quote state
+	bs: 0        ;; pending backslashes
+	foreach c arg [
+		switch/default c [
+			#"\"  [bs: bs + 1 append out c continue]
+			#"^"" [
+				append/dup out #"\" bs + 1  ;; 2n+1 backslashes = literal quote
+				append out c
+				in-q?: not in-q?
+			]
+			#"%"  [append out "%%"]
+		][
+			if all [not in-q? find "&|<>^^()" c] [append out #"^^"]
+			append out c
+		]
+		bs: 0
+	]
+	append/dup out #"\" bs  ;; double trailing backslashes
+	append out #"^""
+	out
+]
+
+form-do-cmd: function [
+	"Forms a command which runs a Rebol script with args (for generated projects)"
+	file  [file!]
+	args  [block! string! none!]
+	shell [word!] "sh or cmd"
+	/as product [word!] "Runner product (default: system/product)"
+][
+	set [to-path: quote-arg:] reduce either shell = 'sh [
+		[:to-posix-file :quote-sh-arg]
+	][	[:lib/to-local-file :quote-cmd-arg] ]
+	args: mold/flat any [prep-do-args args copy []]
+	ajoin either 'Siskin = any [product system/product] [[
+		quote-arg to-path system/options/boot
+		" --script " quote-arg to-path file
+		" --args "   quote-arg args
+	]][[
+		quote-arg to-path system/options/boot
+		" --do " quote-arg ajoin ["do/args " mold file #" " args]
+	]]
 ]
 
 form-sh-pre-build: function [
@@ -3034,12 +3097,7 @@ form-sh-pre-build: function [
 	parse code [any [
 		'do [
 			set val: file! set args: [block! | string! | none! | none] (
-				if string? args [expand-env args]
-				append result rejoin [
-					lf to-posix-file system/options/boot
-					" --script " to-posix-file val
-					escape-sh-args args
-				]
+				append append result lf form-do-cmd val args 'sh
 			)
 		]
 		| 'pushd set val: file! (

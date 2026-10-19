@@ -64,15 +64,14 @@ write-file: func[file [file! block!] data][
 	file
 ]
 
-escaped-args: func[args [block! string! none!]][
-	if none?  args [return ""]
-	args: either block? args [reform args][copy args]
-	; not nice and optimal, but I have no time now...
-	replace/all args #"^^" "^^^^"
-	replace/all args #"^"" {^^"}
-	replace/all args #"^/" "^^^/"
-	replace/all args #"^M" ""
-	ajoin [{ --args "} args {"}]
+escape-msbuild: func [
+	"Escapes a command for MSBuild metadata in XML"
+	str [string!]
+][
+	foreach [c r] ["%" "%25" "$" "%24" "@" "%40" "&" "&amp;" "<" "&lt;" ">" "&gt;"][
+		replace/all str c r
+	]
+	str
 ]
 
 form-pre-post-build: func[
@@ -87,13 +86,7 @@ form-pre-post-build: func[
 	parse code [any[
 		'do [
 			set val file! set args [block! | string! | none! | none] (
-				;?? args
-				if string? args [siskin/expand-env args]
-				append result rejoin [
-					crlf to-local-file system/options/boot ;to-local-file siskin/expand-env %$REBOL3
-					" --script " to-local-file val
-					escaped-args args
-				]
+				append result rejoin [crlf escape-msbuild siskin/form-do-cmd val args 'cmd]
 			)
 		]
 		|
