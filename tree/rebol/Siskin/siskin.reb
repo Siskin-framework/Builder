@@ -2395,7 +2395,7 @@ emit-pushd: func [
 	target [file!]
 ][
 	if #"/" <> first target [
-		target: clean-path join dirize any [last emit-dirs what-dir] target
+		target: clean-path join dirize any [last emit-dirs emit-base what-dir]target
 	]
 	append emit-dirs target
 	target
@@ -2404,7 +2404,16 @@ emit-popd: func [
 	"Tracks a return from a dir change in a generated script; returns the dir to go back to"
 ][
 	take/last emit-dirs
-	any [last emit-dirs what-dir]
+	any [last emit-dirs emit-base what-dir]
+]
+
+emit-base: none
+emit-reset: func [
+	"Starts dir tracking for a generated script"
+	base [file!] "Dir the script starts in"
+][
+	clear emit-dirs
+	emit-base: clean-path dirize base
 ]
 
 delete: function/with [
@@ -3088,11 +3097,11 @@ form-sh-pre-build: function [
 	code [block!]
 ][
 	result: make string! 1000
-	clear emit-dirs
+	emit-reset spec/root
 	append result rejoin [
 		{#!/bin/sh^/}
 		{echo Prebuilding...^/}
-		{cd } to-posix-file spec/root
+		{cd } quote-sh-arg to-posix-file spec/root
 	]
 	parse code [any [
 		'do [
@@ -3101,10 +3110,10 @@ form-sh-pre-build: function [
 			)
 		]
 		| 'pushd set val: file! (
-			append append result "^/cd " to-posix-file emit-pushd val
+			append append result "^/cd " quote-sh-arg to-posix-file emit-pushd val
 		)
 		| 'popd (
-			append append result "^/cd " to-posix-file emit-popd
+			append append result "^/cd " quote-sh-arg to-posix-file emit-popd
 		)
 		|
 		copy val: 2 skip (

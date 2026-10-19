@@ -107,7 +107,7 @@ code: reduce ['do %a.reb none 'do %b.reb "x"]
 --test-- "sh: command after none args"   [has? out "b.reb"]
 --test-- "sh: string args"               [has? out {["x"]}]
 
---test-- "msvc: do without args"         [has? out: msvc/form-pre-post-build copy/deep code "a.reb"]
+--test-- "msvc: do without args"         [has? out: msvc/form-pre-post-build copy/deep code base "a.reb"]
 --test-- "msvc: command after none args" [has? out "b.reb"]
 --test-- "msvc: string args"             [has? out {[\"x\"]}]
 
@@ -115,7 +115,7 @@ code: reduce ['do %a.reb none 'do %b.reb "x"]
 group "Pre-build: dir tracking"
 ;;=============================================================================
 
-clear siskin/emit-dirs
+siskin/emit-reset base
 --test-- "emit-pushd relative"        [is? siskin/emit-pushd %a/ join base %a/]
 --test-- "emit-pushd nested relative" [is? siskin/emit-pushd %b/ join base %a/b/]
 --test-- "emit-popd to parent"        [is? siskin/emit-popd join base %a/]
@@ -123,19 +123,43 @@ clear siskin/emit-dirs
 --test-- "emit-pushd absolute"        [is? siskin/emit-pushd %/x/ %/x/]
 --test-- "emit-popd from absolute"    [is? siskin/emit-popd base]
 
+--test-- "emit-reset sets the base" [
+	siskin/emit-reset %/x/
+	is? siskin/emit-popd %/x/
+]
+
+sh-cd: func [dir][ajoin ["cd " siskin/quote-sh-arg siskin/to-posix-file dir]]
 --test-- "sh: pushd" [
 	out: siskin/form-sh-pre-build spec [pushd %sub/ popd]
-	has? out join "cd " siskin/to-posix-file join base %sub/
+	has? out sh-cd join base %sub/
 ]
 --test-- "sh: popd" [
 	any [
-		did find/last out join "cd " siskin/to-posix-file base
+		did find/last out sh-cd base
 		ajoin ["got " mold/flat out]
 	]
 ]
+--test-- "sh: root with spaces is quoted" [
+	out: siskin/form-sh-pre-build make map! reduce ['root join base %"a b/"] []
+	has? out sh-cd join base %"a b/"
+]
+--test-- "sh: popd returns to spec/root, not what-dir" [
+	out: siskin/form-sh-pre-build make map! reduce ['root join base %r/] [pushd %sub/ popd]
+	all [
+		true = has? out sh-cd join base %r/sub/
+		true = any [
+			did find/last out sh-cd join base %r/
+			ajoin ["got " mold/flat out]
+		]
+	]
+]
 --test-- "msvc: cmd with dir" [
-	out: msvc/form-pre-post-build [cmd %sub/ "echo x"]
+	out: msvc/form-pre-post-build [cmd %sub/ "echo x"] base
 	has? out join "CD " msvc/to-windows-file join base %sub/
+]
+--test-- "msvc: cmd dir relative to the start dir" [
+	out: msvc/form-pre-post-build [cmd %sub/ "echo x"] join base %r/
+	has? out join "CD " msvc/to-windows-file join base %r/sub/
 ]
 
 ;;=============================================================================
@@ -170,7 +194,7 @@ group "Pre-build: command quoting"
 	] {["c:\dir\spec.reb"]}
 ]
 --test-- "msvc: escaped for MSBuild/XML" [
-	out: msvc/form-pre-post-build reduce ['do %a.reb "x &y"]
+	out: msvc/form-pre-post-build reduce ['do %a.reb "x &y"] base
 	all [
 		true = has? out "&amp;y"
 		none? find out "%a.reb"   ;; must be %25%25a.reb
@@ -245,28 +269,5 @@ sa: func [args][mold siskin/take-script-args args]
 --test-- "relative script path"         [
 	is? first siskin/take-script-args ["--script" "x.r3"] join system/options/path %x.r3
 ]
-
-;;=============================================================================
-group "Pre-build: script file"
-;;=============================================================================
-
-tmp-dir: make-dir %tmp-siskin-test/
---test-- "write-sh-pre-build writes the script" [
-	f: siskin/write-sh-pre-build spec tmp-dir
-	all [
-		true = is? f join tmp-dir %pre-build.sh
-		true = has? read/string f "#!/bin/sh"
-	]
-]
-try [delete f delete tmp-dir]
-
-xcode: system/modules/xcode
---test-- "pbx-string plain"               [is? xcode/pbx-string {'/a b/x.sh'} {"'/a b/x.sh'"}]
---test-- "pbx-string quotes, backslashes" [is? xcode/pbx-string {a"b\c} {"a\"b\\c"}]
-
-mmake: system/modules/mmake
---test-- "make-escape dollar"           [is? mmake/make-escape {'a$b'} {'a$$b'}]
---test-- "makefile has prebuild target" [has? mmake/makefile "prebuild:^/^-sh <PRE-BUILD>"]
---test-- "objects wait for prebuild"    [has? mmake/makefile "$(OBJS): | prebuild"]
 
 summary

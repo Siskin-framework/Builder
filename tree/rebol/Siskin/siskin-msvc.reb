@@ -74,14 +74,15 @@ escape-msbuild: func [
 	str
 ]
 
-form-pre-post-build: func[
+form-pre-post-build: func [
 	code [block!]
-	/local val args tmp siskin result
+	base [file!] "Dir the script starts in"
+	/local val args tmp siskin result dir
 ][
 	result: make string! 1024
 	append result "^/^-  <Command>cd .."
 	siskin: system/modules/siskin
-	clear siskin/emit-dirs
+	siskin/emit-reset base
 
 	parse code [any[
 		'do [
@@ -361,7 +362,7 @@ make-project: func[
 	]
 
 	;-- and...
-	PRE-BUILD-EVENT: form-pre-post-build spec/pre-build
+	PRE-BUILD-EVENT: form-pre-post-build spec/pre-build first split-path dir-vs
 	;@@ TODO: post actions..
 	POST-BUILD-EVENT: copy "" ;form-pre-post-build spec/post-build
 
