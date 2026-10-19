@@ -2122,8 +2122,8 @@ eval-code: function/with [
 			)
 			| set arg1 block! (
 				try/with [
-					fn: function/with [spec] code :nest-context
-					fn spec code
+					fn: function/with [spec] arg1 :nest-context
+					fn spec
 				] :on-error-warn
 			)
 		]

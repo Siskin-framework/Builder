@@ -270,4 +270,17 @@ sa: func [args][mold siskin/take-script-args args]
 	is? first siskin/take-script-args ["--script" "x.r3"] join system/options/path %x.r3
 ]
 
+;;=============================================================================
+group "eval-code"
+;;=============================================================================
+
+hits: 0
+--test-- "do [code] evaluates only its own block" [
+	siskin/eval-code make map! [] reduce [
+		'do [set 'hits hits + 1]
+		'do [set 'hits hits + 10]
+	]
+	is? hits 11
+]
+
 summary
