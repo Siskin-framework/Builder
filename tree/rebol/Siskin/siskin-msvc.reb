@@ -65,19 +65,6 @@ relativize-files: func[files [block!] dir /local tmp][
 	files
 ]
 
-dirs-stack: copy []
-pushd: function [
-	target [file!]
-][
-	dir: what-dir
-	append dirs-stack dir
-	dir
-]
-popd: function [][
-	dir: take/last dirs-stack
-]
-
-
 make-guid: func[/from name /local id] [
 	id: enbase (checksum/with to-binary form any [name now/precise] 'md5 "Siskin") 16
 	insert at id 9 "-"
@@ -116,6 +103,8 @@ form-pre-post-build: func[
 	result: make string! 1024
 	append result "^/^-  <Command>cd .."
 	siskin: system/modules/siskin
+	clear siskin/emit-dirs
+	
 	parse code [any[
 		'do [
 			set val file! set args [block! | string! | none! | none] (
@@ -158,7 +147,7 @@ form-pre-post-build: func[
 		| 'cmd set dir [file! | none!] set val string! (
 			append result "^-  <Command>"
 			if dir [
-				append result rejoin ["CD " to-windows-file pushd dir " & "]
+				append result rejoin ["CD " to-windows-file siskin/emit-pushd dir " & "]
 			]
 			foreach line split val lf [
 				line: trim/head/tail line
@@ -167,18 +156,18 @@ form-pre-post-build: func[
 				]
 			]
 			if dir [
-				append result rejoin ["CD " to-windows-file popd]
+				append result rejoin ["CD " to-windows-file siskin/emit-popd]
 			]
 			append result "^-  </Command>^/"
 		)
 		| 'pushd set val file! (
 			append result rejoin [
-				"CD " to-windows-file pushd val
+				"CD " to-windows-file siskin/emit-pushd val
 			]
 		)
 		| 'popd (
 			append result rejoin [
-				"^/CD " to-windows-file popd
+				"^/CD " to-windows-file siskin/emit-popd
 			]
 		)
 		|

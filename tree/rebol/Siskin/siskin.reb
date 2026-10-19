@@ -2367,6 +2367,25 @@ popd: function [
 	] :on-error-warn
 ]
 
+;- dir tracking for generated scripts (used by project emitters)
+emit-dirs: copy []
+emit-pushd: func [
+	"Tracks a dir change in a generated script; returns the absolute target dir"
+	target [file!]
+][
+	if #"/" <> first target [
+		target: clean-path join dirize any [last emit-dirs what-dir] target
+	]
+	append emit-dirs target
+	target
+]
+emit-popd: func [
+	"Tracks a return from a dir change in a generated script; returns the dir to go back to"
+][
+	take/last emit-dirs
+	any [last emit-dirs what-dir]
+]
+
 delete: function/with [
 	"Delete file if exists (ignored on test run)"
 	file [file!]

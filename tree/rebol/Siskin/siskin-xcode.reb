@@ -122,18 +122,6 @@ quoted: func[str][
 	str
 ]
 
-dirs-stack: copy []
-pushd: function [
-	target [file!]
-][
-	dir: what-dir
-	append dirs-stack dir
-	dir
-]
-popd: function [][
-	dir: take/last dirs-stack
-]
-
 escaped-args: func[args [block! string! none!]][
 	if none?  args [return ""]
 	args: either block? args [reform args][copy args]
@@ -152,6 +140,8 @@ form-pre-post-build: func[
 ][
 	result: make string! 1000
 	siskin: system/modules/siskin
+	clear siskin/emit-dirs
+	
 	append result rejoin [
 		{#!/bin/sh^/}
 		{echo Prebuilding...^/}
@@ -170,10 +160,10 @@ form-pre-post-build: func[
 			)
 		]
 		| 'pushd set val file! (
-			append append result "^/cd " to-posix-file pushd dir
+			append append result "^/cd " to-posix-file siskin/emit-pushd dir
 		)
 		| 'popd (
-			append append result "^/cd " to-posix-file popd
+			append append result "^/cd " to-posix-file siskin/emit-popd
 		)
 		|
 		copy val 2 skip (
