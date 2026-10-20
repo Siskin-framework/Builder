@@ -84,13 +84,6 @@ get-file-type: function[file][
 	]
 ]
 
-quoted: func[str][
-	if find str #" " [
-		str: ajoin [#"^"" str #"^""]
-	]
-	str
-]
-
 pbx-string: func [
 	"Forms a quoted pbxproj string value"
 	str [string!]
@@ -260,7 +253,7 @@ make-project: func[
 
 	append SECTION-PBXFileReference rejoin [
 		TAB2 TARGET-UUID  " /* " product " */ = {isa = PBXFileReference; explicitFileType = ^""
-		product-type "^"; includeInIndex = 0; path = " quoted product "; sourceTree = BUILT_PRODUCTS_DIR; };^/"
+		product-type "^"; includeInIndex = 0; path = " pbx-string form product "; sourceTree = BUILT_PRODUCTS_DIR; };^/"
 	]
 
 	foreach file sort spec/shared [

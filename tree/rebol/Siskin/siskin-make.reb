@@ -49,13 +49,6 @@ write-file: func[file [file! block!] data][
 	file
 ]
 
-quoted: func[str][
-	if find str #" " [
-		str: append insert copy str #"^"" #"^""
-	]
-	str
-]
-
 make-escape: func [
 	"Escapes a string for a makefile recipe line"
 	str [string!]

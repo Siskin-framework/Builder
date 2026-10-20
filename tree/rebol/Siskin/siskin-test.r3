@@ -13,9 +13,9 @@ Rebol [
 ]
 
 import %prebol.reb
-import %siskin-msvc.reb
-import %siskin-xcode.reb
-import %siskin-make.reb
+msvc:   import %siskin-msvc.reb
+xcode:  import %siskin-xcode.reb
+mmake:  import %siskin-make.reb
 siskin: import %siskin.reb
 
 ;;=============================================================================
@@ -93,7 +93,6 @@ summary: does [
 
 base: what-dir
 spec: make map! reduce ['root base]
-msvc: system/modules/msvc
 set-env "SISKIN_TEST_VAR" "hello"
 ;; `do-args` normally sets it; needed by `host-windows?`
 extend system 'real-platform system/platform
@@ -378,15 +377,14 @@ group "Defines"
 ]
 --test-- "cmd line quoting keeps %" [is? siskin/quote-cmd-arg/line {50%} {"50%"}]
 --test-- "msvc define"  [is? msvc/form-define {V="1.0" & x} {V="1.0" &amp; x}]
---test-- "xcode define" [is? system/modules/xcode/form-define {V="1.0"} {"V=\\\"1.0\\\""}]
---test-- "make define"  [is? system/modules/mmake/form-define {V="$x"} {'-DV="$$x"'}]
+--test-- "xcode define" [is? xcode/form-define {V="1.0"} {"V=\\\"1.0\\\""}]
+--test-- "make define"  [is? mmake/form-define {V="$x"} {'-DV="$$x"'}]
 
 
 ;;=============================================================================
 group "Makefile paths"
 ;;=============================================================================
 
-mmake: system/modules/mmake
 --test-- "make-path escapes space, # and $" [
 	is? mmake/make-path %"a b/c#d$e" {a\ b/c\#d$$e}
 ]
@@ -438,6 +436,9 @@ foreach mod [mmake xcode] [
 		]
 	]
 ]
+
+--test-- "xcode: product path escaped" [is? xcode/pbx-string {my "app"} {"my \"app\""}]
+
 
 ;;=============================================================================
 group "escape-chars"
