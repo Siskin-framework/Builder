@@ -1267,6 +1267,7 @@ build-target: closure/with [
 		if git-update? [update-gits spec]
 		apply-compiler-override spec
 		apply-extra-flags spec
+		normalize-defines spec
 
 		if force-compiler [
 			switch force-compiler [
@@ -1524,10 +1525,7 @@ build: function/with [
 	]
 
 	; defines
-	defines: make string! 1000
-	foreach def spec/defines [
-		append append defines " -D" def
-	]
+	defines: form-define-flags spec/defines
 	;append cflags defines
 	;append lflags defines ;- defines may be needed in linker phase when processing assembly code!
 
@@ -2573,6 +2571,37 @@ split-flags: func[
 	collect [parse str [any [some ws | copy f some nw (keep f)]]]
 ]
 
+normalize-defines: function [
+	"Converts define values to raw strings (legacy shell-escaped quotes are unescaped)"
+	spec [map!]
+][
+	defs: spec/defines
+	forall defs [
+		def: defs/1: either any-string? defs/1 [copy defs/1][form defs/1]
+		if find def {\"} [
+			print-warn ["Define uses legacy shell escaping (write raw quotes):" as-red def]
+			replace/all def {\"} {"}
+		]
+	]
+	spec
+]
+
+form-define-flags: function [
+	"Forms defines as compiler flags for a host command line"
+	defines [block!]
+	/posix "Force sh quoting (default: by host)"
+][
+	out: make string! 100
+	foreach def defines [
+		def: join "-D" def
+		append out SP
+		append out either any [posix not host-windows?] [
+			quote-sh-arg def
+		][	quote-cmd-arg/line def ]
+	]
+	out
+]
+
 apply-extra-flags: function/with [
 	"Adds flags from SISKIN_* environment variables and CLI options"
 	spec [map!]
@@ -3075,6 +3104,7 @@ quote-sh-arg: func [
 quote-cmd-arg: function [
 	"Quotes a value as one argument for a batch file (cmd.exe + CRT argv rules)"
 	arg [string!]
+	/line "For a command line, not a batch file (% is not doubled)"
 ][
 	out: make string! 2 + length? arg
 	append out #"^""
@@ -3088,7 +3118,7 @@ quote-cmd-arg: function [
 				append out c
 				in-q?: not in-q?
 			]
-			#"%"  [append out "%%"]
+			#"%"  [append out either line ["%"]["%%"]]
 		][
 			if all [not in-q? find "&|<>^^()" c] [append out #"^^"]
 			append out c

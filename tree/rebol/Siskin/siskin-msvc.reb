@@ -90,6 +90,10 @@ mkdir-cmd: func [
 	ajoin [{IF NOT EXIST "} d {" MKDIR "} d {"}]
 ]
 
+form-define: func ["Forms a define for PreprocessorDefinitions" def][
+	escape-msbuild copy form def
+]
+
 form-pre-post-build: func [
 	code [block!]
 	base [file!] "Dir the script starts in"
@@ -330,9 +334,8 @@ make-project: func[
 	;-- collect PROJECT-DEFINES                                                 
 	clear output
 	foreach def any [spec/defines []] [
-		append output rejoin [def #";"]
+		append append output form-define def #";"
 	]
-	replace/all output {\"} {"} ;@@ temp solution!!! 
 	PROJECT-DEFINES: copy output
 
 	;-- collect INCLUDE-PATH                                                    

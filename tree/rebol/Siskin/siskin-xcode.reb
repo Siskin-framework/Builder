@@ -101,6 +101,13 @@ pbx-string: func [
 	ajoin [#"^"" str #"^""]
 ]
 
+form-define: func ["Forms a define as a pbxproj build setting item" def][
+	def: copy form def
+	replace/all def #"\" "\\"     ;; build setting escaping...
+	replace/all def #"^"" {\"}
+	pbx-string def                ;; ...inside a pbxproj string
+]
+
 make-project: func[
 	spec   [map!]
 	;dir    [file! string!]
@@ -387,11 +394,7 @@ make-project: func[
 	;-- collect GCC_PREPROCESSOR_DEFINITIONS
 	GCC_PREPROCESSOR_DEFINITIONS: copy ""
 	foreach def any [spec/defines []] [
-		def: either any-string? def [copy def][to string! def]
-		replace/all def #"\" {\\\} ;@@ temp solution!!! 
-		append GCC_PREPROCESSOR_DEFINITIONS rejoin [
-			{^-^-^-^-^-"} def {",^/}
-		]
+		append GCC_PREPROCESSOR_DEFINITIONS rejoin ["^-^-^-^-^-" form-define def ",^/"]
 	]
 
 	GCC_OPTIMIZATION_LEVEL: 2

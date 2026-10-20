@@ -63,6 +63,10 @@ make-escape: func [
 	replace/all copy str #"$" "$$"
 ]
 
+form-define: func ["Forms a define flag for a makefile" def][
+	make-escape siskin/quote-sh-arg join "-D" def
+]
+
 make-project: func[
 	spec   [map!]
 	;dir    [file! string!]
@@ -138,8 +142,7 @@ make-project: func[
 
 	;-- collect definitions
 	foreach def any [spec/defines []] [
-		def: either any-string? def [copy def][to string! def]
-		append DEFINES join " \^/^--D" def
+		append DEFINES join " \^/^-" form-define def
 	]
 
 	;-- collect libraries

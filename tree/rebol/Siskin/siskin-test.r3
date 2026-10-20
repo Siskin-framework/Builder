@@ -363,6 +363,25 @@ group "Pre-build: sh cmd/call"
 ]
 --test-- "sh: call" [has? siskin/form-sh-pre-build spec [call %x.sh] "^/sh 'x.sh'"]
 
+
+;;=============================================================================
+group "Defines"
+;;=============================================================================
+
+--test-- "normalize-defines unescapes legacy \^" and forms words" [
+	m: make map! reduce ['defines reduce [{A=\"x\"} 'B]]
+	siskin/normalize-defines m
+	is? mold m/defines {[{A="x"} "B"]}
+]
+--test-- "native flags (sh)" [
+	is? siskin/form-define-flags/posix [{V="1.0"} "B"] { '-DV="1.0"' '-DB'}
+]
+--test-- "cmd line quoting keeps %" [is? siskin/quote-cmd-arg/line {50%} {"50%"}]
+--test-- "msvc define"  [is? msvc/form-define {V="1.0" & x} {V="1.0" &amp; x}]
+--test-- "xcode define" [is? system/modules/xcode/form-define {V="1.0"} {"V=\\\"1.0\\\""}]
+--test-- "make define"  [is? system/modules/mmake/form-define {V="$x"} {'-DV="$$x"'}]
+
+
 ;;=============================================================================
 group "Shared helpers"
 ;;=============================================================================
