@@ -63,6 +63,23 @@ make-escape: func [
 	replace/all copy str #"$" "$$"
 ]
 
+make-path: func [
+	"Escapes a path for makefile targets, prerequisites and recipes"
+	path [file! string!]
+][
+	path: make-escape siskin/to-posix-file path
+	replace/all path #"#" "\#"
+	replace/all path #" " "\ "
+	path
+]
+
+form-include: func [
+	"Forms an include flag for a makefile recipe"
+	dir [file!]
+][
+	make-escape siskin/quote-sh-arg join "-I" siskin/to-posix-file dir
+]
+
 form-define: func ["Forms a define flag for a makefile" def][
 	make-escape siskin/quote-sh-arg join "-D" def
 ]
@@ -119,6 +136,9 @@ make-project: func[
 	append Objs-dir rejoin [
 		spec/compiler #"-" spec/arch #"/" spec/name
 	]
+	Root-dir:   make-path Root-dir
+	Objs-dir:   make-path Objs-dir
+	Source-dir: make-path Source-dir
 
 	OBJS:       clear ""
 	LIBS:       clear ""
@@ -137,7 +157,7 @@ make-project: func[
 			dir: join spec/root dir
 		]
 		rel-file: siskin/get-relative-path dir dir-out
-		append INCLUDES join " \^/^--I" siskin/to-posix-file rel-file
+		append INCLUDES join " \^/^-" form-include rel-file
 	]
 
 	;-- collect definitions
@@ -178,7 +198,11 @@ make-project: func[
 		if cpp?: find siskin/cpp-extensions suffix? file [needs-cpp?: true]
 ;		file: find/tail file spec/root
 ;		set [d n] split-path file
-		parse file [ spec/root file: (file: join "$R/" file) ]
+		either find/match file spec/root [
+			file: join "$R/" make-path skip file length? spec/root
+		][
+			file: make-path file
+		]
 
 		obj: siskin/replace-extension copy file %.o
 		replace obj "$R/" "$O/"
