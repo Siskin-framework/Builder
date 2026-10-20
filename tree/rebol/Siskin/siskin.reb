@@ -3146,6 +3146,21 @@ form-sh-pre-build: function [
 		| 'popd (
 			append append result "^/cd " quote-sh-arg to-posix-file emit-popd
 		)
+		| 'cmd set dir: [file! | none!] set val: string! (
+			if dir [
+				dir: emit-pushd dir
+				append append result "^/mkdir -p " quote-sh-arg to-posix-file dir
+				append append result "^/cd "       quote-sh-arg to-posix-file dir
+			]
+			foreach line split expand-env copy val lf [
+				line: trim/head/tail line
+				unless empty? line [append append result lf line]
+			]
+			if dir [append append result "^/cd " quote-sh-arg to-posix-file emit-popd]
+		)
+		| 'call set val: file! (
+			append append result "^/sh " quote-sh-arg to-posix-file val
+		)
 		| p: skip (
 			q: next-pre-build-cmd p
 			print-warn ["Ignoring pre-build command:" mold/flat copy/part p q]

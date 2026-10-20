@@ -328,6 +328,30 @@ group "Pre-build: do [code]"
 ]
 
 ;;=============================================================================
+group "Pre-build: sh cmd/call"
+;;=============================================================================
+
+--test-- "sh: cmd lines" [
+	has? siskin/form-sh-pre-build spec [cmd _ "echo a^/  echo b  "] "^/echo a^/echo b"
+]
+--test-- "sh: cmd expands env" [
+	has? siskin/form-sh-pre-build spec [cmd _ "echo $SISKIN_TEST_VAR"] "^/echo hello"
+]
+--test-- "sh: cmd with dir" [
+	out: siskin/form-sh-pre-build spec [cmd %sub/ "echo x"]
+	all [
+		true = has? out ajoin ["mkdir -p " siskin/quote-sh-arg siskin/to-posix-file join base %sub/]
+		true = has? out sh-cd join base %sub/
+		true = has? out "^/echo x"
+		true = any [
+			did find/last out sh-cd base
+			ajoin ["got " mold/flat out]
+		]
+	]
+]
+--test-- "sh: call" [has? siskin/form-sh-pre-build spec [call %x.sh] "^/sh 'x.sh'"]
+
+;;=============================================================================
 group "Shared helpers"
 ;;=============================================================================
 
