@@ -65,10 +65,10 @@ write-file: func[file [file! block!] data][
 ]
 
 escape-msbuild: func [
-	"Escapes a command for MSBuild metadata in XML"
+	"Escapes a command or value for MSBuild metadata in XML"
 	str [string!]
 ][
-	foreach [c r] ["%" "%25" "$" "%24" "@" "%40" "&" "&amp;" "<" "&lt;" ">" "&gt;"][
+	foreach [c r] ["%" "%25" "$" "%24" "@" "%40" ";" "%3B" "&" "&amp;" "<" "&lt;" ">" "&gt;"][
 		replace/all str c r
 	]
 	str
@@ -88,6 +88,13 @@ mkdir-cmd: func [
 ][
 	d: replace/all to-windows-file dir "%" "%%"
 	ajoin [{IF NOT EXIST "} d {" MKDIR "} d {"}]
+]
+
+form-path: func [
+	"Forms a Windows path for a .vcxproj value (MSBuild + XML escaped)"
+	path [file! string!]
+][
+	escape-msbuild to-windows-file path
 ]
 
 form-define: func ["Forms a define for PreprocessorDefinitions" def][
@@ -282,7 +289,7 @@ make-project: func[
 				unless parse lib/2 [thru ".lib" end][
 					append lib/2 ".lib"
 				]
-				append append output lib/2
+				append append output escape-msbuild form lib/2
 				either parse lib/2 [thru ".lib" end][";"][".lib;"]
 			]
 		]
@@ -292,7 +299,7 @@ make-project: func[
 	foreach path unique lib-paths [
 		path: siskin/expand-env copy path
 		if #"/" <> first path [insert path %../] 
-		append append LIBRARY-PATH to-local-file path #";"
+		append append LIBRARY-PATH form-path path #";"
 	]
 
 	;-- collect RESOURCE-ITEM                                                   
@@ -301,7 +308,7 @@ make-project: func[
 		rejoin [
 		{  <ItemGroup>^/}
 		{    <ResourceCompile Include="}
-		to-windows-file siskin/get-relative-path spec/resource dir-vs {" />^/}
+			form-path siskin/get-relative-path spec/resource dir-vs {" />^/}
 		{  </ItemGroup>}
 		]
 	][""]
@@ -326,7 +333,7 @@ make-project: func[
 		]
 		
 		append output rejoin [
-			{    <ClCompile Include="} to-windows-file rel-file {" />^/}
+			{    <ClCompile Include="} form-path rel-file {" />^/}
 		]
 	]
 	PROJECT-FILES: copy output
@@ -344,7 +351,7 @@ make-project: func[
 		inc: siskin/expand-env copy inc
 		inc: clean-path/only inc
 		if #"/" <> first inc [ insert inc %../ ]
-		append append output to-local-file inc #";"
+		append append output form-path inc #";"
 	]
 	INCLUDE-PATH: copy output
 
@@ -378,10 +385,9 @@ make-project: func[
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>}
 
-	foreach filter filters [ ;first one is always %./ which we don't need
-		filter: to-windows-file filter
+	foreach filter filters [
 		append vcxproj.filters rejoin [{
-	<Filter Include="} filter {">
+	<Filter Include="} form-path filter {">
 	  <UniqueIdentifier>^{} make-guid/from filter {^}</UniqueIdentifier>
 	</Filter>}]
 	]
@@ -389,9 +395,9 @@ make-project: func[
 	append vcxproj.filters {^/  </ItemGroup>^/  <ItemGroup>}
 	foreach [item dir] items [
 		;print [mold item mold dir]
-		append vcxproj.filters rejoin [{^/    <ClCompile Include="} to-windows-file item {">}]
+		append vcxproj.filters rejoin [{^/    <ClCompile Include="} form-path item {">}]
 		if all [dir <> %. find filters dir] [
-			append vcxproj.filters rejoin [{<Filter>} to-windows-file dir {</Filter>}]
+			append vcxproj.filters rejoin [{<Filter>} form-path dir {</Filter>}]
 		]
 		append vcxproj.filters {</ClCompile>}
 	]

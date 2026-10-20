@@ -396,6 +396,18 @@ mmake: system/modules/mmake
 
 
 ;;=============================================================================
+group "MSVC paths"
+;;=============================================================================
+
+--test-- "msvc: form-path escapes for MSBuild and XML" [
+	is? msvc/form-path %"a&b/c$d%3Be%25f" {a&amp;b\c%24d%3Be%25f}
+]
+--test-- "msvc: form-path plain path unchanged" [
+	is? msvc/form-path %src/main.c {src\main.c}
+]
+
+
+;;=============================================================================
 group "Shared helpers"
 ;;=============================================================================
 
