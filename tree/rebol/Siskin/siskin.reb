@@ -2574,10 +2574,23 @@ normalize-defines: function [
 		def: defs/1: either any-string? defs/1 [copy defs/1][form defs/1]
 		if find def {\"} [
 			print-warn ["Define uses legacy shell escaping (write raw quotes):" as-red def]
-			replace/all def {\"} {"}
+			def: defs/1: unquote-sh def
 		]
 	]
 	spec
+]
+
+unquote-sh: function [
+	"Removes sh double-quote quoting: unescaped `^"` dropped, `\^"` and `\\` unescaped"
+	str [string!]
+][
+	out: make string! length? str
+	parse str [any [
+		  #"\" set c: [#"^"" | #"\"] (append out c)
+		| #"^""
+		| set c: skip (append out c)
+	]]
+	out
 ]
 
 form-define-flags: function [

@@ -445,6 +445,17 @@ foreach mod [mmake xcode] [
 --test-- "to-local-file/no-quote"   [is? siskin/to-local-file/no-quote %"a b" lib/to-local-file %"a b"]
 --test-- "to-local-file plain path" [is? siskin/to-local-file %ab lib/to-local-file %ab]
 
+--test-- "unquote-sh" [is? siskin/unquote-sh {S="\"a b\"" P=C:\\x} {S="a b" P=C:\x}]
+--test-- "normalize-defines legacy shell quoting" [
+	m: make map! reduce ['defines reduce [
+		{STR_VALUE="\"Some string\""}
+		{OPT_INCLUDE=\"opt-include.h\"}
+		{A="raw"}
+	]]
+	siskin/normalize-defines m
+	is? mold m/defines {[{STR_VALUE="Some string"} {OPT_INCLUDE="opt-include.h"} {A="raw"}]}
+]
+
 
 ;;=============================================================================
 group "escape-chars"
