@@ -2467,13 +2467,14 @@ to-local-file: function [
 	/no-quote "Don't quote even when found spaces"
 ][
 	file: lib/to-local-file file
-	if all [
-		not no-quote
-		find file #" "
-	][
-		ajoin [#"^"" file #"^""]
+	any [
+		all [
+			not no-quote
+			find file #" "
+			ajoin [#"^"" file #"^""]
+		]
+		file
 	]
-	file
 ]
 
 get-relative-path: function [
@@ -2494,9 +2495,7 @@ to-posix-file: either system/platform = 'windows [
 	func [path [file! string!]][
 		;; Siskin’s own to-local-file adds quotes around paths with spaces, and the emitters never did that.
 		;; so using `lib/to-local-file`
-		path: lib/to-local-file path
-		replace/all path #"\" #"/"
-		path
+		escape-chars lib/to-local-file path #[#"\" #"/"]
 	]
 ][
 	:lib/to-local-file
@@ -3111,7 +3110,7 @@ quote-sh-arg: func [
 	"Quotes a value as one sh argument"
 	arg [string!]
 ][
-	ajoin [#"'" replace/all copy arg #"'" {'\''} #"'"]
+	ajoin [#"'" escape-chars arg #[#"'" {'\''}] #"'"]
 ]
 
 quote-cmd-arg: function [

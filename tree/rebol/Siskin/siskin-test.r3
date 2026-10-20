@@ -439,6 +439,12 @@ foreach mod [mmake xcode] [
 
 --test-- "xcode: product path escaped" [is? xcode/pbx-string {my "app"} {"my \"app\""}]
 
+--test-- "to-local-file quotes spaces" [
+	is? siskin/to-local-file %"a b" ajoin [#"^"" lib/to-local-file %"a b" #"^""]
+]
+--test-- "to-local-file/no-quote"   [is? siskin/to-local-file/no-quote %"a b" lib/to-local-file %"a b"]
+--test-- "to-local-file plain path" [is? siskin/to-local-file %ab lib/to-local-file %ab]
+
 
 ;;=============================================================================
 group "escape-chars"
