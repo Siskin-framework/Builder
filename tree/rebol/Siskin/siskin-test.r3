@@ -164,6 +164,18 @@ sh-cd: func [dir][ajoin ["cd " siskin/quote-sh-arg siskin/to-posix-file dir]]
 	has? out msvc/escape-msbuild msvc/cd-cmd join base %r/sub/
 ]
 
+--test-- "msvc: mkdir-cmd" [
+	is? msvc/mkdir-cmd %/c/a%25b/ {IF NOT EXIST "c:\a%%b\" MKDIR "c:\a%%b\"}
+]
+--test-- "msvc: cmd creates its dir before entering it" [
+	out: msvc/form-pre-post-build [cmd %sub/ "echo x"] base
+	all [
+		p1: find out msvc/escape-msbuild msvc/mkdir-cmd join base %sub/
+		p2: find out msvc/escape-msbuild msvc/cd-cmd join base %sub/
+		true = any [(index? p1) < (index? p2)  "mkdir is not before cd"]
+	]
+]
+
 ;;=============================================================================
 group "Pre-build: command quoting"
 ;;=============================================================================

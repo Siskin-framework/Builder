@@ -81,6 +81,15 @@ cd-cmd: func [
 	ajoin [{CD /D "} replace/all to-windows-file dir "%" "%%" {"}]
 ]
 
+mkdir-cmd: func [
+	"Forms a cmd.exe command creating a dir (with parents) when missing"
+	dir [file!]
+	/local d
+][
+	d: replace/all to-windows-file dir "%" "%%"
+	ajoin [{IF NOT EXIST "} d {" MKDIR "} d {"}]
+]
+
 form-pre-post-build: func [
 	code [block!]
 	base [file!] "Dir the script starts in"
@@ -115,7 +124,11 @@ form-pre-post-build: func [
 			add ajoin ["CALL " siskin/quote-cmd-arg to-windows-file val]
 		)
 		| 'cmd set dir [file! | none!] set val string! (
-			if dir [add cd-cmd siskin/emit-pushd dir]
+			if dir [
+				dir: siskin/emit-pushd dir
+				add mkdir-cmd dir
+				add cd-cmd dir
+			]
 			foreach line split siskin/expand-env copy val lf [
 				line: trim/head/tail line
 				unless empty? line [add line]
