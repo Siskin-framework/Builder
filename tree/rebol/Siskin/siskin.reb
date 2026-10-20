@@ -2157,24 +2157,19 @@ eval-code: function/with [
 			unless spec/script [spec/script: arg2]
 			preprocess-rebol arg1 arg2
 		)
-		|
-		'Rebol2 set val string! (do-rebol2 val)
-;		| 'Red set val file! (
-;			eval-cmd/v [
-;				to-local-file any [ expand-env %$RED_CLI  %red ] #" " 
-;				to-local-file val
-;			]
-;		)
-;		| 'python set val file! (
-;			eval-cmd/v [to-local-file any [config/python %python] #" " to-local-file val]
-;		)
-;		| 'msbuild set val file! set args string! (
-;			eval-cmd/v rejoin [
-;				#"^"" to-local-file expand-env %$MSBUILD #"^""
-;				#" " to-local-file val
-;				#" " args
-;			]
-;		)
+		| 'Rebol2 set val string! (do-rebol2 val)
+		| 'python set val file! (
+			eval-cmd/v [locate-tool 'python none val]
+		)
+		| 'Red set val file! (
+			eval-cmd/v [any [get-env-file "RED_CLI" locate-tool 'red none] val]
+		)
+		| 'msbuild set val file! set args string! (
+			either host-windows? [
+				locate-tool 'msbuild none   ;; finds VS via vswhere and adds MSBuild to PATH
+				eval-cmd/v ['msbuild val args]
+			][	print-error "The `msbuild` pre-build command is available only on Windows" ]
+		)
 		| 'call set val [file!]  (
 			if rel-path? val [insert val what-dir]
 			eval-cmd/v join " CALL " to-local-file val
