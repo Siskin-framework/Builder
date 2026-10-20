@@ -97,7 +97,7 @@ jobs:
       - name: Test only single command
         run: ./siskin-windows-x86_64.exe test list-dir
 
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         with:
           name: Siskin-windows
           path: |
@@ -140,7 +140,7 @@ jobs:
         run: ./siskin rebol/siskin -o ./ --gzip siskin-linux-x86_64-static
 
       - name: Test Siskin's internal code
-        run: ./siskin-linux-x86_64.exe --script ./tree/rebol/Siskin/siskin-test.r3
+        run: ./siskin-linux-x86_64 --script ./tree/rebol/Siskin/siskin-test.r3
 
       - name: List all possible test targets
         run: ./siskin-linux-x86_64 test --list
@@ -176,7 +176,7 @@ jobs:
       - name: Test only single command
         run: ./siskin-linux-x86_64 test list-dir
 
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         with:
           name: Siskin-linux
           path: ./siskin-linux*.gz
@@ -239,7 +239,7 @@ jobs:
 #          /usr/bin/codesign --force -s $MACOS_IDENTITY_ID ./siskin-macos-aarch64 -v
        
       - name: Test Siskin's internal code
-        run: ./siskin-macos-x86_64.exe --script ./tree/rebol/Siskin/siskin-test.r3
+        run: ./siskin-macos-x86_64 --script ./tree/rebol/Siskin/siskin-test.r3
 
       - name: List all possible test targets
         run: ./siskin-macos-x86_64 test --list
@@ -275,7 +275,7 @@ jobs:
       - name: Test only single command
         run: ./siskin-macos-x86_64 test list-dir
 
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         with:
           name: Siskin-macos
           path: ./siskin-macos-*.gz
@@ -296,9 +296,6 @@ jobs:
       - name: Move results into the root for uploading
         run: mv ./tree/rebol/Siskin/build/siskin.r3 ./build.r3
 
-      - name: Test Siskin's internal code
-        run: ./siskin --script ./tree/rebol/Siskin/siskin-test.r3
-        
       - name: List all possible test targets
         run: ./siskin --script build.r3 test --list
       - name: Test build 1
@@ -331,7 +328,7 @@ jobs:
       - name: Compress results before uploading
         run: gzip -9 ./build.r3
 
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         with:
           name: Siskin-script
           path: ./build.r3.gz
@@ -361,7 +358,7 @@ jobs:
           sudo mv ./tree/rebol/Siskin/build/siskin-haiku-x86 ./
           sudo gzip -9 ./siskin-haiku-x86
 
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         with:
           name: Siskin-Haiku-x86
           path: ./siskin-haiku-x86.gz
@@ -391,7 +388,7 @@ jobs:
           sudo mv ./tree/rebol/Siskin/build/siskin-haiku-x86_64 ./
           sudo gzip -9 ./siskin-haiku-x86_64
 
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         with:
           name: Siskin-Haiku-x64
           path: ./siskin-haiku-x86_64.gz
