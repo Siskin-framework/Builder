@@ -440,6 +440,23 @@ foreach mod [mmake xcode] [
 ]
 
 ;;=============================================================================
+group "escape-chars"
+;;=============================================================================
+
+esc: #[#"\" "\\" #"^"" {\"}]
+--test-- "escape-chars replaces"       [is? siskin/escape-chars {a"b\c} esc {a\"b\\c}]
+--test-- "escape-chars cached table"   [is? siskin/escape-chars {"} esc {\"}]   ;; 2nd use of the same map
+--test-- "escape-chars nothing to do"  [is? siskin/escape-chars "abc" esc "abc"]
+--test-- "escape-chars empty string"   [is? siskin/escape-chars "" esc ""]
+--test-- "escape-chars returns a copy" [s: "abc"  not same? s siskin/escape-chars s esc]
+--test-- "escape-chars single pass" [
+	is? siskin/escape-chars "a;&b" #[#";" "%3B" #"&" "&amp;"] "a%3B&amp;b"
+]
+--test-- "escape-chars other table, other charset" [
+	is? siskin/escape-chars {a"b} #[#"a" "A"] {A"b}
+]
+
+;;=============================================================================
 group "do arguments"
 ;;=============================================================================
 

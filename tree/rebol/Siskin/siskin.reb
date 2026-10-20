@@ -2476,7 +2476,7 @@ to-local-file: function [
 		not no-quote
 		find file #" "
 	][
-		append insert file #"^"" #"^""
+		ajoin [#"^"" file #"^""]
 	]
 	file
 ]
@@ -3093,6 +3093,24 @@ move-file: function/with [src [file!] dst [file!]][
 	dst
 ] :nest-context
 
+
+escape-chars: function/with [
+	"Returns a copy of the string with the given chars replaced (single pass)"
+	str [any-string!]
+	map [map!] "char! -> replacement"
+][
+	unless normal: normal-chars/:map [
+		normal-chars/:map: normal: complement charset keys-of map
+	]
+	out: make string! 10 + length? str
+	parse str [any [
+		p: some normal e: (append/part out p offset? p e)
+		| set c: skip (append out map/:c)
+	]]
+	out
+][
+	normal-chars: #[]
+]
 
 quote-sh-arg: func [
 	"Quotes a value as one sh argument"

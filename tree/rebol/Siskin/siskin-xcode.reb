@@ -86,7 +86,7 @@ get-file-type: function[file][
 
 quoted: func[str][
 	if find str #" " [
-		str: append insert copy str #"^"" #"^""
+		str: ajoin [#"^"" str #"^""]
 	]
 	str
 ]
@@ -95,17 +95,12 @@ pbx-string: func [
 	"Forms a quoted pbxproj string value"
 	str [string!]
 ][
-	str: copy str
-	replace/all str #"\" "\\"
-	replace/all str #"^"" {\"}
-	ajoin [#"^"" str #"^""]
+	ajoin [#"^"" siskin/escape-chars str #[#"\" "\\" #"^"" {\"}] #"^""]
 ]
 
 form-define: func ["Forms a define as a pbxproj build setting item" def][
-	def: copy form def
-	replace/all def #"\" "\\"     ;; build setting escaping...
-	replace/all def #"^"" {\"}
-	pbx-string def                ;; ...inside a pbxproj string
+	;; build setting escaping inside pbxproj string escaping, in one pass
+	ajoin [#"^"" siskin/escape-chars form def #[#"\" "\\\\" #"^"" {\\\"}] #"^""]
 ]
 
 make-project: func[

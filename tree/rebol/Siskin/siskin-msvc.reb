@@ -68,10 +68,10 @@ escape-msbuild: func [
 	"Escapes a command or value for MSBuild metadata in XML"
 	str [string!]
 ][
-	foreach [c r] ["%" "%25" "$" "%24" "@" "%40" ";" "%3B" "&" "&amp;" "<" "&lt;" ">" "&gt;"][
-		replace/all str c r
+	siskin/escape-chars str #[
+		#"%" "%25" #"$" "%24" #"@" "%40" #";" "%3B"
+		#"&" "&amp;" #"<" "&lt;" #">" "&gt;"
 	]
-	str
 ]
 
 cd-cmd: func [
@@ -98,7 +98,7 @@ form-path: func [
 ]
 
 form-define: func ["Forms a define for PreprocessorDefinitions" def][
-	escape-msbuild copy form def
+	escape-msbuild form def
 ]
 
 form-pre-post-build: func [

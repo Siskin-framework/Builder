@@ -60,17 +60,14 @@ make-escape: func [
 	"Escapes a string for a makefile recipe line"
 	str [string!]
 ][
-	replace/all copy str #"$" "$$"
+	siskin/escape-chars str #[#"$" "$$"]
 ]
 
 make-path: func [
 	"Escapes a path for makefile targets, prerequisites and recipes"
 	path [file! string!]
 ][
-	path: make-escape siskin/to-posix-file path
-	replace/all path #"#" "\#"
-	replace/all path #" " "\ "
-	path
+	siskin/escape-chars siskin/to-posix-file path #[#"$" "$$" #"#" "\#" #" " "\ "]
 ]
 
 form-include: func [
