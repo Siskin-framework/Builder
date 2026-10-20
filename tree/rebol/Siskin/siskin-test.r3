@@ -206,12 +206,16 @@ group "Pre-build: command quoting"
 		"--script" "/x.r3" "--args" mold/flat siskin/prep-do-args {c:\dir\spec.reb}
 	] {["c:\dir\spec.reb"]}
 ]
+;; the command differs by runner: Siskin exe uses `--script` (plain path, no `%`),
+;; plain Rebol uses `--do` (`%a.reb` -> batch `%%` -> MSBuild `%25%25`)
 --test-- "msvc: escaped for MSBuild/XML" [
 	out: msvc/form-pre-post-build reduce ['do %a.reb "x &y"] base
 	all [
 		true = has? out "&amp;y"
-		none? find out "%a.reb"   ;; must be %25%25a.reb
-		true = has? out "%25%25a.reb"
+		none? find out "%a.reb"   ;; a % must never be left unescaped
+		true = either 'Siskin = system/product [
+			has? out "--script"
+		][	has? out "%25%25a.reb" ]
 	]
 ]
 

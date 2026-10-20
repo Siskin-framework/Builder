@@ -52,6 +52,9 @@ jobs:
       - name: Test 64bit Siskin project (msvc)
         run: ./siskin-windows-x86_64.exe
 
+      - name: Test Siskin's internal code
+        run: ./siskin-windows-x86_64.exe --script ./tree/rebol/Siskin/siskin-test.r3
+
       - name: List all possible test targets
         run: ./siskin-windows-x86_64.exe test --list
       - name: Test build 1
