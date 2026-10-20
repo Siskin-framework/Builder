@@ -236,7 +236,7 @@ tmp-dir: make-dir %tmp-siskin-test/
 		real = 'Windows [true]
 		'else [
 			out: copy ""
-			call/wait/output ajoin ["test -x " siskin/quote-sh-arg siskin/to-posix-file f " && echo yes"] out
+			call/shell/wait/output ajoin ["test -x " siskin/quote-sh-arg siskin/to-posix-file f " && echo yes"] out
 			any [did find out "yes" "script is not executable"]
 		]
 	]
