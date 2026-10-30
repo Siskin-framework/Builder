@@ -113,7 +113,7 @@ jobs:
           project-slug: '${{ vars.SIGNPATH_PROJECT_SLUG }}'
           signing-policy-slug: 'test-signing'
           #signing-policy-slug: ${{ github.event_name == 'workflow_dispatch' && 'release-signing' || 'test-signing' }}
-          artifact-configuration-slug: 'windows-rebx'
+          artifact-configuration-slug: 'siskin-exe'
           github-artifact-id: '${{ steps.upload-unsigned.outputs.artifact-id }}'
           wait-for-completion: true
           output-artifact-directory: './signed'
