@@ -2,7 +2,7 @@ Rebol [
 	Title:  "Siskin Builder - core"
 	Type:    module
 	Name:    siskin
-	Version: 0.23.1   ;; keep in sync with `siskin-version` below!
+	Version: 0.23.2   ;; keep in sync with `siskin-version` below!
 	Author: "Oldes"
 	
 	exports: [
@@ -22,7 +22,7 @@ Rebol [
 		expand-env
 	]
 ]
-siskin-version: 0.23.1
+siskin-version: 0.23.2
 ;? system
 banner: does [next rejoin [{
 ^[[0;33m═╗
@@ -1366,18 +1366,18 @@ build: function/with [
 			]
 		]
 	]
-	spec/defines: copy new-line/all sort unique spec/defines true
+	spec/defines: copy new-line/all unique spec/defines true
 	foreach def spec/defines [
 		;?? def
 		if any-string? def [expand-env def]
 		;?? def
 	]
 
-	spec/includes: copy new-line/all sort unique spec/includes true
+	spec/includes: copy new-line/all unique spec/includes true
 	foreach inc spec/includes [ expand-env inc ]
 
 	if block? spec/libraries [
-		spec/libraries: new-line/all sort unique spec/libraries true
+		spec/libraries: new-line/all unique spec/libraries true
 	]
 
 	while [not tail? spec/files][
