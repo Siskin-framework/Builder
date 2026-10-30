@@ -3,7 +3,7 @@
 ;-  (/uOu\)  https://github.com/Siskin-framework/Builder/                       
 ;-===="="=======================================================================
 github: Oldes/Rebol3 /matrix
-nest:   %Rebol/make/rebol3.nest
+nest:   %Rebol3/make/rebol3.nest
 
 ;version: 3.18.5 ;; use Rebol version!!!
 
