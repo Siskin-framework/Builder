@@ -2,7 +2,7 @@
 ;-   /'v'\   SISKIN-Builder project file                                        
 ;-  (/uOu\)  https://github.com/Siskin-framework/Builder/                       
 ;-===="="=======================================================================
-github: @Rebol
+github: Oldes/Rebol3 /matrix
 nest:   %Rebol/make/rebol3.nest
 
 ;version: 3.18.5 ;; use Rebol version!!!
