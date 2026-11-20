@@ -87,6 +87,7 @@ all-options: [
 	  -  "--make"     -      "Create makefile and use it for a build"
 	  -  "--git-ssh"  -      "Clone gits using password-protected SSH key"
 	  -  "--no-upx"   -      "Ignore default project's UPX compression setting"
+	  -  "--coverage" -      "Build with gcov code coverage (gcc/clang; no strip, no UPX)"
 	  -  "--script"   "path" "Evaluate Rebol script"
 	  -  "--gzip"     -      "Compress the result with GZIP"
 	  -  "--no-comp"  -      "Don't invoke compilation/linking step"
@@ -210,6 +211,7 @@ nest-context: object [
 	rebuild?:     false ; if force compilation of all files (even if not modified)
 	no-eval?:     false
 	no-upx?:      false
+	coverage?:    false
 	clang?:       false
 	no-comp?:     false
 	run-result?:  false
@@ -1111,6 +1113,7 @@ do-nest: closure/with/extern [
 				| 'update  (git-update?: on)
 				| 'git-ssh (git-ssh?: on)
 				| 'no-upx  (no-upx?: on)
+				| 'coverage (coverage?: on)
 				| 'gzip    (gzip?: on)
 				| 'cc      set val: string! (cli-cc: val)
 				| 'cflags  set val: string! (append append cli-cflags val SP)
@@ -1144,6 +1147,7 @@ do-nest: closure/with/extern [
 						clear cli-cppflags
 						clear cli-defines
 						clear cli-undefines
+						coverage?: false
 						result-code: 0
 					)
 
@@ -1267,6 +1271,7 @@ build-target: closure/with [
 		if git-update? [update-gits spec]
 		apply-compiler-override spec
 		apply-extra-flags spec
+		if coverage? [apply-coverage spec]
 		normalize-defines spec
 
 		if force-compiler [
@@ -2654,6 +2659,22 @@ apply-extra-flags: function/with [
 			any [d == name  find/match/case d join name #"="]
 		]
 	]
+] :nest-context
+
+apply-coverage: function/with [
+	"Adds flags for a gcov code coverage build"
+	spec [map!]
+][
+	if force-compiler = @msvc [
+		print-warn "Code coverage is not supported for MSVC builds!"
+		exit
+	]
+	print-info "Coverage build (--coverage -O0 -g)"
+	;; appended last, so -O0 wins over the nest's optimization
+	foreach f ["--coverage" "-O0" "-g"] [add-flag spec copy f]
+	;; coverage data needs the binary as it was linked
+	spec/strip: false
+	spec/upx: false
 ] :nest-context
 
 apply-compiler-override: function/with [

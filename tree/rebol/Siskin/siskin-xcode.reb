@@ -147,10 +147,23 @@ form-c-settings: func [
 ;; link flags the generator handles elsewhere (product type, strip, deployment target)
 handled-link-flags: ["-shared" "-archive-only" "-mwindows" "-mconsole" "-s" "-strip-all"]
 
+setting-flag?: func [
+	"Returns true for a cflag which form-c-settings turns into a build setting"
+	f [string!]
+][
+	to logic! any [
+		parse/case f ["-O" to end]
+		all [parse/case f ["-W" to end]  not find/match f "-Wl,"]
+		parse f ["-std=" to end]
+		find ["-m32" "-m64"] f
+		find/match f "-mmacosx-version-min="
+	]
+]
+
 form-link-flags: func [
-	"Returns lflags to pass to the linker (compile flags copied into lflags are skipped)"
+	"Returns lflags to pass to the linker"
 	lflags [string! none!]
-	cflags [string! none!]
+	cflags [string! none!] "Compile flags copied into lflags are skipped if they are build settings"
 	/local cfs
 ][
 	cfs: siskin/split-flags cflags
@@ -158,7 +171,7 @@ form-link-flags: func [
 		foreach f siskin/split-flags lflags [
 			unless any [
 				find handled-link-flags f
-				find cfs f
+				all [find cfs f  setting-flag? f]  ;; others (e.g. --coverage) are needed by the linker too
 				find/match f "-mmacosx-version-min="
 			][	keep f ]
 		]

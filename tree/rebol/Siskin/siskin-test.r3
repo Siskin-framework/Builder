@@ -722,4 +722,44 @@ siskin/nest-context/no-eval?: true
 system/real-platform: real-host
 siskin/nest-context/no-eval?: false
 
+;;=============================================================================
+group "Coverage"
+;;=============================================================================
+
+cov-spec: does [make map! reduce ['cflags copy "-O2 " 'lflags copy "-shared " 'strip true 'upx true]]
+--test-- "coverage flags added" [
+	siskin/apply-coverage s: cov-spec
+	all [
+		true = is? s/cflags "-O2 --coverage -O0 -g "    ;; -O0 last, so it wins
+		true = is? s/lflags "-shared --coverage -O0 -g "
+		true = is? s/strip false
+		true = is? s/upx false
+	]
+]
+--test-- "coverage skipped for MSVC" [
+	siskin/nest-context/force-compiler: @msvc
+	siskin/apply-coverage s: cov-spec
+	siskin/nest-context/force-compiler: none
+	all [
+		true = is? s/cflags "-O2 "
+		true = is? s/strip true
+	]
+]
+--test-- "--coverage is a known option" [did find siskin/all-options "--coverage"]
+--test-- "xcode: -O0 from coverage is the optimization" [
+	is? second xcode/form-c-settings "-O2 --coverage -O0 -g " none "0"
+]
+--test-- "xcode: --coverage reaches the linker" [
+	is? xcode/form-link-flags "-shared --coverage -O0 -g " "-O2 --coverage -O0 -g " ["--coverage" "-g"]
+]
+--test-- "xcode: setting-flag?" [
+	all [
+		xcode/setting-flag? "-O2"
+		xcode/setting-flag? "-Wall"
+		xcode/setting-flag? "-std=c11"
+		not xcode/setting-flag? "-Wl,-dead_strip"
+		not xcode/setting-flag? "-fsanitize=address"
+	]
+]
+
 summary
