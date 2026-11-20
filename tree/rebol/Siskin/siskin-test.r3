@@ -624,4 +624,43 @@ group "MSVC lflags"
 	is? first msvc/form-link-settings "/DEF:a;b.def " none "/DEF:a%3Bb.def "
 ]
 
+;;=============================================================================
+group "Xcode cflags/cppflags"
+;;=============================================================================
+
+T4: "^-^-^-^-"
+--test-- "xcode: no flags" [is? xcode/form-c-settings none none ["" "2" ""]]
+--test-- "xcode: first -W flag is kept" [
+	is? third xcode/form-c-settings "-Wall -Wextra " none ajoin [{"-Wall",^/} T4 {^-"-Wextra",}]
+]
+--test-- "xcode: last -O wins"   [is? second xcode/form-c-settings "-O3 -Os " none "s"]
+--test-- "xcode: -O means -O1"   [is? second xcode/form-c-settings "-O " none "1"]
+--test-- "xcode: -Ofast"         [is? second xcode/form-c-settings "-Ofast " none "fast"]
+--test-- "xcode: invalid -O ignored" [is? second xcode/form-c-settings "-Ox " none "2"]
+--test-- "xcode: -std= in cflags" [
+	is? first xcode/form-c-settings "-std=c11 " none ajoin ["^/" T4 {GCC_C_LANGUAGE_STANDARD = "c11";}]
+]
+--test-- "xcode: -std= in cppflags" [
+	is? first xcode/form-c-settings none "-std=c++20 " ajoin ["^/" T4 {CLANG_CXX_LANGUAGE_STANDARD = "c++20";}]
+]
+--test-- "xcode: arch flags skipped, others to OTHER_CFLAGS" [
+	is? first xcode/form-c-settings "-m64 -mmacosx-version-min=11.0 -fno-strict-aliasing " none
+		ajoin ["^/" T4 "OTHER_CFLAGS = (^/" T4 {^-"-fno-strict-aliasing",^/} T4 ");"]
+]
+--test-- "xcode: other cppflags keep the cflags" [
+	is? first xcode/form-c-settings none "-fno-rtti " ajoin [
+		"^/" T4 "OTHER_CPLUSPLUSFLAGS = (^/"
+		T4 {^-"$(OTHER_CFLAGS)",^/} T4 {^-"-fno-rtti",^/} T4 ");"
+	]
+]
+--test-- "xcode: flags escaped" [
+	has? first xcode/form-c-settings {-DA="b" } none {"-DA=\\\"b\\\"",}
+]
+--test-- "xcode: template uses the settings in both target configs" [
+	all [
+		true = is? count-of xcode/project.pbxproj "#TARGET-SETTINGS#" 2
+		true = is? count-of xcode/project.pbxproj "#WARNING_CFLAGS#" 2
+	]
+]
+
 summary

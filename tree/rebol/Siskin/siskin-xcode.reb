@@ -41,6 +41,7 @@ MACH_O_TYPE:
 ARCH:
 GCC_WARN_64_TO_32_BIT_CONVERSION:
 MACOSX_DEPLOYMENT_TARGET:
+TARGET-SETTINGS:
 none
 
 TAB2: "^-^-"
@@ -91,9 +92,56 @@ pbx-string: func [
 	ajoin [#"^"" siskin/escape-chars str #[#"\" "\\" #"^"" {\"}] #"^""]
 ]
 
-form-define: func ["Forms a define as a pbxproj build setting item" def][
+form-item: func ["Forms a value as a pbxproj build setting item" val][
 	;; build setting escaping inside pbxproj string escaping, in one pass
-	ajoin [#"^"" siskin/escape-chars form def #[#"\" "\\\\" #"^"" {\\\"}] #"^""]
+	ajoin [#"^"" siskin/escape-chars form val #[#"\" "\\\\" #"^"" {\\\"}] #"^""]
+]
+form-define: func ["Forms a define as a pbxproj build setting item" def][form-item def]
+
+form-items: func ["Forms values as pbxproj build setting array items" values [block!]][
+	ajoin collect [foreach v values [keep ajoin [TAB4 #"^-" form-item v ",^/"]]]
+]
+
+form-c-settings: func [
+	"Converts cflags and cppflags; returns [target-settings optimization warnings]"
+	cflags   [string! none!]
+	cppflags [string! none!]
+	/local opt warn other c-std cpp-std cpp-other v
+][
+	opt: none
+	warn: copy []  other: copy []  cpp-other: copy []
+	foreach f siskin/split-flags cflags [
+		case [
+			parse/case f ["-O" copy v to end][
+				either find ["" "0" "1" "2" "3" "s" "z" "fast"] v [
+					opt: either empty? v ["1"][v]  ;; the last one wins
+				][	siskin/print-warn ["Ignoring optimization on Xcode:" f] ]
+			]
+			parse f ["-std=" copy v to end][c-std: v]
+			find ["-m32" "-m64"] f []                  ;; handled by `arch`
+			find/match f "-mmacosx-version-min=" []    ;; handled from lflags
+			parse/case f ["-W" to end][append warn f]
+			'else [append other f]
+		]
+	]
+	foreach f siskin/split-flags cppflags [
+		either parse f ["-std=" copy v to end][cpp-std: v][append cpp-other f]
+	]
+	reduce [
+		ajoin [
+			if c-std   [ajoin ["^/" TAB4 "GCC_C_LANGUAGE_STANDARD = " pbx-string c-std #";"]]
+			if cpp-std [ajoin ["^/" TAB4 "CLANG_CXX_LANGUAGE_STANDARD = " pbx-string cpp-std #";"]]
+			unless empty? other [
+				ajoin ["^/" TAB4 "OTHER_CFLAGS = (^/" form-items other TAB4 ");"]
+			]
+			unless empty? cpp-other [
+				;; C++ files get the cflags too (as with the other compilers)
+				ajoin ["^/" TAB4 "OTHER_CPLUSPLUSFLAGS = (^/" form-items head insert cpp-other "$(OTHER_CFLAGS)" TAB4 ");"]
+			]
+		]
+		any [opt "2"]
+		trim/head/tail form-items warn
+	]
 ]
 
 make-project: func[
@@ -385,10 +433,8 @@ make-project: func[
 		append GCC_PREPROCESSOR_DEFINITIONS rejoin ["^-^-^-^-^-" form-define def ",^/"]
 	]
 
-	GCC_OPTIMIZATION_LEVEL: 2
-	parse spec/cflags [
-		["-O" | thru " -O"] copy GCC_OPTIMIZATION_LEVEL to #" "
-	]
+	set [TARGET-SETTINGS GCC_OPTIMIZATION_LEVEL WARNING_CFLAGS]
+		form-c-settings spec/cflags spec/cppflags
 	
 	
 
@@ -400,17 +446,6 @@ make-project: func[
 	foreach lib any [spec/libraries []] [
 		append OTHER_LDFLAGS rejoin [
 			{^-^-^-^-^-"-} either dir? lib [#"L"][#"l"] lib {",^/}
-		]
-	]
-
-	WARNING_CFLAGS: clear ""
-	parse spec/cflags [
-		any [
-			to " -W" 1 skip copy tmp to #" " (
-				append WARNING_CFLAGS rejoin [
-					{^-^-^-^-^-"} tmp {",^/}
-				]
-			)
 		]
 	]
 
@@ -763,7 +798,7 @@ project.pbxproj: {// !$*UTF8*$!
 				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = "#PROJECT-VERSION#";
 				DEVELOPMENT_TEAM = "";
-				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_HARDENED_RUNTIME = YES;#TARGET-SETTINGS#
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					#GCC_PREPROCESSOR_DEFINITIONS#
 				);
@@ -775,6 +810,9 @@ project.pbxproj: {// !$*UTF8*$!
 				);
 				OTHER_LDFLAGS = (
 					#OTHER_LDFLAGS#
+				);
+				WARNING_CFLAGS = (
+					#WARNING_CFLAGS#
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				MACH_O_TYPE = "#MACH_O_TYPE#";
@@ -791,7 +829,7 @@ project.pbxproj: {// !$*UTF8*$!
 				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = "#PROJECT-VERSION#";
 				DEVELOPMENT_TEAM = "";
-				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_HARDENED_RUNTIME = YES;#TARGET-SETTINGS#
 				GCC_OPTIMIZATION_LEVEL = #GCC_OPTIMIZATION_LEVEL#;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					#GCC_PREPROCESSOR_DEFINITIONS#
