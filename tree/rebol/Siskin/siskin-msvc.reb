@@ -28,6 +28,8 @@ MSVC-PATH:
 TOOLSET-VERSION:
 STACK-SIZE:
 ADDITIONAL_OPTIONS:
+C-SETTINGS:
+OPTIMIZATION:
 none
 
 
@@ -137,6 +139,56 @@ form-cpp-settings: func [
 		]
 	]
 ]
+
+;; GCC/Clang -std values -> MSBuild LanguageStandard_C (none = MSVC default)
+c-standards: #[
+	"c11" "stdc11"  "c1x" "stdc11"  "iso9899:2011" "stdc11"
+	"c17" "stdc17"  "c18" "stdc17"  "iso9899:2017" "stdc17"  "iso9899:2018" "stdc17"
+	"c2x" "stdclatest"  "c23" "stdclatest"  "c2y" "stdclatest"  "clatest" "stdclatest"
+]
+
+form-c-settings: func [
+	"Converts cflags to ClCompile settings; returns [settings release-optimization]"
+	flags [string! none!]
+	/local std opt opts v
+][
+	std: none
+	opt: "Full"
+	opts: copy ""
+	foreach f siskin/split-flags flags [
+		case [
+			parse f [["-std=" | "/std:"] copy v to end][
+				replace v "gnu" "c"
+				unless std: c-standards/:v [
+					siskin/print-warn ["Using MSVC's default C standard for:" f]
+				]
+			]
+			parse f ["-O" copy v to end][
+				opt: switch/default v [
+					"0"                [ "Disabled" ]
+					"1" "s" "z"        [ "MinSpace" ]
+					"" "2" "3" "fast"  [ "MaxSpeed" ]
+				][
+					siskin/print-warn ["Ignoring optimization on MSVC:" f]
+					opt
+				]
+			]
+			find ["-m32" "-m64"] f [] ;; handled by `arch`
+			#"/" = first f [append append opts f SP] ;; native cl option
+			'else [siskin/print-warn ["Ignoring cflag on MSVC:" f]]
+		]
+	]
+	reduce [
+		ajoin [
+			if std [ajoin ["^/^-  <LanguageStandard_C>" std "</LanguageStandard_C>"]]
+			unless empty? opts [
+				ajoin ["^/^-  <AdditionalOptions>" escape-msbuild opts "%(AdditionalOptions)</AdditionalOptions>"]
+			]
+		]
+		opt
+	]
+]
+
 
 form-cl-item: func [
 	"Forms a ClCompile item; C++ files get the C++ only settings"
@@ -386,6 +438,9 @@ make-project: func[
 	]
 	PROJECT-FILES: copy output
 
+	;-- collect C-SETTINGS and OPTIMIZATION
+	set [C-SETTINGS OPTIMIZATION] form-c-settings spec/cflags
+
 	;-- collect PROJECT-DEFINES                                                 
 	clear output
 	foreach def any [spec/defines []] [
@@ -554,7 +609,7 @@ vcxproj: {<?xml version="1.0" encoding="utf-8"?>
 	<SourcePath>$(SourcePath)</SourcePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|#PLATFORM#'">
-	<IncludePath>#INCLUDE-PATH#;$(IncludePath)</IncludePath>
+	<IncludePath>#INCLUDE-PATH#$(IncludePath)</IncludePath>
 	<LibraryPath>#LIBRARY-PATH#$(LibraryPath);$(SolutionDir)$(Configuration)-$(Platform)\</LibraryPath>
 	<SourcePath>$(SourcePath)</SourcePath>
   </PropertyGroup>
@@ -566,7 +621,7 @@ vcxproj: {<?xml version="1.0" encoding="utf-8"?>
 	  <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
 	  <SDLCheck>true</SDLCheck>
 	  <MultiProcessorCompilation>true</MultiProcessorCompilation>
-	  <PreprocessorDefinitions>#PROJECT-DEFINES#%(PreprocessorDefinitions)</PreprocessorDefinitions>
+	  <PreprocessorDefinitions>#PROJECT-DEFINES#%(PreprocessorDefinitions)</PreprocessorDefinitions>#C-SETTINGS#
 	</ClCompile>
 	<Link>
 	  <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -582,13 +637,13 @@ vcxproj: {<?xml version="1.0" encoding="utf-8"?>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|#PLATFORM#'">
 	<ClCompile>
 	  <WarningLevel>Level3</WarningLevel>
-	  <Optimization>Full</Optimization>
+	  <Optimization>#OPTIMIZATION#</Optimization>
 	  <FunctionLevelLinking>true</FunctionLevelLinking>
 	  <IntrinsicFunctions>false</IntrinsicFunctions>
 	  <SDLCheck>true</SDLCheck>
 	    <MultiProcessorCompilation>true</MultiProcessorCompilation>
 	    <DebugInformationFormat>None</DebugInformationFormat>
-	  <PreprocessorDefinitions>#PROJECT-DEFINES#%(PreprocessorDefinitions)</PreprocessorDefinitions>
+	  <PreprocessorDefinitions>#PROJECT-DEFINES#%(PreprocessorDefinitions)</PreprocessorDefinitions>#C-SETTINGS#
 	  <WholeProgramOptimization>true</WholeProgramOptimization>
 	</ClCompile>
 	<Link>

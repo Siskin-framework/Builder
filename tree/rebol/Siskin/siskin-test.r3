@@ -557,4 +557,44 @@ group "MSVC cppflags"
 	is? msvc/form-cl-item %src/a.c "<X/>" {    <ClCompile Include="src\a.c" />^/}
 ]
 
+
+;;=============================================================================
+group "MSVC cflags"
+;;=============================================================================
+
+--test-- "msvc: no cflags" [is? msvc/form-c-settings none ["" "Full"]]
+--test-- "msvc: -std=c11" [
+	is? msvc/form-c-settings "-std=c11 " ["^/^-  <LanguageStandard_C>stdc11</LanguageStandard_C>" "Full"]
+]
+--test-- "msvc: -std=gnu17" [
+	is? first msvc/form-c-settings "-std=gnu17 " "^/^-  <LanguageStandard_C>stdc17</LanguageStandard_C>"
+]
+--test-- "msvc: -std=c99 uses the default" [is? first msvc/form-c-settings "-std=c99 " ""]
+--test-- "msvc: -Os"    [is? second msvc/form-c-settings "-Os "    "MinSpace"]
+--test-- "msvc: -O2"    [is? second msvc/form-c-settings "-O2 "    "MaxSpeed"]
+--test-- "msvc: -O0"    [is? second msvc/form-c-settings "-O0 "    "Disabled"]
+--test-- "msvc: last -O wins" [is? second msvc/form-c-settings "-O3 -Os " "MinSpace"]
+--test-- "msvc: arch and gcc-only flags ignored" [
+	is? msvc/form-c-settings "-m64 -fno-strict-aliasing -Wall " ["" "Full"]
+]
+--test-- "msvc: native cl options kept" [
+	is? first msvc/form-c-settings "/utf-8 /W4 " "^/^-  <AdditionalOptions>/utf-8 /W4 %(AdditionalOptions)</AdditionalOptions>"
+]
+--test-- "msvc: template uses the settings" [
+	all [
+		true = is? count-of msvc/vcxproj "#C-SETTINGS#" 2
+		true = is? count-of msvc/vcxproj "<Optimization>#OPTIMIZATION#</Optimization>" 1
+	]
+]
+--test-- "msvc: settings rendered in both configurations" [
+	set [cs: opt:] msvc/form-c-settings "-Os /utf-8 "
+	out: reword/escape msvc/vcxproj make map! reduce ['C-SETTINGS cs 'OPTIMIZATION opt] [#"#" #"#"]
+	all [
+		true = is? count-of out "<AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>" 2
+		true = has? out "<Optimization>MinSpace</Optimization>"
+		true = has? out "<Optimization>Disabled</Optimization>"   ;; Debug stays unoptimized
+	]
+]
+
+
 summary
