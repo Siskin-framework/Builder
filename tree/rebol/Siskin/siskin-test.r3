@@ -663,4 +663,20 @@ T4: "^-^-^-^-"
 	]
 ]
 
+;;=============================================================================
+group "Xcode lflags"
+;;=============================================================================
+
+--test-- "xcode: no lflags" [is? xcode/form-link-flags none none []]
+--test-- "xcode: handled and compile flags skipped" [
+	is? xcode/form-link-flags "-shared -s -Os -m64 -mmacosx-version-min=11.0 " "-Os -m64 " []
+]
+--test-- "xcode: other lflags kept" [
+	is? xcode/form-link-flags "-Wl,-dead_strip -framework Cocoa -Llib -lz " none
+		["-Wl,-dead_strip" "-framework" "Cocoa" "-Llib" "-lz"]
+]
+--test-- "xcode: lflags formed as OTHER_LDFLAGS items" [
+	is? xcode/form-items xcode/form-link-flags "-lz " none ajoin [T4 {^-"-lz",^/}]
+]
+
 summary

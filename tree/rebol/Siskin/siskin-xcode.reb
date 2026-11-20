@@ -144,6 +144,27 @@ form-c-settings: func [
 	]
 ]
 
+;; link flags the generator handles elsewhere (product type, strip, deployment target)
+handled-link-flags: ["-shared" "-archive-only" "-mwindows" "-mconsole" "-s" "-strip-all"]
+
+form-link-flags: func [
+	"Returns lflags to pass to the linker (compile flags copied into lflags are skipped)"
+	lflags [string! none!]
+	cflags [string! none!]
+	/local cfs
+][
+	cfs: siskin/split-flags cflags
+	collect [
+		foreach f siskin/split-flags lflags [
+			unless any [
+				find handled-link-flags f
+				find cfs f
+				find/match f "-mmacosx-version-min="
+			][	keep f ]
+		]
+	]
+]
+
 make-project: func[
 	spec   [map!]
 	;dir    [file! string!]
@@ -441,7 +462,7 @@ make-project: func[
 	;-- collect libraries
 	OTHER_LDFLAGS: clear ""
 
-	;probe spec/lflags
+	append OTHER_LDFLAGS form-items form-link-flags spec/lflags spec/cflags
 
 	foreach lib any [spec/libraries []] [
 		append OTHER_LDFLAGS rejoin [
