@@ -2,7 +2,7 @@ Rebol [
 	Title:  "Siskin Builder - core"
 	Type:    module
 	Name:    siskin
-	Version: 0.23.2   ;; keep in sync with `siskin-version` below!
+	Version: 0.23.3   ;; keep in sync with `siskin-version` below!
 	Author: "Oldes"
 	
 	exports: [
@@ -22,7 +22,7 @@ Rebol [
 		expand-env
 	]
 ]
-siskin-version: 0.23.2
+siskin-version: 0.23.3
 ;? system
 banner: does [next rejoin [{
 ^[[0;33m═╗
