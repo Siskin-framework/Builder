@@ -74,6 +74,13 @@ form-define: func ["Forms a define flag for a makefile" def][
 	make-escape siskin/quote-sh-arg join "-D" def
 ]
 
+form-flags: func [
+	"Forms compiler or linker flags for a makefile (shell quoting is kept)"
+	flags [string! none!]
+][
+	make-escape any [flags ""]
+]
+
 make-project: func[
 	spec   [map!]
 	;dir    [file! string!]
@@ -166,9 +173,9 @@ make-project: func[
 		append FRAMEWORKS join " \^/^--framework " file
 	]
 
-	append CFLAGS spec/cflags
-	append CXXFLAGS spec/cppflags
-	append LFLAGS spec/lflags
+	append CFLAGS   form-flags spec/cflags
+	append CXXFLAGS form-flags spec/cppflags
+	append LFLAGS   form-flags spec/lflags
 
 	foreach file sort spec/shared [
 		siskin/replace-extension file %.dylib

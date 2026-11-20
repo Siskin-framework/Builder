@@ -383,6 +383,10 @@ group "Defines"
 --test-- "msvc define"  [is? msvc/form-define {V="1.0" & x} {V="1.0" &amp; x}]
 --test-- "xcode define" [is? xcode/form-define {V="1.0"} {"V=\\\"1.0\\\""}]
 --test-- "make define"  [is? mmake/form-define {V="$x"} {'-DV="$$x"'}]
+--test-- "make flags keep $ for the shell" [
+	is? mmake/form-flags {-Wl,-rpath,'$ORIGIN' } {-Wl,-rpath,'$$ORIGIN' }
+]
+--test-- "make flags none" [is? mmake/form-flags none ""]
 
 
 ;;=============================================================================
