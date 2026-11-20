@@ -24,7 +24,8 @@ It can compile directly (gcc, clang, tcc, emcc…), or generate a **Visual Studi
 7. [Pre-build commands and actions](#pre-build-commands-and-actions)
 8. [Environment variables](#environment-variables)
 9. [What happens during a build](#what-happens-during-a-build)
-10. [Tips & troubleshooting](#tips--troubleshooting)
+10. [Code coverage](#code-coverage)
+11. [Tips & troubleshooting](#tips--troubleshooting)
 
 ---
 
@@ -141,6 +142,8 @@ Short options can be combined: `-cr 1` means `--clean --run 1`.
 | | `--make` | Generate a Makefile and build with it |
 | | `--git-ssh` | Clone GitHub repositories over SSH (password-protected key) |
 | | `--no-upx` | Skip UPX compression even if the nest asks for it |
+| | `--coverage` | Build with gcov code coverage (gcc/clang), see [Code coverage](#code-coverage) |
+| | `--gcov` | Make coverage reports of the targets, without building them |
 | | `--gzip` | Also produce a `.gz` compressed copy of the result |
 | | `--no-comp` | Skip compiling/linking (run only the other steps) |
 | | `--script <file>` | Just evaluate a Rebol script (and quit) |
@@ -167,6 +170,10 @@ siskin hello --cc clang 1
 
 # Build via Visual Studio
 siskin rebol --msvc 1
+
+# Coverage build, run the tests, then make the reports
+siskin rebol --coverage 1
+siskin rebol --gcov 1
 ```
 
 ---
@@ -317,6 +324,24 @@ define: none            ; drop all inherited defines
 
 Special flag: `archive-only` produces only a static library (`lib<name>.a`) without linking. With `shared`, Siskin builds the shared library **and** a static archive.
 
+#### Flags in generated projects
+
+With `--make`, the flags are written into the Makefile as they are (a `$` is escaped, so it reaches the shell like in a direct build). With `--msvc` and `--xcode`, they are translated to project settings:
+
+| Flag | Visual Studio | Xcode |
+|---|---|---|
+| `-O…` | Release `Optimization` (`-O0` Disabled, `-O1`/`-Os`/`-Oz` MinSpace, `-O2`/`-O3`/`-Ofast` MaxSpeed) | `GCC_OPTIMIZATION_LEVEL` (the last one wins) |
+| `-std=…` in `cflags` | `LanguageStandard_C` (`c11`, `c17`, `c23`…; older ones use the default) | `GCC_C_LANGUAGE_STANDARD` |
+| `-std=…` in `cppflags` | `LanguageStandard` of C++ files only (`c++14`…`c++26`, `c++latest`) | `CLANG_CXX_LANGUAGE_STANDARD` |
+| `-W…` | ignored (warned) | `WARNING_CFLAGS` |
+| native options (`/utf-8`, `/LTCG`…) | `AdditionalOptions` (compiler or linker) | — |
+| other `cflags` / `cppflags` | ignored (warned) | `OTHER_CFLAGS` / `OTHER_CPLUSPLUSFLAGS` |
+| `-l<lib>` / `-L<dir>` in `lflags` | `AdditionalDependencies` / `LibraryPath` | passed to the linker |
+| `-Wl,/…` | linker `AdditionalOptions` | passed to the linker |
+| other `lflags` | ignored (warned) | passed to the linker |
+
+`-m32`/`-m64` are covered by `arch:`. Flags Visual Studio can't use are reported, so nothing is dropped silently.
+
 ### Libraries
 
 | Key | Meaning |
@@ -335,6 +360,7 @@ Special flag: `archive-only` produces only a static library (`lib<name>.a`) with
 | `entitlements:` | macOS entitlements file used when signing |
 | `bundle:` | macOS `.app` bundle info: `[id: "com.me.app" title: "App" version: "1.0" copyright: "…" icon: %app.iconset]` |
 | `version:` | Used for macOS dylib `-current_version` / `-compatibility_version` |
+| | macOS dylibs get the install name `@rpath/<file name>` (see [Tips](#tips--troubleshooting)) |
 | `resource:` | Windows `.rc` file compiled with `windres` |
 
 ### Environment
@@ -438,7 +464,7 @@ Tools found by Siskin (e.g. `GIT`, `UPX`, `STRIP`) are also exported under their
 3. **Pre-build** commands and actions run.
 4. **Compile** each source file into `<temp>/<platform>-<compiler>-<arch>/<name>/`. Files are recompiled only when the source is newer than the object (or with `--clean`, or listed in `clean:`). `.cpp`, `.cc`, `.cxx` files use the C++ compiler, and then the C++ linker is used.
 5. **Link** the result into the output directory (`build/` by default). Extension is added per platform: `.exe` / `.dll` on Windows, `.so` on Linux, `.dylib` on macOS.
-6. **Finish:** strip, UPX, code-sign (macOS), move to `--output`, gzip — whatever is requested.
+6. **Finish:** strip, UPX, set the install name of a dylib to `@rpath/<name>` and code-sign (macOS), move to `--output`, gzip — whatever is requested.
 
 On success you'll see the bird:
 
@@ -455,6 +481,40 @@ On success you'll see the bird:
 
 ---
 
+## Code coverage
+
+Siskin can build a target with [gcov](https://gcc.gnu.org/onlinedocs/gcc/Gcov.html) instrumentation and make coverage reports from it:
+
+```sh
+siskin my-project --coverage 1     # 1. build with coverage
+./build/my-app                     # 2. run the program or the tests (any number of times)
+siskin my-project --gcov 1         # 3. make the reports
+```
+
+**`--coverage`** adds `--coverage -O0 -g` to the compiler and linker flags (after the nest's own, so `-O0` wins), skips strip and UPX, and deletes coverage data (`.gcda`) of previous runs from the target's objects directory. It's not available for Visual Studio builds.
+
+**`--gcov`** doesn't build anything. It runs `gcov` on all objects of the target (`llvm-cov gcov` for clang and on macOS), merges the results — a header included by many sources gets one report — and writes them to `coverage/<name>/`:
+
+| File | Content |
+|---|---|
+| `index.html` | All sources with coverage bars; click a column header to sort |
+| `<source>.html` | The source with executed lines green, partly executed (e.g. an `if` branch never taken) yellow and never executed red. Keys `n` / `p` jump to the next / previous unvisited line |
+| `<source>.gcov` | gcov's text report |
+
+The reports mirror the source tree; sources outside of the nest root go under `_external/`. A summary is printed too:
+
+```
+Coverage of my-app (lines executed):
+    74.9%        131/175  src/dev-serial.c
+    27.9%        119/427  src/dev-stdio.c
+    ...
+    61.2%      8213/13420  TOTAL
+```
+
+> Every run of the program adds to the counts until the next `--coverage` build. All objects of a program get new data when it exits, even the ones whose code didn't run.
+
+---
+
 ## Tips & troubleshooting
 
 - **See what it does:** `-v`, or `-d` for everything (exact commands, merged spec).
@@ -464,6 +524,12 @@ On success you'll see the bird:
 - **"Source file not found" warning:** fine if the file is generated by a pre-build step; otherwise check `source:` and `files:`.
 - **Old nests with `\"` in defines:** still work, but Siskin warns — write the raw quotes instead (`define: {NAME="value"}`).
 - **Requiring a newer Siskin:** add `needs: [siskin 0.23.0]` so older versions fail with a clear message.
+- **Finding shared libraries at run time:** a program linked with `shared:` libraries that aren't installed system-wide needs an rpath. Add it in the nest:
+  ```rebol
+  #if macOS? [lflags: "-Wl,-rpath,@executable_path"]
+  #if linux? [lflags: "-Wl,-rpath,'$ORIGIN'"]
+  ```
+  On macOS, Siskin sets the install name of each dylib it builds to `@rpath/<file name>` (also when `--output` renames it), so the rpath is all that's needed. It's left alone when `lflags` use `-install_name`.
 
 ---
 
