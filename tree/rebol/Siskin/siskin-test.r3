@@ -762,4 +762,50 @@ cov-spec: does [make map! reduce ['cflags copy "-O2 " 'lflags copy "-shared " 's
 	]
 ]
 
+;;=============================================================================
+group "gcov"
+;;=============================================================================
+
+--test-- "--gcov is a known option" [did find siskin/all-options "--gcov"]
+--test-- "detect-arch last flag wins" [
+	all [
+		true = is? siskin/detect-arch "-m64 -m32 " 'x32
+		true = is? siskin/detect-arch "-m32 -m64 " 'x64
+		true = is? siskin/detect-arch none system/build/arch
+	]
+]
+--test-- "default-objects-dir" [
+	is? siskin/default-objects-dir make map! [temp: %tmp/ compiler: gcc arch: x64] "my lib"
+		as file! ajoin [%tmp/ lowercase form system/platform "-gcc-x64/my-lib/"]
+]
+--test-- "target-name" [
+	all [
+		true = is? siskin/target-name make map! [name: "x"] %x
+		true = is? siskin/target-name make map! [name: "/a/b/x"] %x
+		true = is? siskin/target-name make map! [] none
+	]
+]
+--test-- "gcno-files" [
+	d: make-dir/deep %tmp-siskin-gcno/a/b/
+	write %tmp-siskin-gcno/m.c.gcno ""
+	write %tmp-siskin-gcno/m.c.o ""
+	write %tmp-siskin-gcno/a/b/f.c.gcno ""
+	r: siskin/gcno-files %tmp-siskin-gcno/
+	try [delete-dir %tmp-siskin-gcno/]
+	is? r [%a/b/f.c.gcno %m.c.gcno]
+]
+--test-- "gcov-cmd" [
+	either siskin/host-macOS? [
+		is? siskin/gcov-cmd 'gcc "xcrun llvm-cov gcov"
+	][
+		all [
+			true = is? siskin/gcov-cmd 'gcc "gcov"
+			true = is? siskin/gcov-cmd 'clang "llvm-cov gcov"
+		]
+	]
+]
+--test-- "do-gcov without coverage data" [
+	not siskin/do-gcov make map! reduce ['name "no-such-target" 'compiler 'gcc 'temp %tmp-siskin-none/]
+]
+
 summary

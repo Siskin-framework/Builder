@@ -88,6 +88,7 @@ all-options: [
 	  -  "--git-ssh"  -      "Clone gits using password-protected SSH key"
 	  -  "--no-upx"   -      "Ignore default project's UPX compression setting"
 	  -  "--coverage" -      "Build with gcov code coverage (gcc/clang; no strip, no UPX)"
+	  -  "--gcov"     -      "Make coverage reports in coverage/<name>/ (no build)"
 	  -  "--script"   "path" "Evaluate Rebol script"
 	  -  "--gzip"     -      "Compress the result with GZIP"
 	  -  "--no-comp"  -      "Don't invoke compilation/linking step"
@@ -212,6 +213,7 @@ nest-context: object [
 	no-eval?:     false
 	no-upx?:      false
 	coverage?:    false
+	gcov?:        false
 	clang?:       false
 	no-comp?:     false
 	run-result?:  false
@@ -1114,6 +1116,7 @@ do-nest: closure/with/extern [
 				| 'git-ssh (git-ssh?: on)
 				| 'no-upx  (no-upx?: on)
 				| 'coverage (coverage?: on)
+				| 'gcov     (gcov?: on)
 				| 'gzip    (gzip?: on)
 				| 'cc      set val: string! (cli-cc: val)
 				| 'cflags  set val: string! (append append cli-cflags val SP)
@@ -1148,6 +1151,7 @@ do-nest: closure/with/extern [
 						clear cli-defines
 						clear cli-undefines
 						coverage?: false
+						gcov?: false
 						result-code: 0
 					)
 
@@ -1272,6 +1276,7 @@ build-target: closure/with [
 		apply-compiler-override spec
 		apply-extra-flags spec
 		if coverage? [apply-coverage spec]
+		if gcov? [return do-gcov spec]
 		normalize-defines spec
 
 		if force-compiler [
@@ -1557,29 +1562,11 @@ build: function/with [
 	spec/libraries: libs
 	spec/shared: shared
 
-	if none? spec/arch [
-		; try to detect architecture using c flags
-		p1: find/last cflags "-m32 "
-		p2: find/last cflags "-m64 "
-		spec/arch: any [
-			all [p1 any [none? p2 (index? p1) > (index? p2)] 'x32]
-			all [p2 any [none? p1 (index? p1) < (index? p2)] 'x64]
-			system/build/arch
-		]
-	]
+	if none? spec/arch [spec/arch: detect-arch cflags]
 
 	;- prepare a directory to hold object files                                 
 
-	if none? spec/objects [
-		;; <temp>/<platform>-<compiler>-<arch>/<name>/
-		;; (spec/temp is always set by defaults or `temp:` and is a dir)
-		spec/objects: as file! dirize ajoin [
-			spec/temp
-			normalize-file-name lowercase ajoin [system/platform #"-" spec/compiler #"-" spec/arch]
-			#"/"
-			if out-file [normalize-file-name out-file]
-		]
-	]
+	if none? spec/objects [spec/objects: default-objects-dir spec out-file]
 
 	probe-spec spec [
 		objects
@@ -1937,6 +1924,103 @@ build: function/with [
 	]
 
 	finalize-build spec either archive-only? [archive][out-file]
+] :nest-context
+
+detect-arch: func [
+	"Detects the architecture from -m32/-m64 compiler flags (the last one wins)"
+	cflags [string! none!]
+	/local p1 p2
+][
+	cflags: any [cflags ""]
+	p1: find/last cflags "-m32 "
+	p2: find/last cflags "-m64 "
+	any [
+		all [p1 any [none? p2 (index? p1) > (index? p2)] 'x32]
+		all [p2 any [none? p1 (index? p1) < (index? p2)] 'x64]
+		system/build/arch
+	]
+]
+
+default-objects-dir: func [
+	"Returns <temp>/<platform>-<compiler>-<arch>/<name>/ (spec/temp is a dir)"
+	spec [map!]
+	name [any-string! none!] "Output file name"
+][
+	as file! dirize ajoin [
+		spec/temp
+		normalize-file-name lowercase ajoin [system/platform #"-" spec/compiler #"-" spec/arch]
+		#"/"
+		if name [normalize-file-name name]
+	]
+]
+
+target-name: func [
+	"Returns the output file name of a target (as used for its objects dir)"
+	spec [map!]
+	/local f
+][
+	if f: any [spec/exe-file spec/name spec/target] [
+		f: to-rebol-file f
+		if all [abs-path? f not dir? f] [f: second split-path f]
+	]
+	f
+]
+
+gcno-files: function [
+	"Returns .gcno files found under the dir (relative paths)"
+	dir [file!]
+][
+	out: copy []
+	scan: func [sub [file!] /local f][
+		foreach f read join dir sub [
+			either dir? f [scan join sub f][
+				if %.gcno = suffix? f [append out join sub f]
+			]
+		]
+	]
+	scan %""
+	sort out
+]
+
+gcov-cmd: func [
+	"Returns the gcov command for the compiler used"
+	compiler [word! none!]
+][
+	case [
+		host-macOS?        ["xcrun llvm-cov gcov"]  ;; Apple's `gcc` is clang
+		compiler = 'clang  ["llvm-cov gcov"]
+		'else              ["gcov"]
+	]
+]
+
+do-gcov: function/with [
+	"Makes gcov reports of a target in coverage/<name>/ (from its existing coverage data)"
+	spec [map!]
+][
+	foreach [k v] defaults [unless spec/:k [spec/:k: v]]
+	name: target-name spec
+	unless spec/arch [spec/arch: detect-arch spec/cflags]
+	objects: clean-path any [spec/objects default-objects-dir spec name]
+	files: either exists? objects [gcno-files objects][copy []]
+	if empty? files [
+		print-error ["No coverage data found in:" as-red to-local-file objects]
+		print-info  "Build the target with --coverage and run it first."
+		return false
+	]
+	out-dir: clean-path rejoin [%coverage/ normalize-file-name any [name "target"] #"/"]
+	print-info ["Coverage reports:" as-green to-local-file out-dir]
+	cmd: gcov-cmd spec/compiler
+	failed: 0
+	foreach file files [
+		;; reports mirror the objects tree, so same named sources don't collide
+		dir: make-dir/deep join out-dir first split-path file
+		pushd/quiet dir
+		eval-cmd/v/no-quit [cmd join objects file]
+		popd/quiet
+		if result-code <> 0 [failed: failed + 1]
+	]
+	if failed > 0 [print-error ["gcov failed for" failed "of" length? files "files"]]
+	failed = 0
 ] :nest-context
 
 probe-spec: func[spec [map!] values [block!] /local val data][
