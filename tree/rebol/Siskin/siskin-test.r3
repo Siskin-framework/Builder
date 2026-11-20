@@ -531,7 +531,6 @@ hits: 0
 	is? hits 11
 ]
 
-
 ;;=============================================================================
 group "MSVC cppflags"
 ;;=============================================================================
@@ -556,7 +555,6 @@ group "MSVC cppflags"
 --test-- "msvc: C item does not" [
 	is? msvc/form-cl-item %src/a.c "<X/>" {    <ClCompile Include="src\a.c" />^/}
 ]
-
 
 ;;=============================================================================
 group "MSVC cflags"
@@ -596,5 +594,34 @@ group "MSVC cflags"
 	]
 ]
 
+;;=============================================================================
+group "MSVC lflags"
+;;=============================================================================
+
+--test-- "msvc: no lflags" [is? mold msvc/form-link-settings none none {["" [] []]}]
+--test-- "msvc: handled and compile flags skipped" [
+	is? mold msvc/form-link-settings "-mwindows -shared -Os -m64 " "-Os -m64 " {["" [] []]}
+]
+--test-- "msvc: native link options kept" [
+	is? first msvc/form-link-settings "/LTCG /NODEFAULTLIB:libcmt " none "/LTCG /NODEFAULTLIB:libcmt "
+]
+--test-- "msvc: -Wl, native options kept" [
+	is? first msvc/form-link-settings "-Wl,/OPT:REF,--as-needed " none "/OPT:REF "
+]
+--test-- "msvc: -l becomes a .lib, CRT libs skipped" [
+	is? second msvc/form-link-settings "-lfoo -lbar.lib -lm -lc " none ["foo.lib" "bar.lib"]
+]
+--test-- "msvc: -L becomes a library dir" [
+	is? third msvc/form-link-settings "-Llib/x64 " none [%lib/x64]
+]
+--test-- "msvc: -L is not taken as -l" [
+	is? mold msvc/form-link-settings "-Lx -ly " none {["" ["y.lib"] [%x]]}
+]
+--test-- "msvc: unknown lflags ignored" [
+	is? mold msvc/form-link-settings "-rdynamic -pthread " none {["" [] []]}
+]
+--test-- "msvc: link options escaped" [
+	is? first msvc/form-link-settings "/DEF:a;b.def " none "/DEF:a%3Bb.def "
+]
 
 summary

@@ -105,10 +105,10 @@ form-define: func ["Forms a define for PreprocessorDefinitions" def][
 
 ;; GCC/Clang -std values -> MSBuild LanguageStandard (MSVC's minimum is C++14)
 cpp-standards: #[
-	"c++98" "stdcpp14"      "c++03" "stdcpp14"  "c++0x" "stdcpp14"  "c++11" "stdcpp14"
-	"c++1y" "stdcpp14"      "c++14" "stdcpp14"
-	"c++1z" "stdcpp17"      "c++17" "stdcpp17"
-	"c++2a" "stdcpp20"      "c++20" "stdcpp20"
+	"c++98" "stdcpp14"  "c++03" "stdcpp14"  "c++0x" "stdcpp14"  "c++11" "stdcpp14"
+	"c++1y" "stdcpp14"  "c++14" "stdcpp14"
+	"c++1z" "stdcpp17"  "c++17" "stdcpp17"
+	"c++2a" "stdcpp20"  "c++20" "stdcpp20"
 	"c++2b" "stdcpplatest"  "c++23" "stdcpplatest"
 	"c++2c" "stdcpplatest"  "c++26" "stdcpplatest"  "c++latest" "stdcpplatest"
 ]
@@ -189,6 +189,42 @@ form-c-settings: func [
 	]
 ]
 
+;; link flags the generator handles elsewhere (subsystem, project type, strip)
+handled-link-flags: ["-mwindows" "-mconsole" "-shared" "-archive-only" "-s" "-strip-all"]
+
+form-link-settings: func [
+	"Converts lflags to MSVC linker settings; returns [options libraries library-dirs]"
+	lflags [string! none!]
+	cflags [string! none!] "Compile flags (also present in lflags) are skipped"
+	/local opts libs dirs cfs v
+][
+	opts: copy ""
+	libs: copy []
+	dirs: copy []
+	cfs: siskin/split-flags cflags
+	foreach f siskin/split-flags lflags [
+		case [
+			any [find handled-link-flags f  find cfs f] [] ;; nothing to do
+			#"/" = first f [append append opts f SP]       ;; native link option
+			parse f ["-Wl," copy v to end][
+				foreach a split v #"," [
+					either #"/" = first a [append append opts a SP][
+						siskin/print-warn ["Ignoring linker option on MSVC:" a]
+					]
+				]
+			]
+			parse/case f ["-l" copy v to end][
+				unless find ["m" "c"] v [ ;; part of the MSVC CRT
+					unless parse v [thru ".lib" end][append v ".lib"]
+					append libs v
+				]
+			]
+			parse/case f ["-L" copy v to end][append dirs to-rebol-file v]
+			'else [siskin/print-warn ["Ignoring lflag on MSVC:" f]]
+		]
+	]
+	reduce [escape-msbuild opts libs dirs]
+]
 
 form-cl-item: func [
 	"Forms a ClCompile item; C++ files get the C++ only settings"
@@ -298,7 +334,7 @@ make-project: func[
 	/debug? "Force DEBUG build."
 	/local
 		name tmp output dir dir-vs dir-bin defines includes rel-file
-		filters items ver lib-paths cpp
+		filters items ver lib-paths cpp link
 ][
 	unless siskin [siskin: system/modules/siskin]
 	output: make string! 30000
@@ -378,7 +414,9 @@ make-project: func[
 	write-file [dir-vs name %.sln] output
 
 	;-- collect ADDITIONAL-DEPENDENCIES                                         
-	lib-paths: copy [] 
+	link: form-link-settings spec/lflags spec/cflags
+	append ADDITIONAL_OPTIONS link/1
+	lib-paths: copy link/3
 	clear output
 	foreach lib join spec/libraries spec/shared [
 		either dir? lib [
@@ -395,6 +433,7 @@ make-project: func[
 			]
 		]
 	]
+	foreach lib link/2 [append append output escape-msbuild lib #";"]
 	ADDITIONAL-DEPENDENCIES: copy output
 	LIBRARY-PATH: copy ""
 	foreach path unique lib-paths [
@@ -465,13 +504,6 @@ make-project: func[
 		either find spec/lflags "-archive-only " ["StaticLibrary"]["DynamicLibrary"]
 	][
 		"Application"
-	]
-	CPP-STANDARD: case [
-		find spec/cppflags "c++latest" ["stdcpplatest"]
-		find spec/cppflags "c++20"     ["stdcpp20"]
-		find spec/cppflags "c++17"     ["stdcpp17"]
-		find spec/cppflags "c++14"     ["stdcpp14"]
-		true                           ["Default"]
 	]
 
 	;-- and...
@@ -609,7 +641,7 @@ vcxproj: {<?xml version="1.0" encoding="utf-8"?>
 	<SourcePath>$(SourcePath)</SourcePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|#PLATFORM#'">
-	<IncludePath>#INCLUDE-PATH#$(IncludePath)</IncludePath>
+	<IncludePath>#INCLUDE-PATH#;$(IncludePath)</IncludePath>
 	<LibraryPath>#LIBRARY-PATH#$(LibraryPath);$(SolutionDir)$(Configuration)-$(Platform)\</LibraryPath>
 	<SourcePath>$(SourcePath)</SourcePath>
   </PropertyGroup>
