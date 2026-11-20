@@ -101,6 +101,55 @@ form-define: func ["Forms a define for PreprocessorDefinitions" def][
 	escape-msbuild form def
 ]
 
+;; GCC/Clang -std values -> MSBuild LanguageStandard (MSVC's minimum is C++14)
+cpp-standards: #[
+	"c++98" "stdcpp14"      "c++03" "stdcpp14"  "c++0x" "stdcpp14"  "c++11" "stdcpp14"
+	"c++1y" "stdcpp14"      "c++14" "stdcpp14"
+	"c++1z" "stdcpp17"      "c++17" "stdcpp17"
+	"c++2a" "stdcpp20"      "c++20" "stdcpp20"
+	"c++2b" "stdcpplatest"  "c++23" "stdcpplatest"
+	"c++2c" "stdcpplatest"  "c++26" "stdcpplatest"  "c++latest" "stdcpplatest"
+]
+
+form-cpp-settings: func [
+	"Converts cppflags to ClCompile item metadata (used only for C++ files)"
+	flags [string! none!]
+	/local std opts v
+][
+	std: none
+	opts: copy ""
+	foreach f siskin/split-flags flags [
+		case [
+			parse f [["-std=" | "/std:"] copy v to end][
+				replace v "gnu++" "c++"
+				unless std: cpp-standards/:v [
+					siskin/print-warn ["Unsupported C++ standard for MSVC:" f]
+				]
+			]
+			#"/" = first f [append append opts f SP] ;; native cl option
+			'else [siskin/print-warn ["Ignoring cppflag on MSVC:" f]]
+		]
+	]
+	ajoin [
+		if std [ajoin ["<LanguageStandard>" std "</LanguageStandard>"]]
+		unless empty? opts [
+			ajoin ["<AdditionalOptions>" escape-msbuild opts "%(AdditionalOptions)</AdditionalOptions>"]
+		]
+	]
+]
+
+form-cl-item: func [
+	"Forms a ClCompile item; C++ files get the C++ only settings"
+	file [file!]   "Path relative to the project"
+	cpp  [string!] "Result of form-cpp-settings"
+][
+	ajoin either all [
+		not empty? cpp
+		find siskin/cpp-extensions suffix? file
+	][	[{    <ClCompile Include="} form-path file {">} cpp {</ClCompile>^/}]
+	][	[{    <ClCompile Include="} form-path file {" />^/}] ]
+]
+
 form-pre-post-build: func [
 	code [block!]
 	base [file!] "Dir the script starts in"
@@ -197,7 +246,7 @@ make-project: func[
 	/debug? "Force DEBUG build."
 	/local
 		name tmp output dir dir-vs dir-bin defines includes rel-file
-		filters items ver lib-paths
+		filters items ver lib-paths cpp
 ][
 	unless siskin [siskin: system/modules/siskin]
 	output: make string! 30000
@@ -315,6 +364,7 @@ make-project: func[
 
 	;-- collect PROJECT-FILES                                                   
 	clear output
+	cpp: form-cpp-settings spec/cppflags
 	filters: copy [] ; used later
 	items:   copy []
 	foreach file join spec/files spec/assembly [
@@ -332,9 +382,7 @@ make-project: func[
 			append filters dir
 		]
 		
-		append output rejoin [
-			{    <ClCompile Include="} form-path rel-file {" />^/}
-		]
+		append output form-cl-item rel-file cpp
 	]
 	PROJECT-FILES: copy output
 
@@ -362,6 +410,13 @@ make-project: func[
 		either find spec/lflags "-archive-only " ["StaticLibrary"]["DynamicLibrary"]
 	][
 		"Application"
+	]
+	CPP-STANDARD: case [
+		find spec/cppflags "c++latest" ["stdcpplatest"]
+		find spec/cppflags "c++20"     ["stdcpp20"]
+		find spec/cppflags "c++17"     ["stdcpp17"]
+		find spec/cppflags "c++14"     ["stdcpp14"]
+		true                           ["Default"]
 	]
 
 	;-- and...

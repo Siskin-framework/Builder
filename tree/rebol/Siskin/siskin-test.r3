@@ -531,4 +531,30 @@ hits: 0
 	is? hits 11
 ]
 
+
+;;=============================================================================
+group "MSVC cppflags"
+;;=============================================================================
+
+--test-- "msvc: -std=c++20" [
+	is? msvc/form-cpp-settings "-std=c++20 " "<LanguageStandard>stdcpp20</LanguageStandard>"
+]
+--test-- "msvc: -std=gnu++17" [
+	is? msvc/form-cpp-settings "-std=gnu++17 " "<LanguageStandard>stdcpp17</LanguageStandard>"
+]
+--test-- "msvc: /std:c++latest" [
+	is? msvc/form-cpp-settings "/std:c++latest " "<LanguageStandard>stdcpplatest</LanguageStandard>"
+]
+--test-- "msvc: native cl options kept" [
+	is? msvc/form-cpp-settings "-std=c++20 /Zc:__cplusplus " {<LanguageStandard>stdcpp20</LanguageStandard><AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>}
+]
+--test-- "msvc: gcc-only cppflag ignored" [is? msvc/form-cpp-settings "-fno-rtti " ""]
+--test-- "msvc: no cppflags"              [is? msvc/form-cpp-settings none ""]
+--test-- "msvc: C++ item gets settings" [
+	is? msvc/form-cl-item %src/a.cpp "<X/>" {    <ClCompile Include="src\a.cpp"><X/></ClCompile>^/}
+]
+--test-- "msvc: C item does not" [
+	is? msvc/form-cl-item %src/a.c "<X/>" {    <ClCompile Include="src\a.c" />^/}
+]
+
 summary
