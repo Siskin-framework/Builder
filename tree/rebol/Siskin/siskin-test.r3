@@ -824,4 +824,92 @@ group "gcov"
 	not siskin/do-gcov make map! reduce ['name "no-such-target" 'compiler 'gcc 'temp %tmp-siskin-none/]
 ]
 
+--test-- "gcov-int" [
+	all [
+		true = is? siskin/gcov-int "12"  12
+		true = is? siskin/gcov-int "3*"  3
+		true = is? siskin/gcov-int "#####" none
+		true = is? siskin/gcov-int "-" none
+	]
+]
+--test-- "merge-gcov-count" [
+	all [
+		true = is? siskin/merge-gcov-count "-" "-" "-"
+		true = is? siskin/merge-gcov-count "2" "3" "5"
+		true = is? siskin/merge-gcov-count "1*" "2" "3*"
+		true = is? siskin/merge-gcov-count "#####" "4" "4"
+		true = is? siskin/merge-gcov-count "-" "#####" "#####"
+		true = is? siskin/merge-gcov-count "=====" "#####" "#####"
+	]
+]
+gcov-out: {        -:    0:Source:main.c
+        -:    1:#include "h.h"
+       1*:    2:int main(){ return twice(1); }
+        -:    0:Source:h.h
+        1:    1:static inline int twice(int x){ return x*2; }
+        -:    0:Source:f.c
+    #####:    1:int f(int x){ return twice(x); }
+        -:    0:Source:h.h
+    #####:    1:static inline int twice(int x){ return x*2; }
+}
+--test-- "parse-gcov merges sources" [
+	r: siskin/parse-gcov gcov-out make map! []
+	all [
+		true = is? sort keys-of r ["f.c" "h.h" "main.c"]
+		true = is? r/("h.h") [["1" "static inline int twice(int x){ return x*2; }"]]
+		true = is? r/("main.c")/2/1 "1*"
+	]
+]
+--test-- "parse-gcov keeps colons in the source text" [
+	r: siskin/parse-gcov {        -:    0:Source:a.c^/        2:    1:a: b: c;^/} make map! []
+	is? r/("a.c") [["2" "a: b: c;"]]
+]
+--test-- "parse-gcov CRLF output" [
+	r: siskin/parse-gcov {        -:    0:Source:a.c^M^/        2:    1:x;^M^/} make map! []
+	is? r/("a.c") [["2" "x;"]]
+]
+--test-- "split-batches by count" [
+	is? siskin/split-batches ["a" "b" "c" "d" "e"] 2 100 [["a" "b"] ["c" "d"] ["e"]]
+]
+--test-- "split-batches by length" [
+	;; each value takes its length + 1 (space)
+	is? siskin/split-batches ["aaa" "bbb" "ccc"] 10 8 [["aaa" "bbb"] ["ccc"]]
+]
+--test-- "split-batches long value alone" [
+	is? siskin/split-batches ["a" "very-long-value" "b"] 10 5 [["a"] ["very-long-value"] ["b"]]
+]
+--test-- "split-batches empty" [is? siskin/split-batches [] 10 10 []]
+--test-- "gcov-message-kind" [
+	all [
+		true = is? siskin/gcov-message-kind "/x/a.c.gcda:cannot open data file, assuming not executed" 'missing
+		true = is? siskin/gcov-message-kind "/x/a-globals.c.gcno:no functions found" none
+		true = is? siskin/gcov-message-kind "^M" none
+		true = is? siskin/gcov-message-kind "/x/a.c.gcda:stamp mismatch with notes file" 'warning
+	]
+]
+--test-- "gcov-summary" [
+	is? siskin/gcov-summary [["-" "a"] ["3" "b"] ["#####" "c"] ["1*" "d"]] [2 3]
+]
+--test-- "form-gcov-report" [
+	is? siskin/form-gcov-report "a.c" [["-" "x"] ["12" "y"]] ajoin [
+		"        -:    0:Source:a.c^/"
+		"        -:    1:x^/"
+		"       12:    2:y^/"
+	]
+]
+--test-- "gcov-report-file" [
+	all [
+		true = is? siskin/gcov-report-file "src/a.c" %src/a.c.gcov
+		true = is? siskin/gcov-report-file "/usr/include/x.h" %_external/usr/include/x.h.gcov
+		true = is? siskin/gcov-report-file "../lib/y.c" %_external/__/lib/y.c.gcov
+	]
+]
+--test-- "form-gcov-row" [
+	all [
+		true = has? siskin/form-gcov-row "a.c" 1 3 "33.3%"
+		true = has? siskin/form-gcov-row "a.c" 1 3 "1/3  a.c"
+		true = has? siskin/form-gcov-row "h.h" 0 0 "-"
+	]
+]
+
 summary

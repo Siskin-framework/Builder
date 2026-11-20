@@ -2009,6 +2009,166 @@ gcov-cmd: func [
 	]
 ]
 
+gcov-int: func [
+	"Returns the number of a gcov count (or line number), or none"
+	str [string!]
+	/local n
+][
+	all [
+		parse str [any SP copy n some chars_numbers opt #"*" any SP]  ;; (`to integer! "-"` is 0)
+		to integer! n
+	]
+]
+
+merge-gcov-count: func [
+	"Merges two gcov line counts (`-`, `#####`, `=====`, `N` or `N*`)"
+	a [string!] b [string!]
+	/local na nb
+][
+	if a = "-" [return b]
+	if b = "-" [return a]
+	na: gcov-int a
+	nb: gcov-int b
+	case [
+		all [na nb] [ajoin [na + nb  if any [find a #"*" find b #"*"] #"*"]]
+		na    [a]
+		nb    [b]
+		any [a = "#####" b = "#####"] ["#####"]
+		'else [a]
+	]
+]
+
+parse-gcov: function [
+	"Parses `gcov --stdout` reports into the map: source -> lines (block of [count text])"
+	text   [string!]
+	result [map!] "Reports of the same source are merged"
+	/local cnt num txt
+][
+	lines: none
+	;; one pass over the text (it may have millions of lines)
+	parse text [any [
+		any SP copy cnt to #":" skip any SP copy num some chars_numbers #":"
+		copy txt [to lf | to end] opt lf (
+			if #"^M" = last txt [take/last txt]
+			num: to integer! num
+			case [
+				num = 0 [
+					if find/match txt "Source:" [
+						src: copy skip txt 7
+						unless lines: result/:src [lines: result/:src: copy []]
+					]
+				]
+				none? lines []
+				old: pick lines num [old/1: merge-gcov-count old/1 cnt]
+				'else [
+					if num > length? lines [append/dup lines none num - length? lines]
+					poke lines num reduce [cnt txt]
+				]
+			]
+		)
+		| thru lf
+	]]
+	result
+]
+
+split-batches: func [
+	"Splits values into batches limited by count and formed length (each batch has at least one value)"
+	values    [block!]
+	max-count [integer!]
+	max-chars [integer!] "Including a space between values"
+	/local out batch size
+][
+	out: copy []
+	batch: copy []
+	size: 0
+	foreach v values [
+		if all [
+			not empty? batch
+			any [max-count <= length? batch  max-chars < (size + 1 + length? form v)]
+		][
+			append/only out batch
+			batch: copy []
+			size: 0
+		]
+		append batch v
+		size: size + 1 + length? form v
+	]
+	unless empty? batch [append/only out batch]
+	out
+]
+
+gcov-message-kind: func [
+	"Classifies a gcov stderr line: none (ignore), 'missing (no .gcda) or 'warning"
+	line [string!]
+][
+	trim/tail line
+	case [
+		empty? line                         [none]
+		find line "cannot open data file"   ['missing]
+		find line "no functions found"      [none]  ;; source with data only
+		'else                               ['warning]
+	]
+]
+
+gcov-summary: func [
+	"Returns [executed executable] line counts of a source"
+	lines [block!]
+	/local hit exe
+][
+	hit: exe: 0
+	foreach l lines [
+		if all [l  l/1 <> "-"] [
+			exe: exe + 1
+			if gcov-int l/1 [hit: hit + 1]
+		]
+	]
+	reduce [hit exe]
+]
+
+form-gcov-report: func [
+	"Forms a .gcov report of a source"
+	src [string!] lines [block!]
+	/local out n
+][
+	out: ajoin [pad/left copy "-" 9 ":" pad/left 0 5 ":Source:" src lf]
+	n: 0
+	foreach l lines [
+		n: n + 1
+		if l [append out ajoin [pad/left copy l/1 9 #":" pad/left n 5 #":" l/2 lf]]
+	]
+	out
+]
+
+gcov-report-file: func [
+	"Returns the report file of a source (relative; mirrors the source tree)"
+	src [string!]
+	/local f
+][
+	f: to-rebol-file src
+	if any [abs-path? f  find f %../] [
+		;; source outside of the root
+		if abs-path? f [f: copy next f]
+		f: join %_external/ replace/all f %../ %__/
+	]
+	join f %.gcov
+]
+
+form-gcov-row: func [
+	"Forms a line of the coverage summary"
+	name [string!] hit [integer!] exe [integer!]
+	/local p pct
+][
+	p: either exe > 0 [round/to hit * 100.0 / exe 0.1][none]
+	pct: pad/left either p [join p #"%"]["-"] 7
+	pct: case [
+		none? p  [pct]
+		p >= 80  [as-green  pct]
+		p >= 50  [as-yellow pct]
+		'else    [as-red    pct]
+	]
+	ajoin ["  " pct "  " pad/left ajoin [hit #"/" exe] 13 "  " name]
+]
+
 do-gcov: function/with [
 	"Makes gcov reports of a target in coverage/<name>/ (from its existing coverage data)"
 	spec [map!]
@@ -2023,20 +2183,81 @@ do-gcov: function/with [
 		print-info  "Build the target with --coverage and run it first."
 		return false
 	]
+	;; relative sources (headers) are relative to where they were compiled
+	root: clean-path any [spec/root what-dir]
 	out-dir: clean-path rejoin [%coverage/ normalize-file-name any [name "target"] #"/"]
-	print-info ["Coverage reports:" as-green to-local-file out-dir]
-	cmd: gcov-cmd spec/compiler
-	failed: 0
-	foreach file files [
-		;; reports mirror the objects tree, so same named sources don't collide
-		dir: make-dir/deep join out-dir first split-path file
-		pushd/quiet dir
-		eval-cmd/v/no-quit [cmd join objects file]
-		popd/quiet
-		if result-code <> 0 [failed: failed + 1]
+	q: either host-windows? [func [a][quote-cmd-arg/line a]][:quote-sh-arg]
+	cmd: ajoin [gcov-cmd spec/compiler " --stdout --source-prefix " q lib/to-local-file undirize copy root]
+	reports: make map! 100
+	missing: 0
+	failed?: false
+	pushd/quiet root
+	;; gcov is called in batches (also as cmd.exe limits a command line to 8191 chars)
+	args: collect [foreach f files [keep q lib/to-local-file join objects f]]
+	done: 0
+	foreach batch split-batches args 20 6000 - length? cmd [
+		line: ajoin [cmd SP ajoin/with batch SP]
+		print-more ["EVAL:^[[0;33m" line]
+		unless no-eval? [
+			out: make string! 100000
+			err: make string! 1000
+			if 0 <> call/shell/wait/output/error line out err [failed?: true]
+			parse-gcov out reports
+			foreach l split err lf [
+				switch gcov-message-kind l [
+					missing [missing: missing + 1]
+					warning [print-warn l]
+				]
+			]
+		]
+		done: done + length? batch
+		unless system/options/quiet [
+			print ajoin [
+				" [" pad/left to integer! round 100 * done / length? files 4 "% ] "
+				as-green "gcov: " done " of " length? files " objects"
+			]
+		]
 	]
-	if failed > 0 [print-error ["gcov failed for" failed "of" length? files "files"]]
-	failed = 0
+	popd/quiet
+
+	;; reports of a previous run
+	foreach f find-files out-dir %.gcov [try [lib/delete join out-dir f]]
+	rows: copy []
+	total-hit: total-exe: 0
+	dirs: make map! 50   ;; each report dir is made only once
+	n: length? reports
+	done: 0
+	step: max 1 to integer! n / 10
+	foreach [src lines] reports [
+		set [hit: exe:] gcov-summary lines
+		total-hit: total-hit + hit
+		total-exe: total-exe + exe
+		file: join out-dir gcov-report-file src
+		dir: first split-path file
+		unless dirs/:dir [make-dir/deep dir  dirs/:dir: true]
+		write file form-gcov-report src lines
+		repend rows [src hit exe]
+		done: done + 1
+		if all [not system/options/quiet  any [done = n  0 = remainder done step]][
+			print ajoin [
+				" [" pad/left to integer! round 100 * done / n 4 "% ] "
+				as-green "reports: " done " of " n " sources"
+			]
+		]
+	]
+	sort/skip rows 3
+	unless system/options/quiet [
+		print as-yellow ajoin [lf "Coverage of " name " (lines executed):"]
+		foreach [src hit exe] rows [print form-gcov-row src hit exe]
+		print form-gcov-row "TOTAL" total-hit total-exe
+		print ""
+	]
+	if missing > 0 [
+		print-info [missing "of" length? files "objects were never executed (no .gcda)"]
+	]
+	if failed? [print-error "gcov reported an error!"]
+	print-info ["Reports:" as-green to-local-file out-dir]
+	not failed?
 ] :nest-context
 
 probe-spec: func[spec [map!] values [block!] /local val data][
