@@ -2153,6 +2153,141 @@ gcov-report-file: func [
 	join f %.gcov
 ]
 
+html-escape: func [
+	"Escapes text for HTML"
+	str [any-string!]
+][
+	escape-chars str #[#"&" "&amp;" #"<" "&lt;" #">" "&gt;" #"^"" "&quot;"]
+]
+
+gcov-level: func [
+	"Returns the CSS class of a coverage level"
+	hit [integer!] exe [integer!]
+	/local p
+][
+	if exe = 0 [return "none"]
+	p: hit * 100.0 / exe
+	case [p >= 80 ["hi"]  p >= 50 ["med"]  'else ["lo"]]
+]
+
+form-pct: func [hit [integer!] exe [integer!]][
+	either exe > 0 [join round/to hit * 100.0 / exe 0.1 #"%"]["-"]
+]
+
+gcov-html-file: func [
+	"Returns the HTML page of a source (relative; mirrors the source tree)"
+	src [string!]
+	/local f
+][
+	f: gcov-report-file src
+	join copy/part f find/last f %.gcov %.html
+]
+
+gcov-css: {body{font:14px/1.4 system-ui,sans-serif;margin:1.5em;color:#222;background:#fff}
+a{color:#0645ad;text-decoration:none}a:hover{text-decoration:underline}
+h1{font-size:1.3em;margin:0 0 .3em}.info{color:#666;margin-bottom:1em}
+table{border-collapse:collapse}
+.idx td,.idx th{padding:3px 10px;border-bottom:1px solid #eee;text-align:right}
+.idx td:first-child,.idx th:first-child{text-align:left}
+.idx th{cursor:pointer;user-select:none;background:#f5f5f5}
+.bar{width:120px;height:10px;background:#f2c4c4;display:inline-block;vertical-align:middle}
+.bar i{display:block;height:100%;background:#7cc47c}
+.hi{color:#1a7f1a}.med{color:#a07000}.lo{color:#c62828}.none{color:#888}
+.src{font:13px/1.35 ui-monospace,Menlo,Consolas,monospace;tab-size:4;width:100%}
+.src td{padding:0 8px;white-space:pre;vertical-align:top}
+.src td.n{color:#999;text-align:right;user-select:none}
+.src td.c{text-align:right;user-select:none;border-right:1px solid #ddd}
+.src tr.h td.c{background:#d7f0d7}.src tr.h td.t{background:#eef9ee}
+.src tr.p td.c{background:#f6e7b0}.src tr.p td.t{background:#fdf6dc}
+.src tr.m td.c{background:#f4c7c7}.src tr.m td.t{background:#fdeaea}
+.src tr:target td{outline:2px solid #4a8be0}
+@media (prefers-color-scheme:dark){body{background:#1e1e1e;color:#ddd}a{color:#8ab4f8}
+.idx td,.idx th{border-color:#333}.idx th{background:#2a2a2a}.info,.src td.n{color:#888}
+.src tr.h td.c{background:#244d24}.src tr.h td.t{background:#1d331d}
+.src tr.p td.c{background:#5a4a14}.src tr.p td.t{background:#3a3214}
+.src tr.m td.c{background:#5c2525}.src tr.m td.t{background:#3a1d1d}
+.hi{color:#7cd17c}.med{color:#e0b84a}.lo{color:#f07a7a}}
+}
+
+form-gcov-html: func [
+	"Forms the HTML page of a source"
+	src   [string!]
+	lines [block!]
+	top   [string!] "Relative path to the report root (e.g. ../../)"
+	/local out n c hit exe cls cnt
+][
+	set [hit exe] gcov-summary lines
+	out: make string! 100 * length? lines
+	append out ajoin [
+		{<!DOCTYPE html><html><head><meta charset="utf-8"><title>} html-escape src
+		{</title><link rel="stylesheet" href="} top {coverage.css"></head><body>}
+		{<h1>} html-escape src {</h1><div class="info"><a href="} top {index.html">index</a> | lines: }
+		{<b class="} gcov-level hit exe {">} form-pct hit exe {</b> (} hit "/" exe
+		{) | keys <b>n</b>/<b>p</b>: next/previous unvisited line</div><table class="src">}
+	]
+	n: 0
+	foreach l lines [
+		n: n + 1
+		c: any [all [l l/1] "-"]
+		cnt: gcov-int c
+		cls: case [
+			c = "-"         [""]
+			none? cnt       [" class=m"]
+			find c #"*"     [" class=p"]
+			'else           [" class=h"]
+		]
+		append out ajoin [
+			{<tr id=L} n cls {><td class=n>} n {</td><td class=c>}
+			case [c = "-" [""]  cnt [cnt]  'else ["0"]]
+			{</td><td class=t>} either l [html-escape l/2][""] {</td></tr>^/}
+		]
+	]
+	append out {</table><script>
+var m=[].slice.call(document.querySelectorAll("tr.m,tr.p")),i=-1;
+document.onkeydown=function(e){if(!m.length||e.ctrlKey||e.metaKey||e.altKey)return;
+if(e.key=="n")i=Math.min(i+1,m.length-1);else if(e.key=="p")i=Math.max(i-1,0);else return;
+location.hash=m[i].id;}
+</script></body></html>}
+	out
+]
+
+form-gcov-index: func [
+	"Forms the index page of coverage reports"
+	name  [any-string!]
+	rows  [block!] "[source hit executable ...]"
+	/local out hit exe total-hit total-exe p
+][
+	total-hit: total-exe: 0
+	foreach [src hit exe] rows [total-hit: total-hit + hit  total-exe: total-exe + exe]
+	out: make string! 200 * length? rows
+	append out ajoin [
+		{<!DOCTYPE html><html><head><meta charset="utf-8"><title>Coverage: } html-escape form name
+		{</title><link rel="stylesheet" href="coverage.css"></head><body>}
+		{<h1>Coverage: } html-escape form name {</h1><div class="info">lines: <b class="}
+		gcov-level total-hit total-exe {">} form-pct total-hit total-exe {</b> (} total-hit "/" total-exe
+		{) | generated } now/date { } now/time {</div><table class="idx"><thead><tr>}
+		{<th>Source</th><th>Coverage</th><th>%</th><th>Lines</th></tr></thead><tbody>^/}
+	]
+	foreach [src hit exe] rows [
+		p: either exe > 0 [hit * 100.0 / exe][0]
+		append out ajoin [
+			{<tr><td><a href="} html-escape to-posix-file gcov-html-file src {">} html-escape src
+			{</a></td><td data-v="} p {"><span class="bar"><i style="width:} to integer! p {%"></i></span></td>}
+			{<td class="} gcov-level hit exe {" data-v="} p {">} form-pct hit exe
+			{</td><td data-v="} exe {">} hit "/" exe {</td></tr>^/}
+		]
+	]
+	append out {</tbody></table><script>
+document.querySelectorAll(".idx th").forEach(function(th,c){var d=1;th.onclick=function(){
+var tb=th.closest("table").tBodies[0],r=[].slice.call(tb.rows);d=-d;
+r.sort(function(a,b){var x=a.cells[c],y=b.cells[c];
+if(c==0)return d*x.textContent.localeCompare(y.textContent);
+return d*(parseFloat(x.dataset.v)-parseFloat(y.dataset.v));});
+r.forEach(function(e){tb.appendChild(e);});};});
+</script></body></html>}
+	out
+]
+
 form-gcov-row: func [
 	"Forms a line of the coverage summary"
 	name [string!] hit [integer!] exe [integer!]
@@ -2221,7 +2356,9 @@ do-gcov: function/with [
 	popd/quiet
 
 	;; reports of a previous run
-	foreach f find-files out-dir %.gcov [try [lib/delete join out-dir f]]
+	foreach ext [%.gcov %.html] [
+		foreach f find-files out-dir ext [try [lib/delete join out-dir f]]
+	]
 	rows: copy []
 	total-hit: total-exe: 0
 	dirs: make map! 50   ;; each report dir is made only once
@@ -2236,6 +2373,9 @@ do-gcov: function/with [
 		dir: first split-path file
 		unless dirs/:dir [make-dir/deep dir  dirs/:dir: true]
 		write file form-gcov-report src lines
+		;; HTML page next to it
+		top: ajoin collect [loop -1 + length? split gcov-report-file src #"/" [keep "../"]]
+		write join out-dir gcov-html-file src form-gcov-html src lines top
 		repend rows [src hit exe]
 		done: done + 1
 		if all [not system/options/quiet  any [done = n  0 = remainder done step]][
@@ -2246,6 +2386,8 @@ do-gcov: function/with [
 		]
 	]
 	sort/skip rows 3
+	write out-dir/coverage.css gcov-css
+	write out-dir/index.html form-gcov-index name rows
 	unless system/options/quiet [
 		print as-yellow ajoin [lf "Coverage of " name " (lines executed):"]
 		foreach [src hit exe] rows [print form-gcov-row src hit exe]
@@ -2256,7 +2398,7 @@ do-gcov: function/with [
 		print-info [missing "of" length? files "objects were never executed (no .gcda)"]
 	]
 	if failed? [print-error "gcov reported an error!"]
-	print-info ["Reports:" as-green to-local-file out-dir]
+	print-info ["Reports:" as-green to-local-file out-dir/index.html]
 	not failed?
 ] :nest-context
 

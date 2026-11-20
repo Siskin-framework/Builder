@@ -912,4 +912,40 @@ gcov-out: {        -:    0:Source:main.c
 	]
 ]
 
+--test-- "html-escape" [is? siskin/html-escape {a<b && "c">} {a&lt;b &amp;&amp; &quot;c&quot;&gt;}]
+--test-- "gcov-html-file" [
+	all [
+		true = is? siskin/gcov-html-file "src/a.c" %src/a.c.html
+		true = is? siskin/gcov-html-file "/usr/x.h" %_external/usr/x.h.html
+	]
+]
+--test-- "gcov-level" [
+	all [
+		true = is? siskin/gcov-level 8 10 "hi"
+		true = is? siskin/gcov-level 5 10 "med"
+		true = is? siskin/gcov-level 1 10 "lo"
+		true = is? siskin/gcov-level 0 0 "none"
+	]
+]
+--test-- "form-gcov-html" [
+	h: siskin/form-gcov-html "a.c" [["-" "x"] ["3" "y<1"] ["#####" "z"] ["1*" "w"]] "../"
+	all [
+		true = has? h {href="../coverage.css"}
+		true = has? h {href="../index.html"}
+		true = has? h "<tr id=L1><td class=n>1</td><td class=c></td><td class=t>x</td></tr>"
+		true = has? h "<tr id=L2 class=h><td class=n>2</td><td class=c>3</td><td class=t>y&lt;1</td></tr>"
+		true = has? h "<tr id=L3 class=m><td class=n>3</td><td class=c>0</td>"
+		true = has? h "<tr id=L4 class=p><td class=n>4</td><td class=c>1</td>"
+		true = has? h ">66.7%</b> (2/3)"
+	]
+]
+--test-- "form-gcov-index" [
+	h: siskin/form-gcov-index "lib" ["a&b.c" 1 2 "src/x.c" 0 0]
+	all [
+		true = has? h {<a href="a&amp;b.c.html">a&amp;b.c</a>}
+		true = has? h {<a href="src/x.c.html">src/x.c</a>}
+		true = has? h ">50.0%</b> (1/2)"
+	]
+]
+
 summary
