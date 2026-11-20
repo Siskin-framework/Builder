@@ -785,14 +785,30 @@ group "gcov"
 		true = is? siskin/target-name make map! [] none
 	]
 ]
---test-- "gcno-files" [
+--test-- "find-files" [
 	d: make-dir/deep %tmp-siskin-gcno/a/b/
 	write %tmp-siskin-gcno/m.c.gcno ""
 	write %tmp-siskin-gcno/m.c.o ""
 	write %tmp-siskin-gcno/a/b/f.c.gcno ""
-	r: siskin/gcno-files %tmp-siskin-gcno/
+	r: siskin/find-files %tmp-siskin-gcno/ %.gcno
 	try [delete-dir %tmp-siskin-gcno/]
 	is? r [%a/b/f.c.gcno %m.c.gcno]
+]
+--test-- "find-files in a missing dir" [is? siskin/find-files %tmp-siskin-none/ %.gcno []]
+--test-- "delete-gcda" [
+	d: make-dir/deep %tmp-siskin-gcda/a/
+	write %tmp-siskin-gcda/m.c.gcda ""
+	write %tmp-siskin-gcda/m.c.gcno ""
+	write %tmp-siskin-gcda/a/f.c.gcda ""
+	r: siskin/delete-gcda %tmp-siskin-gcda/
+	left: siskin/find-files %tmp-siskin-gcda/ %.gcda
+	gcno: siskin/find-files %tmp-siskin-gcda/ %.gcno
+	try [delete-dir %tmp-siskin-gcda/]
+	all [
+		true = is? r [%a/f.c.gcda %m.c.gcda]
+		true = is? left []
+		true = is? gcno [%m.c.gcno]   ;; notes files are kept
+	]
 ]
 --test-- "gcov-cmd" [
 	either siskin/host-macOS? [

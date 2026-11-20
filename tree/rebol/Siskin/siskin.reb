@@ -1567,6 +1567,8 @@ build: function/with [
 	;- prepare a directory to hold object files                                 
 
 	if none? spec/objects [spec/objects: default-objects-dir spec out-file]
+	;; counters of previous runs would be summed (or not match rebuilt objects)
+	if coverage? [delete-gcda spec/objects]
 
 	probe-spec spec [
 		objects
@@ -1966,21 +1968,35 @@ target-name: func [
 	f
 ]
 
-gcno-files: function [
-	"Returns .gcno files found under the dir (relative paths)"
+find-files: function [
+	"Returns files with the extension found under the dir (relative paths)"
 	dir [file!]
+	ext [file!]
 ][
 	out: copy []
+	unless exists? dir [return out]
 	scan: func [sub [file!] /local f][
 		foreach f read join dir sub [
 			either dir? f [scan join sub f][
-				if %.gcno = suffix? f [append out join sub f]
+				if ext = suffix? f [append out join sub f]
 			]
 		]
 	]
 	scan %""
 	sort out
 ]
+
+delete-gcda: function/with [
+	"Deletes coverage counters (.gcda) of previous runs from the objects dir"
+	dir [file!]
+][
+	files: find-files dir %.gcda
+	unless empty? files [
+		print-info ["Deleting" length? files "old coverage data files (.gcda)"]
+		unless no-eval? [foreach f files [try [lib/delete join dir f]]]
+	]
+	files
+] :nest-context
 
 gcov-cmd: func [
 	"Returns the gcov command for the compiler used"
@@ -2001,7 +2017,7 @@ do-gcov: function/with [
 	name: target-name spec
 	unless spec/arch [spec/arch: detect-arch spec/cflags]
 	objects: clean-path any [spec/objects default-objects-dir spec name]
-	files: either exists? objects [gcno-files objects][copy []]
+	files: find-files objects %.gcno
 	if empty? files [
 		print-error ["No coverage data found in:" as-red to-local-file objects]
 		print-info  "Build the target with --coverage and run it first."
