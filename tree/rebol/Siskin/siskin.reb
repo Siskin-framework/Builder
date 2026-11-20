@@ -2016,6 +2016,13 @@ finalize-build: closure/with [spec [map!] file [file! none!] /no-fail][
 		]
 
 		if host-macOS? [
+			if all [
+				fix-install-name spec out-file
+				not sign
+			][
+				;; install_name_tool invalidates the linker's ad-hoc signature
+				eval-cmd/v/no-quit ["codesign --force --sign -" out-file]
+			]
 			if sign [
 				eval-cmd/v combine [
 					{codesign --sign "} (sign) {" -f}
@@ -3079,11 +3086,44 @@ prepare-macos-bundle: function/with [
 
 ] :nest-context
 
-move-file: function/with [src [file!] dst [file!]][
-	if all [dir?/check dst not dir?/check src][
+move-target: func [
+	"Returns where `move-file` moves the src file"
+	src [file!] dst [file!]
+][
+	either all [dir?/check dst not dir?/check src][
 		;; moving a file to another directory keeping its name
-		dst: join dirize dst second split-path src
+		join dirize dst second split-path src
+	][	dst ]
+]
+
+install-name-cmd: func [
+	"Forms a command setting the install name of a dylib to @rpath/<name>"
+	file [file!] name [file!]
+][
+	ajoin [
+		"install_name_tool -id " quote-sh-arg join "@rpath/" name
+		SP quote-sh-arg to-posix-file file
 	]
+]
+
+fix-install-name: function/with [
+	"Sets a macOS dylib's install name to @rpath/<final file name>; returns true when done"
+	spec [map!] file [file!]
+][
+	unless all [
+		host-macOS?
+		%.dylib = suffix? file
+		not find any [spec/lflags ""] "-install_name"  ;; user's own choice
+	][return false]
+	name: second split-path either file? out-file-override [
+		move-target file out-file-override  ;; the name it will have after `-o`
+	][	file ]
+	eval-cmd/v/no-quit install-name-cmd file name
+	0 = result-code
+] :nest-context
+
+move-file: function/with [src [file!] dst [file!]][
+	dst: move-target src dst
 	unless no-eval? [
 		print-info ["Moving" as-green src 'to as-green dst]
 		delete dst

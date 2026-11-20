@@ -679,4 +679,43 @@ group "Xcode lflags"
 	is? xcode/form-items xcode/form-link-flags "-lz " none ajoin [T4 {^-"-lz",^/}]
 ]
 
+;;=============================================================================
+group "macOS install name"
+;;=============================================================================
+
+--test-- "move-target to a file" [
+	is? siskin/move-target %/a/libx.dylib %/b/liby.dylib %/b/liby.dylib
+]
+--test-- "move-target to a dir keeps the name" [
+	is? siskin/move-target %/a/libx.dylib %/b/ %/b/libx.dylib
+]
+--test-- "move-target to an existing dir without slash" [
+	d: make-dir %tmp-siskin-mt/
+	r: siskin/move-target %/a/libx.dylib clean-path %tmp-siskin-mt
+	try [delete-dir d]
+	is? r join clean-path %tmp-siskin-mt/ %libx.dylib
+]
+--test-- "install-name-cmd" [
+	;; the path form follows the host (the command itself runs only on macOS)
+	is? siskin/install-name-cmd %"/a b/libx.dylib" %liby.dylib ajoin [
+		{install_name_tool -id '@rpath/liby.dylib' }
+		siskin/quote-sh-arg siskin/to-posix-file %"/a b/libx.dylib"
+	]
+]
+;; pretend macOS without running anything (eval-cmd does nothing when no-eval?)
+real-host: system/real-platform
+system/real-platform: 'macOS
+siskin/nest-context/no-eval?: true
+--test-- "fix-install-name for a dylib" [
+	true = siskin/fix-install-name make map! [lflags: "-shared "] %/a/x.dylib
+]
+--test-- "fix-install-name only for dylibs" [
+	not siskin/fix-install-name make map! [lflags: ""] %/a/x.so
+]
+--test-- "fix-install-name keeps the user's -install_name" [
+	not siskin/fix-install-name make map! [lflags: "-install_name @loader_path/x.dylib "] %/a/x.dylib
+]
+system/real-platform: real-host
+siskin/nest-context/no-eval?: false
+
 summary
