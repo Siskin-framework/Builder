@@ -2,7 +2,7 @@ Rebol [
 	Title:  "Siskin Builder - core"
 	Type:    module
 	Name:    siskin
-	Version: 0.23.3   ;; keep in sync with `siskin-version` below!
+	Version: 0.23.4   ;; keep in sync with `siskin-version` below!
 	Author: "Oldes"
 	
 	exports: [
@@ -22,7 +22,7 @@ Rebol [
 		expand-env
 	]
 ]
-siskin-version: 0.23.3
+siskin-version: 0.23.4
 ;? system
 banner: does [next rejoin [{
 ^[[0;33m═╗
@@ -89,6 +89,7 @@ all-options: [
 	  -  "--no-upx"   -      "Ignore default project's UPX compression setting"
 	  -  "--coverage" -      "Build with gcov code coverage (gcc/clang; no strip, no UPX)"
 	  -  "--gcov"     -      "Make coverage reports in coverage/<name>/ (no build)"
+	  -  "--sanitize" -      "Build with AddressSanitizer (gcc/clang, when supported)"
 	  -  "--script"   "path" "Evaluate Rebol script"
 	  -  "--gzip"     -      "Compress the result with GZIP"
 	  -  "--no-comp"  -      "Don't invoke compilation/linking step"
@@ -214,6 +215,7 @@ nest-context: object [
 	no-upx?:      false
 	coverage?:    false
 	gcov?:        false
+	sanitize?:    false ;; from `--sanitize` (per command batch)
 	clang?:       false
 	no-comp?:     false
 	run-result?:  false
@@ -1117,6 +1119,7 @@ do-nest: closure/with/extern [
 				| 'no-upx  (no-upx?: on)
 				| 'coverage (coverage?: on)
 				| 'gcov     (gcov?: on)
+				| 'sanitize (sanitize?: on)
 				| 'gzip    (gzip?: on)
 				| 'cc      set val: string! (cli-cc: val)
 				| 'cflags  set val: string! (append append cli-cflags val SP)
@@ -1152,6 +1155,7 @@ do-nest: closure/with/extern [
 						clear cli-undefines
 						coverage?: false
 						gcov?: false
+						sanitize?: false
 						result-code: 0
 					)
 
@@ -1277,6 +1281,7 @@ build-target: closure/with [
 		apply-extra-flags spec
 		if coverage? [apply-coverage spec]
 		if gcov? [return do-gcov spec]
+		if sanitize? [apply-sanitize spec]
 		normalize-defines spec
 
 		if force-compiler [
@@ -1950,7 +1955,11 @@ default-objects-dir: func [
 ][
 	as file! dirize ajoin [
 		spec/temp
-		normalize-file-name lowercase ajoin [system/platform #"-" spec/compiler #"-" spec/arch]
+		normalize-file-name lowercase ajoin [
+			system/platform #"-" spec/compiler #"-" spec/arch
+			if spec/sanitize ["-asan"]  ;; never mix instrumented objects with plain ones
+			if spec/coverage ["-cov"]
+		]
 		#"/"
 		if name [normalize-file-name name]
 	]
@@ -2308,6 +2317,7 @@ do-gcov: function/with [
 	"Makes gcov reports of a target in coverage/<name>/ (from its existing coverage data)"
 	spec [map!]
 ][
+	spec/coverage: true
 	foreach [k v] defaults [unless spec/:k [spec/:k: v]]
 	name: target-name spec
 	unless spec/arch [spec/arch: detect-arch spec/cflags]
@@ -2467,6 +2477,9 @@ finalize-build: closure/with [spec [map!] file [file! none!] /no-fail][
 
 		if all [spec/strip not debug?] [
 			case [
+				spec/sanitize [
+					print-warn "Not using STRIP for a sanitized build"
+				]
 				all [macOS? spec/sign <> false not sign][
 					print-error "Not using requested STRIP as it would invalidate a signature!"
 					print-error "There is no available sign identity to re-sign!"
@@ -2480,7 +2493,9 @@ finalize-build: closure/with [spec [map!] file [file! none!] /no-fail][
 			]
 		]
 		if spec/upx [
-			try/with [do-upx out-file][print-error system/state/last-error]
+			either spec/sanitize [
+				print-warn "Not using UPX for a sanitized build"
+			][	try/with [do-upx out-file][print-error system/state/last-error] ]
 		]
 
 		if host-macOS? [
@@ -3138,6 +3153,7 @@ apply-coverage: function/with [
 	;; coverage data needs the binary as it was linked
 	spec/strip: false
 	spec/upx: false
+	spec/coverage: true
 ] :nest-context
 
 apply-compiler-override: function/with [
@@ -3156,6 +3172,42 @@ apply-compiler-override: function/with [
 		either abs-path? cc [cc][clean-path join root-dir cc]
 	][	none ]        ;; just a name; resolved by `locate-tool`
 	print-info ["Compiler override:" as-green spec/compiler as-yellow any [spec/cc ""]]
+] :nest-context
+
+sanitize-blocker: function/with [
+	"Returns why AddressSanitizer can't be used for the spec, or none when it can"
+	spec [map!]
+][
+	cc: form any [spec/compiler ""]
+	case [
+		force-compiler = @msvc  ["not supported in generated MSVC projects"]
+		force-compiler = @xcode ["not supported in generated Xcode projects"]
+		empty? cc               ["no compiler"]
+		find cc "clang-cl"      ["clang-cl is not supported"]
+		not any [find cc "gcc" find cc "clang" find cc "emcc"] [
+			ajoin ["compiler " cc " is not supported"]
+		]
+		windows? ["not supported on Windows"]
+		find [OpenBSD Haiku Turris] system/platform [
+			ajoin ["not supported on " system/platform]
+		]
+	]
+] :nest-context
+
+apply-sanitize: function/with [
+	"Adds AddressSanitizer flags when `--sanitize` is used and supported"
+	spec [map!]
+][
+	unless sanitize? [exit]
+	if reason: sanitize-blocker spec [
+		print-warn ["Sanitizer not used:" reason]
+		exit
+	]
+	add-flag spec copy "-fsanitize=address"               ;; compiler and linker
+	append-flag spec/cflags copy "-fno-omit-frame-pointer"
+	append-flag spec/cflags copy "-g"                     ;; readable reports
+	spec/sanitize: true
+	print-info ["Sanitizer:" as-green "address"]
 ] :nest-context
 
 eval-cmd: function/with [

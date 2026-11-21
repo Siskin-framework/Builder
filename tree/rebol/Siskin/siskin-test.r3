@@ -948,4 +948,64 @@ gcov-out: {        -:    0:Source:main.c
 	]
 ]
 
+
+;;=============================================================================
+group "Sanitizer"
+;;=============================================================================
+
+nc: siskin/nest-context
+asan-host?: not find [Windows OpenBSD Haiku Turris] system/platform
+asan-spec: does [make map! reduce ['compiler 'gcc 'cflags copy "" 'lflags copy ""]]
+
+--test-- "sanitize: gcc supported" [
+	either asan-host? [is? siskin/sanitize-blocker make map! [compiler: gcc] none][true]
+]
+--test-- "sanitize: versioned clang name" [
+	either asan-host? [is? siskin/sanitize-blocker make map! [compiler: clang-18] none][true]
+]
+--test-- "sanitize: tcc not supported"      [string? siskin/sanitize-blocker make map! [compiler: tcc]]
+--test-- "sanitize: clang-cl not supported" [string? siskin/sanitize-blocker make map! [compiler: clang-cl]]
+--test-- "sanitize: no compiler"            [string? siskin/sanitize-blocker make map! []]
+--test-- "sanitize: msvc project" [
+	nc/force-compiler: @msvc
+	r: siskin/sanitize-blocker make map! [compiler: clang]
+	nc/force-compiler: none
+	string? r
+]
+--test-- "apply-sanitize: off does nothing" [
+	nc/sanitize?: false
+	siskin/apply-sanitize m: asan-spec
+	all [empty? m/cflags empty? m/lflags none? m/sanitize]
+]
+--test-- "apply-sanitize: flags" [
+	either asan-host? [
+		nc/sanitize?: true
+		siskin/apply-sanitize m: asan-spec
+		nc/sanitize?: false
+		all [
+			true = has? m/cflags "-fsanitize=address "
+			true = has? m/lflags "-fsanitize=address "
+			true = has? m/cflags "-fno-omit-frame-pointer "
+			true = any [none? find m/lflags "-fno-omit" "frame-pointer flag in lflags"]
+			true = is? m/sanitize true
+		]
+	][true]
+]
+--test-- "apply-sanitize: no duplicates" [
+	either asan-host? [
+		nc/sanitize?: true
+		siskin/apply-sanitize m: asan-spec
+		siskin/apply-sanitize m
+		nc/sanitize?: false
+		is? count-of m/cflags "-fsanitize=address" 1
+	][true]
+]
+--test-- "apply-sanitize: unsupported leaves spec alone" [
+	nc/sanitize?: true
+	m: asan-spec  m/compiler: 'tcc
+	siskin/apply-sanitize m
+	nc/sanitize?: false
+	all [empty? m/cflags none? m/sanitize]
+]
+
 summary
