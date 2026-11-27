@@ -2590,7 +2590,7 @@ clone-gits: function/with [
 		]
 		;; updates are handled per target in `build-target`
 		unless exists? dir [
-			cmd: ["git clone" git "--depth 1 --quiet"]
+			cmd: copy ["git clone" git "--depth 1 --quiet"]
 			if branch [append cmd ["--branch" branch]]
 			res: either find/match git https:// [
 				eval-cmd/v cmd
