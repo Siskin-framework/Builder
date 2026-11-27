@@ -948,6 +948,21 @@ gcov-out: {        -:    0:Source:main.c
 	]
 ]
 
+--test-- "linked-gcno-files" [
+	d: clean-path make-dir/deep %"tmp-siskin-linked/a b/"
+	o: clean-path %tmp-siskin-linked/
+	write o/objects.txt ajoin [
+		lib/to-local-file o/m.c.o lf                                ;; absolute
+		{"} lib/to-local-file o/("a b/f.c.o") {"} lf                ;; quoted (space)
+		"/elsewhere/x.S" lf                                         ;; assembly
+		"/other/dir/y.c.o" lf                                       ;; outside the dir
+		lf
+	]
+	r: siskin/linked-gcno-files o
+	try [delete-dir %tmp-siskin-linked/]
+	is? r [%"a b/f.c.gcno" %m.c.gcno]
+]
+
 
 ;;=============================================================================
 group "Sanitizer"

@@ -2080,6 +2080,26 @@ parse-gcov: function [
 	result
 ]
 
+linked-gcno-files: func [
+	"Returns .gcno files (relative to the objects dir) of the objects linked by the last build"
+	objects [file!] "Absolute objects dir with objects.txt"
+	/local out f
+][
+	out: copy []
+	foreach line split read/string objects/objects.txt lf [
+		trim line
+		;; paths with spaces are quoted
+		if all [#"^"" = first line  #"^"" = last line] [line: copy/part next line back tail line]
+		if empty? line [continue]
+		f: clean-path to-rebol-file line
+		if all [%.o = suffix? f  f: find/match/tail f objects] [
+			;; x.c.o -> x.c.gcno
+			append out join head clear back tail copy f %gcno
+		]
+	]
+	sort out
+]
+
 split-batches: func [
 	"Splits values into batches limited by count and formed length (each batch has at least one value)"
 	values    [block!]
@@ -2323,6 +2343,14 @@ do-gcov: function/with [
 	unless spec/arch [spec/arch: detect-arch spec/cflags]
 	objects: clean-path any [spec/objects default-objects-dir spec name]
 	files: find-files objects %.gcno
+	;; objects of sources removed from the build stay in the dir
+	if exists? objects/objects.txt [
+		n: length? files
+		files: intersect files linked-gcno-files objects
+		if n > length? files [
+			print-info ["Skipped" n - length? files "object(s) not in the last build"]
+		]
+	]
 	if empty? files [
 		print-error ["No coverage data found in:" as-red to-local-file objects]
 		print-info  "Build the target with --coverage and run it first."
